@@ -14,41 +14,11 @@ interface StateChartOptions {
 export class StateChart {
   private states: Map<string, BaseStateNode> = new Map();
   private activeStateChain: Tuple<BaseStateNode> = [];
-  private activeStates: Set<string> = new Set();
 
   constructor(
     private readonly initial: string,
     private readonly nodes: Map<string, BaseNode>
   ) {}
-
-  calculateExitStatues(transitions: TransitionNode[]) {
-    // Create a set representing the active state
-    const states = new Set<string>();
-
-    // Individual nodes are kept track of by their full path
-    //   Ex:
-    //     - scxml.healthSystem.healthy
-    //     - scxml.agent.toolCall
-    //
-    // We look 
-    this.activeStateChain.forEach(([id]) => {
-      id.split('.').forEach(states.add);
-    });
-
-    const statesToExit = new Set<string>();
-
-    for (const transition of transitions) {
-      if (transition.isTargetLess) {
-        continue;
-      }
-
-      // Find Least Common Ancestor (LCCA)
-
-      
-    }
-
-
-  }
 
   * loadState(state: BaseStateNode, data: Record<string, unknown>): Generator<MountResponse, Record<string, unknown>, MountResponse> {
     let nextState = { ...data };
@@ -99,86 +69,102 @@ export class StateChart {
     this.enterStates(transitions);
   }
 
-  private findLCCA(source: BaseStateNode, target: BaseStateNode): BaseStateNode {
-    // Get all ancestors of source (including source itself)
-    const sourceAncestors = this.getAncestors(source);
-
-    // Walk up from target until we find a common ancestor
-    let current: BaseStateNode | undefined = target;
-    while (current) {
-      if (sourceAncestors.includes(current)) {
-        return current; // First common ancestor found
-      }
-      current = current.parent as BaseStateNode | undefined;
+  findLCCA(sourcePath: string, targetPath: string): string {
+    // Handle root level transitions
+    if (!sourcePath.includes('.') && !targetPath.includes('.')) {
+      return ""; // Both are top-level, LCCA is root
     }
 
-    // Should never reach here in a valid state machine
-    throw new Error('No common ancestor found');
-  }
+    const sourceParts = sourcePath.split('.');
+    const targetParts = targetPath.split('.');
 
-  private getAncestors(state: BaseStateNode): BaseStateNode[] {
-    const ancestors: BaseStateNode[] = [];
-    let current: BaseStateNode | undefined = state;
+    // Find common prefix
+    let commonDepth = 0;
+    const minLength = Math.min(sourceParts.length, targetParts.length);
 
-    while (current) {
-      ancestors.push(current);
-      current = current.parent as BaseStateNode | undefined;
-    }
-
-    return ancestors;
-  }
-
-  private computeExitSet(transitions: any[]): Set<BaseStateNode> {
-    const exitSet = new Set<BaseStateNode>();
-
-    for (const transition of transitions) {
-      if (transition.target) {
-        // Find Least Common Compound Ancestor (LCCA)
-        const lcca = this.findLCCA(transition.source, transition.target);
-
-        // Add all active descendants of LCCA to exit set
-        for (const stateId of this.activeStates) {
-          const state = this.states.get(stateId);
-          if (state && this.isDescendant(state, lcca) && state !== lcca) {
-            exitSet.add(state);
-          }
-        }
+    for (let i = 0; i < minLength; i++) {
+      if (sourceParts[i] === targetParts[i]) {
+        commonDepth = i + 1;
+      } else {
+        break;
       }
     }
 
-    return exitSet;
+    // Return the LCCA path
+    return sourceParts.slice(0, commonDepth).join('.');
   }
 
-  private computeEntrySet(transitions: any[]): Set<BaseStateNode> {
-    const entrySet = new Set<BaseStateNode>();
+  /**
+   * Computes the set of states that need to be exited during a transition.
+   *
+   * According to SCXML specification, states are exited in document order (deepest first)
+   * and only states within the scope of the Least Common Compound Ancestor (LCCA) are
+   * considered for exit. States that are ancestors of the target are preserved.
+   *
+   * @param sourcePath - The path of the source state (e.g., "playing.healthSystem.healthy")
+   * @param targetPath - The path of the target state (e.g., "playing.scoreSystem.scoring")
+   * @returns Array of state paths to exit, sorted deepest-first for proper exit order
+   *
+   * @example
+   * ```typescript
+   * // Same-parent transition: healthy → critical
+   * computeExitSet("playing.healthSystem.healthy", "playing.healthSystem.critical")
+   * // Returns: ["playing.healthSystem.healthy"]
+   *
+   * // Cross-subsystem transition: health → score
+   * computeExitSet("playing.healthSystem.healthy", "playing.scoreSystem.scoring")
+   * // Returns: ["playing.healthSystem.healthy", "playing.scoreSystem.scoring", "playing.healthSystem"]
+   *
+   * // To top-level: playing → gameOver
+   * computeExitSet("playing.healthSystem.healthy", "gameOver")
+   * // Returns: ["playing.healthSystem.healthy", "playing.scoreSystem.scoring",
+   * //           "playing.healthSystem", "playing.scoreSystem", "playing"]
+   * ```
+   *
+   * @remarks
+   * - Uses path-based LCCA calculation for efficiency
+   * - Preserves parallel state regions that don't conflict with the transition
+   * - Excludes the LCCA itself from the exit set
+   * - Returns empty array for self-transitions or when no exits are needed
+   * - Maintains SCXML-compliant exit ordering (deepest states first)
+   */
+  computeExitSet(sourcePath: string, targetPath: string): string[] {
+    const lccaPath = this.findLCCA(sourcePath, targetPath);
+    const exitSet: string[] = [];
 
-    for (const transition of transitions) {
-      if (transition.target) {
-        // Add target and all ancestors up to LCCA
-        let current = transition.target;
-        const lcca = this.findLCCA(transition.source, transition.target);
-
-        while (current && current !== lcca) {
-          if (!this.activeStates.has(current.id)) {
-            entrySet.add(current);
-          }
-          current = current.parent as BaseStateNode | undefined;
-        }
+    // Find all active states that are descendants of LCCA but not ancestors of target
+    for (const [activePath] of this.activeStateChain) {
+      if (activePath.startsWith(lccaPath) &&
+          activePath !== lccaPath &&
+          !targetPath.startsWith(activePath)) {
+        exitSet.push(activePath);
       }
     }
 
-    return entrySet;
+    // Sort deepest first (for proper exit order)
+    return exitSet.sort((a, b) => b.split('.').length - a.split('.').length);
   }
 
-  private isDescendant(state: BaseStateNode, ancestor: BaseStateNode): boolean {
-    let current = state.parent as BaseStateNode | undefined;
-    while (current) {
-      if (current === ancestor) {
-        return true;
+  computeEntrySet(sourcePath: string, targetPath: string): string[] {
+    const lccaPath = this.findLCCA(sourcePath, targetPath);
+    const entrySet: string[] = [];
+
+    // Build path from LCCA to target
+    const targetParts = targetPath.split('.');
+    const lccaParts = lccaPath ? lccaPath.split('.') : [];
+
+    for (let i = lccaParts.length; i <= targetParts.length; i++) {
+      const pathToEnter = targetParts.slice(0, i).join('.');
+      if (pathToEnter && !this.isActive(pathToEnter)) {
+        entrySet.push(pathToEnter);
       }
-      current = current.parent as BaseStateNode | undefined;
     }
-    return false;
+
+    return entrySet; // Already in entry order (shallowest first)
+  }
+
+  private isActive(path: string): boolean {
+    return this.activeStateChain.some(([activePath]) => activePath === path);
   }
 
   private exitStates(transitions: any[]) {

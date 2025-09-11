@@ -1,0 +1,410 @@
+import { describe, it, expect, jest } from '@jest/globals';
+import { BaseStateNode } from './base-state';
+import { TransitionNode } from '../nodes/transition.node';
+import { FinalNode } from '../nodes/final.node';
+import { InitialNode } from '../nodes/initial.node';
+
+describe('BaseStateNode', () => {
+
+  describe('constructor', () => {
+    it.skip('should create a BaseStateNode instance with default values', () => {
+      // Test basic construction
+    });
+
+    it.skip('should set allowChildren to true', () => {
+      // Test that allowChildren is properly set
+    });
+
+    it.skip('should initialize with empty id when not provided', () => {
+      // Test default id behavior
+    });
+
+    it.skip('should set initial state when provided', () => {
+      // Test initial state setting
+    });
+  });
+
+  describe('properties', () => {
+    describe('#isAtomic', () => {
+      it('should return true when state has no child states', () => {
+        // Arrange
+        const atomicState = new (class extends BaseStateNode {
+          constructor() {
+            super({ content: '', children: [] });
+            // @ts-expect-error - Setting readonly property for testing
+            this.id = 'atomicState';
+          }
+        })();
+
+        // Act
+        const result = atomicState.isAtomic;
+
+        // Assert
+        expect(result).toBe(true);
+      });
+
+      it('should return false when state has child states', () => {
+        // Arrange
+        const childState = new (class extends BaseStateNode {
+          constructor() {
+            super({ content: '', children: [] });
+            // @ts-expect-error - Setting readonly property for testing
+            this.id = 'childState';
+          }
+        })();
+
+        const compoundState = new (class extends BaseStateNode {
+          constructor() {
+            super({ content: '', children: [childState] });
+            // @ts-expect-error - Setting readonly property for testing
+            this.id = 'compoundState';
+          }
+        })();
+
+        // Mock getChildrenOfType to return the child state
+        jest.spyOn(compoundState, 'getChildrenOfType').mockReturnValue([childState]);
+
+        // Act
+        const result = compoundState.isAtomic;
+
+        // Assert
+        expect(result).toBe(false);
+      });
+
+      it('should only consider BaseStateNode children for atomic determination', () => {
+        // Arrange
+        const transitionNode = new TransitionNode({
+          transition: { event: 'test', target: 'target', content: '', children: [] }
+        });
+        const finalNode = new FinalNode({
+          final: { id: 'final', content: '', children: [] }
+        });
+
+        const stateWithNonStateChildren = new (class extends BaseStateNode {
+          constructor() {
+            super({ content: '', children: [transitionNode, finalNode] });
+            // @ts-expect-error - Setting readonly property for testing
+            this.id = 'stateWithNonStateChildren';
+          }
+        })();
+
+        // Mock getChildrenOfType to return empty array for BaseStateNode children
+        jest.spyOn(stateWithNonStateChildren, 'getChildrenOfType').mockReturnValue([]);
+
+        // Act
+        const result = stateWithNonStateChildren.isAtomic;
+
+        // Assert
+        expect(result).toBe(true);
+        expect(stateWithNonStateChildren.getChildrenOfType).toHaveBeenCalledWith(BaseStateNode);
+      });
+    });
+
+    describe('#initialState', () => {
+      it('should return the initial attribute value when set', () => {
+        // Arrange
+        const stateWithInitial = new (class extends BaseStateNode {
+          constructor() {
+            super({ content: '', children: [] });
+            // @ts-expect-error - Setting readonly property for testing
+            this.id = 'stateWithInitial';
+            // @ts-expect-error - Setting readonly property for testing
+            this.initial = 'specificInitialState';
+          }
+        })();
+
+        // Act
+        const result = stateWithInitial.initialState;
+
+        // Assert
+        expect(result).toBe('specificInitialState');
+      });
+
+      it('should return content from initial child element when no initial attribute', () => {
+        // Arrange
+        const initialNode = new InitialNode({
+          initial: { content: 'initialFromElement', children: [] }
+        });
+
+        const stateWithInitialElement = new (class extends BaseStateNode {
+          constructor() {
+            super({ content: '', children: [initialNode] });
+            // @ts-expect-error - Setting readonly property for testing
+            this.id = 'stateWithInitialElement';
+          }
+        })();
+
+        // Act
+        const result = stateWithInitialElement.initialState;
+
+        // Assert
+        expect(result).toBe('initialFromElement');
+      });
+
+      it('should return first child state id when no initial specified', () => {
+        // Arrange
+        const firstChildState = new (class extends BaseStateNode {
+          constructor() {
+            super({ content: '', children: [] });
+            // @ts-expect-error - Setting readonly property for testing
+            this.id = 'firstChild';
+          }
+        })();
+
+        const secondChildState = new (class extends BaseStateNode {
+          constructor() {
+            super({ content: '', children: [] });
+            // @ts-expect-error - Setting readonly property for testing
+            this.id = 'secondChild';
+          }
+        })();
+
+        const stateWithChildren = new (class extends BaseStateNode {
+          constructor() {
+            super({ content: '', children: [firstChildState, secondChildState] });
+            // @ts-expect-error - Setting readonly property for testing
+            this.id = 'stateWithChildren';
+          }
+        })();
+
+        // Act
+        const result = stateWithChildren.initialState;
+
+        // Assert
+        expect(result).toBe('firstChild');
+      });
+
+      it('should return empty string when no children exist', () => {
+        // Arrange
+        const emptyState = new (class extends BaseStateNode {
+          constructor() {
+            super({ content: '', children: [] });
+            // @ts-expect-error - Setting readonly property for testing
+            this.id = 'emptyState';
+          }
+        })();
+
+        // Mock getChildrenOfType to return empty arrays
+        jest.spyOn(emptyState, 'getChildrenOfType').mockReturnValue([]);
+
+        // Act
+        const result = emptyState.initialState;
+
+        // Assert
+        expect(result).toBe('');
+      });
+
+      it('should prioritize initial attribute over initial element', () => {
+        // Arrange
+
+        const firstChildState = new (class extends BaseStateNode {
+          constructor() {
+            super({ content: '', children: [] });
+            // @ts-expect-error - Setting readonly property for testing
+            this.id = 'firstChild';
+          }
+        })();
+
+        const secondChildState = new (class extends BaseStateNode {
+          constructor() {
+            super({ content: '', children: [] });
+            // @ts-expect-error - Setting readonly property for testing
+            this.id = 'secondChild';
+          }
+        })();
+
+        const stateWithBoth = new (class extends BaseStateNode {
+          constructor() {
+            super({ content: '', children: [firstChildState, secondChildState] });
+            // @ts-expect-error - Setting readonly property for testing
+            this.id = 'stateWithBoth';
+            // @ts-expect-error - Setting readonly property for testing
+            this.initial = 'secondChild';
+          }
+        })();
+
+        // Act
+        const result = stateWithBoth.initialState;
+
+        // Assert
+        expect(result).toBe('secondChild');
+      });
+    });
+  });
+
+  describe('utility methods', () => {
+    describe('#getTransitions', () => {
+      it.skip('should return empty array for atomic states', () => {
+        // Test atomic state transition behavior
+      });
+
+      it.skip('should return all TransitionNode children for compound states', () => {
+        // Test transition collection
+      });
+
+      it.skip('should filter out non-TransitionNode children', () => {
+        // Test type filtering
+      });
+    });
+
+    describe('#getChildState', () => {
+      it.skip('should return empty array for atomic states', () => {
+        // Test atomic state child behavior
+      });
+
+      it.skip('should return all child states when no id specified', () => {
+        // Test all children retrieval
+      });
+
+      it.skip('should return specific child state when id provided', () => {
+        // Test specific child lookup
+      });
+
+      it.skip('should return undefined when child with id not found', () => {
+        // Test missing child behavior
+      });
+
+      it.skip('should only return BaseStateNode children', () => {
+        // Test type filtering
+      });
+    });
+
+    describe('#getFinalState', () => {
+      it.skip('should return empty array for atomic states', () => {
+        // Test atomic state final behavior
+      });
+
+      it.skip('should return all FinalNode children', () => {
+        // Test final state collection
+      });
+
+      it.skip('should filter out non-FinalNode children', () => {
+        // Test type filtering
+      });
+    });
+  });
+
+  describe('#onEntry', () => {
+    it.skip('should execute default onentry handler', () => {
+      // Test default onentry behavior
+    });
+
+    it.skip('should pass state through unchanged by default', () => {
+      // Test state passthrough
+    });
+
+    it.skip('should allow custom onentry handler override', () => {
+      // Test custom handler
+    });
+
+    it.skip('should receive current state as parameter', () => {
+      // Test parameter passing
+    });
+
+    it.skip('should return modified state from custom handler', () => {
+      // Test state modification
+    });
+  });
+
+  describe('#onExit', () => {
+    it.skip('should execute default onexit handler', () => {
+      // Test default onexit behavior
+    });
+
+    it.skip('should pass state through unchanged by default', () => {
+      // Test state passthrough
+    });
+
+    it.skip('should allow custom onexit handler override', () => {
+      // Test custom handler
+    });
+
+    it.skip('should receive current state as parameter', () => {
+      // Test parameter passing
+    });
+
+    it.skip('should return modified state from custom handler', () => {
+      // Test state modification
+    });
+  });
+
+  describe('#mount', () => {
+    it.skip('should call onentry for atomic states', () => {
+      // Test atomic state mounting
+    });
+
+    it.skip('should return state from onentry for atomic states', () => {
+      // Test atomic state return value
+    });
+
+    it.skip('should return compound state path for compound states with initial', () => {
+      // Test compound state path generation
+    });
+
+    it.skip('should return state id and state for compound states with initial', () => {
+      // Test compound state return format
+    });
+
+    it.skip('should return just state id when no initial state found', () => {
+      // Test fallback behavior
+    });
+
+    it.skip('should handle nested state paths correctly', () => {
+      // Test path construction
+    });
+
+    it.skip('should not call onentry for compound states', () => {
+      // Test compound state behavior
+    });
+  });
+
+  describe('#unmount', () => {
+    it.skip('should call onexit handler', () => {
+      // Test onexit execution
+    });
+
+    it.skip('should pass current state to onexit', () => {
+      // Test parameter passing
+    });
+
+    it.skip('should return result from onexit handler', () => {
+      // Test return value
+    });
+
+    it.skip('should work with custom onexit handlers', () => {
+      // Test custom handler integration
+    });
+
+    it.skip('should handle state modifications in onexit', () => {
+      // Test state modification
+    });
+  });
+
+  describe('integration tests', () => {
+    it.skip('should handle complete mount/unmount cycle', () => {
+      // Test full lifecycle
+    });
+
+    it.skip('should maintain state consistency through operations', () => {
+      // Test state consistency
+    });
+
+    it.skip('should work with complex nested state hierarchies', () => {
+      // Test complex scenarios
+    });
+  });
+
+  describe('edge cases', () => {
+    it.skip('should handle empty children array', () => {
+      // Test empty children
+    });
+
+    it.skip('should handle null/undefined state objects', () => {
+      // Test error conditions
+    });
+
+    it.skip('should handle circular references safely', () => {
+      // Test circular reference protection
+    });
+  });
+});

@@ -58,14 +58,11 @@ export class BaseStateNode extends BaseNode {
   }
 
   /**
-   * Utility function for getting all the transitions for the state.
-   * @returns A list of all the child transactions
+   * Utility function for getting all the eventless transitions for the state.
+   * Both atomic and compound states can have outgoing transitions.
+   * @returns A list of all the eventless child transitions
    */
   getEventlessTransitions() {
-    if (this.isAtomic) {
-      return [];
-    }
-    
     return this.getChildrenOfType(TransitionNode).filter(
       transition => transition.isEventLess
     );

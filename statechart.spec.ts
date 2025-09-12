@@ -1,347 +1,16 @@
- 
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { StateChart } from './statechart';
+import { StateNode } from './nodes/state.node';
+import { TransitionNode } from './nodes/transition.node';
+import { BaseStateNode } from './models/base-state';
 
 // Type for mock active state chain entries
 type MockActiveStateEntry = [string, Record<string, unknown>];
+// Type for real active state chain entries
+type ActiveStateEntry = [string, BaseStateNode];
 
 describe('StateChart', () => {
 
-  describe('findLCCA', () => {
-    let stateChart: StateChart;
-
-    beforeEach(() => {
-      // Create a simple StateChart instance for testing the findLCCA method
-      stateChart = new StateChart('gameStart', new Map());
-    });
-
-    it('should find LCCA for states within same parent', () => {
-      // Arrange
-      const sourcePath = 'playing.healthSystem.healthy';
-      const targetPath = 'playing.healthSystem.critical';
-      const expectedLCCA = 'playing.healthSystem';
-
-      // Act
-      const result = stateChart.findLCCA(sourcePath, targetPath);
-
-      // Assert
-      expect(result).toBe(expectedLCCA);
-    });
-
-    it('should find LCCA for states across different subsystems', () => {
-      // Arrange
-      const sourcePath = 'playing.healthSystem.healthy';
-      const targetPath = 'playing.scoreSystem.scoring';
-      const expectedLCCA = 'playing';
-
-      // Act
-      const result = stateChart.findLCCA(sourcePath, targetPath);
-
-      // Assert
-      expect(result).toBe(expectedLCCA);
-    });
-
-    it('should find LCCA for transition to top level', () => {
-      // Arrange
-      const sourcePath = 'playing.healthSystem.healthy';
-      const targetPath = 'gameOver';
-      const expectedLCCA = '';
-
-      // Act
-      const result = stateChart.findLCCA(sourcePath, targetPath);
-
-      // Assert
-      expect(result).toBe(expectedLCCA);
-    });
-
-    it('should handle root level transitions', () => {
-      // Arrange
-      const sourcePath = 'gameStart';
-      const targetPath = 'gameOver';
-      const expectedLCCA = '';
-
-      // Act
-      const result = stateChart.findLCCA(sourcePath, targetPath);
-
-      // Assert
-      expect(result).toBe(expectedLCCA);
-    });
-
-    it('should handle single-level paths', () => {
-      // Arrange
-      const sourcePath = 'playing';
-      const targetPath = 'gameOver';
-      const expectedLCCA = '';
-
-      // Act
-      const result = stateChart.findLCCA(sourcePath, targetPath);
-
-      // Assert
-      expect(result).toBe(expectedLCCA);
-    });
-
-    it('should handle identical source and target paths', () => {
-      // Arrange
-      const sourcePath = 'playing.healthSystem.healthy';
-      const targetPath = 'playing.healthSystem.healthy';
-      const expectedLCCA = 'playing.healthSystem.healthy';
-
-      // Act
-      const result = stateChart.findLCCA(sourcePath, targetPath);
-
-      // Assert
-      expect(result).toBe(expectedLCCA);
-    });
-
-    it('should handle deep nested paths with different depths', () => {
-      // Arrange
-      const sourcePath = 'playing.healthSystem.processingDamage.subState';
-      const targetPath = 'playing.healthSystem.critical';
-      const expectedLCCA = 'playing.healthSystem';
-
-      // Act
-      const result = stateChart.findLCCA(sourcePath, targetPath);
-
-      // Assert
-      expect(result).toBe(expectedLCCA);
-    });
-
-    it('should handle paths where one is ancestor of another', () => {
-      // Arrange
-      const sourcePath = 'playing.healthSystem';
-      const targetPath = 'playing.healthSystem.healthy';
-      const expectedLCCA = 'playing.healthSystem';
-
-      // Act
-      const result = stateChart.findLCCA(sourcePath, targetPath);
-
-      // Assert
-      expect(result).toBe(expectedLCCA);
-    });
-
-    it('should handle complex parallel system transitions', () => {
-      // Arrange
-      const sourcePath = 'playing.healthSystem.processingDamage';
-      const targetPath = 'playing.scoreSystem.addingPoints';
-      const expectedLCCA = 'playing';
-
-      // Act
-      const result = stateChart.findLCCA(sourcePath, targetPath);
-
-      // Assert
-      expect(result).toBe(expectedLCCA);
-    });
-
-    it('should handle transitions within score system', () => {
-      // Arrange
-      const sourcePath = 'playing.scoreSystem.scoring';
-      const targetPath = 'playing.scoreSystem.addingPoints';
-      const expectedLCCA = 'playing.scoreSystem';
-
-      // Act
-      const result = stateChart.findLCCA(sourcePath, targetPath);
-
-      // Assert
-      expect(result).toBe(expectedLCCA);
-    });
-
-    it('should handle empty string paths correctly', () => {
-      // Arrange
-      const sourcePath = '';
-      const targetPath = 'gameStart';
-      const expectedLCCA = '';
-
-      // Act
-      const result = stateChart.findLCCA(sourcePath, targetPath);
-
-      // Assert
-      expect(result).toBe(expectedLCCA);
-    });
-
-    it('should handle reverse transition (target to source)', () => {
-      // Arrange
-      const sourcePath = 'playing.scoreSystem.scoring';
-      const targetPath = 'playing.healthSystem.healthy';
-      const expectedLCCA = 'playing';
-
-      // Act
-      const result = stateChart.findLCCA(sourcePath, targetPath);
-
-      // Assert
-      expect(result).toBe(expectedLCCA);
-    });
-  });
-
-  describe('computeExitSet', () => {
-    let stateChart: StateChart;
-
-    beforeEach(() => {
-      stateChart = new StateChart('gameStart', new Map());
-    });
-
-    it('should compute exit set for same-parent transition', () => {
-      // Arrange
-      const sourcePath = 'playing.healthSystem.healthy';
-      const targetPath = 'playing.healthSystem.critical';
-      const mockActiveStateChain: MockActiveStateEntry[] = [
-        ['playing', {}],
-        ['playing.healthSystem', {}],
-        ['playing.healthSystem.healthy', {}],
-        ['playing.scoreSystem', {}],
-        ['playing.scoreSystem.scoring', {}]
-      ];
-      (stateChart as unknown as { activeStateChain: MockActiveStateEntry[] }).activeStateChain = mockActiveStateChain;
-
-      // Act
-      const result = stateChart.computeExitSet(sourcePath, targetPath);
-
-      // Assert
-      expect(result).toEqual(['playing.healthSystem.healthy']);
-    });
-
-    it('should compute exit set for cross-subsystem transition', () => {
-      // Arrange
-      const sourcePath = 'playing.healthSystem.healthy';
-      const targetPath = 'playing.scoreSystem.addingPoints';
-      const mockActiveStateChain: MockActiveStateEntry[] = [
-        ['playing', {}],
-        ['playing.healthSystem', {}],
-        ['playing.healthSystem.healthy', {}],
-        ['playing.scoreSystem', {}],
-        ['playing.scoreSystem.scoring', {}]
-      ];
-      (stateChart as unknown as { activeStateChain: MockActiveStateEntry[] }).activeStateChain = mockActiveStateChain;
-
-      // Act
-      const result = stateChart.computeExitSet(sourcePath, targetPath);
-
-      // Assert
-      expect(result).toEqual([
-        'playing.healthSystem.healthy',
-        'playing.scoreSystem.scoring',
-        'playing.healthSystem'
-      ]);
-    });
-
-    it('should compute exit set for transition to top level', () => {
-      // Arrange
-      const sourcePath = 'playing.healthSystem.healthy';
-      const targetPath = 'gameOver';
-      const mockActiveStateChain: MockActiveStateEntry[] = [
-        ['playing', {}],
-        ['playing.healthSystem', {}],
-        ['playing.healthSystem.healthy', {}],
-        ['playing.scoreSystem', {}],
-        ['playing.scoreSystem.scoring', {}]
-      ];
-      (stateChart as unknown as { activeStateChain: MockActiveStateEntry[] }).activeStateChain = mockActiveStateChain;
-
-      // Act
-      const result = stateChart.computeExitSet(sourcePath, targetPath);
-
-      // Assert
-      expect(result).toEqual([
-        'playing.healthSystem.healthy',
-        'playing.scoreSystem.scoring',
-        'playing.healthSystem',
-        'playing.scoreSystem',
-        'playing'
-      ]);
-    });
-
-    it('should return empty array when no states need to exit', () => {
-      // Arrange
-      const sourcePath = 'playing.healthSystem.healthy';
-      const targetPath = 'playing.healthSystem.healthy'; // Same state
-      const mockActiveStateChain: MockActiveStateEntry[] = [
-        ['playing', {}],
-        ['playing.healthSystem', {}],
-        ['playing.healthSystem.healthy', {}]
-      ];
-      (stateChart as unknown as { activeStateChain: MockActiveStateEntry[] }).activeStateChain = mockActiveStateChain;
-
-      // Act
-      const result = stateChart.computeExitSet(sourcePath, targetPath);
-
-      // Assert
-      expect(result).toEqual([]);
-    });
-
-    it('should sort exit states in proper order (deepest first)', () => {
-      // Arrange
-      const sourcePath = 'playing.healthSystem.healthy';
-      const targetPath = 'gameStart';
-      const mockActiveStateChain: MockActiveStateEntry[] = [
-        ['playing', {}],
-        ['playing.healthSystem', {}],
-        ['playing.healthSystem.healthy', {}],
-        ['playing.healthSystem.processingDamage', {}],
-        ['playing.scoreSystem', {}]
-      ];
-      (stateChart as unknown as { activeStateChain: MockActiveStateEntry[] }).activeStateChain = mockActiveStateChain;
-
-      // Act
-      const result = stateChart.computeExitSet(sourcePath, targetPath);
-
-      // Assert
-      // Verify deepest states come first (depth 3, then depth 2, then depth 1)
-      const depth3States = result.filter(path => path.split('.').length === 3);
-      const depth2States = result.filter(path => path.split('.').length === 2);
-      const depth1States = result.filter(path => path.split('.').length === 1);
-
-      expect(depth3States.length).toBe(2); // healthy and processingDamage
-      expect(depth2States.length).toBe(2); // healthSystem and scoreSystem
-      expect(depth1States.length).toBe(1); // playing
-
-      // Verify order: all depth 3 first, then depth 2, then depth 1
-      expect(result.slice(0, 2).every(path => path.split('.').length === 3)).toBe(true);
-      expect(result.slice(2, 4).every(path => path.split('.').length === 2)).toBe(true);
-      expect(result.slice(4, 5).every(path => path.split('.').length === 1)).toBe(true);
-    });
-
-    it('should handle parallel state exits', () => {
-      // Arrange
-      const sourcePath = 'playing.healthSystem.healthy';
-      const targetPath = 'playing.healthSystem.critical';
-      const mockActiveStateChain: MockActiveStateEntry[] = [
-        ['playing', {}],
-        ['playing.healthSystem', {}],
-        ['playing.healthSystem.healthy', {}],
-        ['playing.scoreSystem', {}],
-        ['playing.scoreSystem.scoring', {}]
-      ];
-      (stateChart as unknown as { activeStateChain: MockActiveStateEntry[] }).activeStateChain = mockActiveStateChain;
-
-      // Act
-      const result = stateChart.computeExitSet(sourcePath, targetPath);
-
-      // Assert
-      // Should only exit the source state, not the parallel scoreSystem
-      expect(result).toEqual(['playing.healthSystem.healthy']);
-      expect(result).not.toContain('playing.scoreSystem.scoring');
-      expect(result).not.toContain('playing.scoreSystem');
-    });
-
-    it('should exclude LCCA from exit set', () => {
-      // Arrange
-      const sourcePath = 'playing.healthSystem.healthy';
-      const targetPath = 'playing.healthSystem.critical';
-      const mockActiveStateChain: MockActiveStateEntry[] = [
-        ['playing', {}],
-        ['playing.healthSystem', {}],
-        ['playing.healthSystem.healthy', {}]
-      ];
-      (stateChart as unknown as { activeStateChain: MockActiveStateEntry[] }).activeStateChain = mockActiveStateChain;
-
-      // Act
-      const result = stateChart.computeExitSet(sourcePath, targetPath);
-
-      // Assert
-      // LCCA is 'playing.healthSystem', should not be in exit set
-      expect(result).not.toContain('playing.healthSystem');
-      expect(result).toEqual(['playing.healthSystem.healthy']);
-    });
-  });
 
   describe('computeEntrySet', () => {
     let stateChart: StateChart;
@@ -554,6 +223,65 @@ describe('StateChart', () => {
     it.todo('should handle deep nested state paths');
 
     it.todo('should be case sensitive');
+  });
+
+  describe('exitStates', () => {
+    let stateChart: StateChart;
+
+    beforeEach(() => {
+      stateChart = new StateChart('gameStart', new Map());
+    });
+
+    it('should exit states and call unmount handlers', () => {
+      // Arrange
+      // Create a real TransitionNode instance
+      const transition = new TransitionNode({
+        transition: {
+          target: 'playing.healthSystem.critical',
+          event: '', // eventless transition
+          content: '',
+          children: []
+        }
+      });
+
+      // Create a real atomic StateNode instance with custom unmount behavior
+      const healthyStateNode = new StateNode({
+        state: {
+          id: 'healthy',
+          content: '',
+          children: []
+        }
+      });
+
+      // Add the transition to the atomic state (this should now work with our fix)
+      healthyStateNode.children.push(transition);
+
+      // Spy on the unmount method to verify it's called and mock its return value
+      const unmountSpy = jest.spyOn(healthyStateNode, 'unmount').mockReturnValue({ exitData: 'test' });
+
+      // Set up active state chain with real StateNode instances
+      const activeStateChain: ActiveStateEntry[] = [
+        ['playing', new StateNode({ state: { id: 'playing', content: '', children: [] } })],
+        ['playing.healthSystem', new StateNode({ state: { id: 'healthSystem', content: '', children: [] } })],
+        ['playing.healthSystem.healthy', healthyStateNode]
+      ];
+      (stateChart as unknown as { activeStateChain: ActiveStateEntry[] }).activeStateChain = activeStateChain;
+
+      const initialState = { currentData: 'initial' };
+
+
+
+      // Act
+      const result = (stateChart as any).exitStates([transition], initialState);
+
+      // Assert
+      expect(unmountSpy).toHaveBeenCalledWith(initialState);
+      expect(result).toEqual({ currentData: 'initial', exitData: 'test' });
+
+      // Verify state was removed from active chain
+      const updatedActiveChain = (stateChart as unknown as { activeStateChain: ActiveStateEntry[] }).activeStateChain;
+      expect(updatedActiveChain.find(([path]) => path === 'playing.healthSystem.healthy')).toBeUndefined();
+    });
   });
 
   describe('Integration Tests', () => {

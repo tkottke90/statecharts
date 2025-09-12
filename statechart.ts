@@ -3,6 +3,7 @@ import SimpleXML from 'simple-xml-to-json';
 import { parse } from "./parser";
 import { BaseStateNode, MountResponse } from "./models/base-state";
 import { TransitionNode } from "./nodes";
+import { findLCCA, computeExitSet, buildEntryPath, type ActiveStateEntry } from './utils/transition-utils';
 
 type Tuple<T> = Array<[string, T]>;
 
@@ -39,7 +40,7 @@ export class StateChart {
     return nextState;
   }
 
-  async * macrostep(state: Record<string, never>) {
+  async macrostep(state: Record<string, never>) {
     // Initialize transaction list
     const transitions: TransitionNode[] = this.activeStateChain
       .map(([, node]) => node.getEventlessTransitions())
@@ -48,7 +49,10 @@ export class StateChart {
     let macrostepDone = false;
     while (!macrostepDone) {
       
+
       
+
+
       // When we reach this line the macrostep is done and we can return
       macrostepDone = true;
     }
@@ -58,125 +62,121 @@ export class StateChart {
     return state;
   }
 
-  async microstep(state: Record<string, never>, transitions: TransitionNode[]) {
+  async microstep(state: Record<string, unknown>, transitions: TransitionNode[]): Promise<Record<string, unknown>> {
+    let currentState = { ...state };
+
     // Exit states
-    this.exitStates(transitions);
+    currentState = this.exitStates(transitions, currentState);
 
     // Execute transition content
-    this.executeTransitionContent(transitions);
+    currentState = await this.executeTransitionContent(transitions, currentState);
 
     // Enter states
-    this.enterStates(transitions);
-  }
+    currentState = this.enterStates(transitions, currentState);
 
-  findLCCA(sourcePath: string, targetPath: string): string {
-    // Handle root level transitions
-    if (!sourcePath.includes('.') && !targetPath.includes('.')) {
-      return ""; // Both are top-level, LCCA is root
-    }
-
-    const sourceParts = sourcePath.split('.');
-    const targetParts = targetPath.split('.');
-
-    // Find common prefix
-    let commonDepth = 0;
-    const minLength = Math.min(sourceParts.length, targetParts.length);
-
-    for (let i = 0; i < minLength; i++) {
-      if (sourceParts[i] === targetParts[i]) {
-        commonDepth = i + 1;
-      } else {
-        break;
-      }
-    }
-
-    // Return the LCCA path
-    return sourceParts.slice(0, commonDepth).join('.');
-  }
-
-  /**
-   * Computes the set of states that need to be exited during a transition.
-   *
-   * According to SCXML specification, states are exited in document order (deepest first)
-   * and only states within the scope of the Least Common Compound Ancestor (LCCA) are
-   * considered for exit. States that are ancestors of the target are preserved.
-   *
-   * @param sourcePath - The path of the source state (e.g., "playing.healthSystem.healthy")
-   * @param targetPath - The path of the target state (e.g., "playing.scoreSystem.scoring")
-   * @returns Array of state paths to exit, sorted deepest-first for proper exit order
-   *
-   * @example
-   * ```typescript
-   * // Same-parent transition: healthy → critical
-   * computeExitSet("playing.healthSystem.healthy", "playing.healthSystem.critical")
-   * // Returns: ["playing.healthSystem.healthy"]
-   *
-   * // Cross-subsystem transition: health → score
-   * computeExitSet("playing.healthSystem.healthy", "playing.scoreSystem.scoring")
-   * // Returns: ["playing.healthSystem.healthy", "playing.scoreSystem.scoring", "playing.healthSystem"]
-   *
-   * // To top-level: playing → gameOver
-   * computeExitSet("playing.healthSystem.healthy", "gameOver")
-   * // Returns: ["playing.healthSystem.healthy", "playing.scoreSystem.scoring",
-   * //           "playing.healthSystem", "playing.scoreSystem", "playing"]
-   * ```
-   *
-   * @remarks
-   * - Uses path-based LCCA calculation for efficiency
-   * - Preserves parallel state regions that don't conflict with the transition
-   * - Excludes the LCCA itself from the exit set
-   * - Returns empty array for self-transitions or when no exits are needed
-   * - Maintains SCXML-compliant exit ordering (deepest states first)
-   */
-  computeExitSet(sourcePath: string, targetPath: string): string[] {
-    const lccaPath = this.findLCCA(sourcePath, targetPath);
-    const exitSet: string[] = [];
-
-    // Find all active states that are descendants of LCCA but not ancestors of target
-    for (const [activePath] of this.activeStateChain) {
-      if (activePath.startsWith(lccaPath) &&
-          activePath !== lccaPath &&
-          !targetPath.startsWith(activePath)) {
-        exitSet.push(activePath);
-      }
-    }
-
-    // Sort deepest first (for proper exit order)
-    return exitSet.sort((a, b) => b.split('.').length - a.split('.').length);
+    return currentState;
   }
 
   computeEntrySet(sourcePath: string, targetPath: string): string[] {
-    const lccaPath = this.findLCCA(sourcePath, targetPath);
-    const entrySet: string[] = [];
+    const lccaPath = findLCCA(sourcePath, targetPath);
 
-    // Build path from LCCA to target
-    const targetParts = targetPath.split('.');
-    const lccaParts = lccaPath ? lccaPath.split('.') : [];
-
-    for (let i = lccaParts.length; i <= targetParts.length; i++) {
-      const pathToEnter = targetParts.slice(0, i).join('.');
-      if (pathToEnter && !this.isActive(pathToEnter)) {
-        entrySet.push(pathToEnter);
-      }
-    }
-
-    return entrySet; // Already in entry order (shallowest first)
+    // Build entry path using utility function, then filter out already active states
+    const candidateEntryPaths = buildEntryPath(lccaPath, targetPath);
+    return candidateEntryPaths.filter((path: string) => !this.isActive(path));
   }
 
   private isActive(path: string): boolean {
     return this.activeStateChain.some(([activePath]) => activePath === path);
   }
 
-  private exitStates(transitions: any[]) {
-    // Implementation for exiting states
+  /**
+   * Computes the exit set for a collection of transitions.
+   *
+   * This method processes multiple transitions and computes the union of all
+   * states that need to be exited, handling parallel transitions correctly.
+   *
+   * @param transitions - Array of transitions to process
+   * @returns Array of state paths to exit, sorted deepest-first
+   */
+  private computeExitSetFromTransitions(transitions: TransitionNode[]): string[] {
+    const allExitStates = new Set<string>();
+
+    // For each transition, compute its exit set and add to the union
+    for (const transition of transitions) {
+      // Extract source path from transition - we need to find the source state
+      const sourceState = this.findSourceStateForTransition(transition);
+      if (sourceState && transition.target) {
+        // Convert activeStateChain to the format expected by the utility function
+        const activeStateEntries: ActiveStateEntry[] = this.activeStateChain.map(([path, node]) => [path, node]);
+        
+        // Compute exit set for this transition
+        const exitStates = computeExitSet(sourceState, transition.target, activeStateEntries);
+        exitStates.forEach(state => allExitStates.add(state));
+      }
+    }
+
+    // Convert to array and sort deepest first (already handled by computeExitSet)
+    const exitArray = Array.from(allExitStates);
+    return exitArray.sort((a, b) => b.split('.').length - a.split('.').length);
   }
 
-  private executeTransitionContent(transitions: any[]) {
+  /**
+   * Finds the source state path for a given transition by looking through
+   * the active state chain to find which state contains this transition.
+   *
+   * @param transition - The transition to find the source for
+   * @returns The path of the source state, or null if not found
+   */
+  private findSourceStateForTransition(transition: TransitionNode): string | null {
+    // Look through active state chain to find which state contains this transition
+    for (const [statePath, stateNode] of this.activeStateChain) {
+      // Check if this state node contains the transition
+      if (stateNode.getEventlessTransitions &&
+          stateNode.getEventlessTransitions().includes(transition)) {
+        return statePath;
+      }
+    }
+    return null;
+  }
+
+  private exitStates(transitions: TransitionNode[], state: Record<string, unknown>): Record<string, unknown> {
+    // Compute the complete exit set for all transitions
+    const statesToExit = this.computeExitSetFromTransitions(transitions);
+
+    let currentState = { ...state };
+
+    // Sort states in exit order (deepest first) - already handled by computeExitSet
+    // Execute onexit handlers and remove from active configuration
+    for (const statePath of statesToExit) {
+      // Find the state node in our active state chain
+      const stateEntry = this.activeStateChain.find(([path]) => path === statePath);
+
+      if (stateEntry) {
+        const [, stateNode] = stateEntry;
+
+        // Execute onexit handler by calling unmount method
+        if (typeof stateNode.unmount === 'function') {
+          currentState = { ...currentState, ...stateNode.unmount(currentState) };
+        }
+
+        // Remove state from active configuration
+        this.activeStateChain = this.activeStateChain.filter(([path]) => path !== statePath);
+      }
+    }
+
+    return currentState;
+  }
+
+  private async executeTransitionContent(transitions: TransitionNode[], state: Record<string, unknown>): Promise<Record<string, unknown>> {
     // Implementation for executing transition content
+    // For now, just return the state unchanged
+    return state;
   }
 
-  private enterStates(transitions: any[]) {
+  private enterStates(transitions: TransitionNode[], state: Record<string, unknown>): Record<string, unknown> {
     // Implementation for entering states
+    // For now, just return the state unchanged
+    return state;
   }
 
   async run(input: Record<string, never>, options?: StateChartOptions) {

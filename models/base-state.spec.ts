@@ -233,17 +233,128 @@ describe('BaseStateNode', () => {
   });
 
   describe('utility methods', () => {
-    describe('#getTransitions', () => {
-      it.skip('should return empty array for atomic states', () => {
-        // Test atomic state transition behavior
+    describe('#getEventlessTransitions', () => {
+      it('should return eventless transitions for atomic states', () => {
+        // Arrange
+        const eventlessTransition = new TransitionNode({
+          transition: { event: '', target: 'target', content: '', children: [] }
+        });
+        const eventTransition = new TransitionNode({
+          transition: { event: 'click', target: 'target', content: '', children: [] }
+        });
+
+        const atomicState = new (class extends BaseStateNode {
+          constructor() {
+            super({ content: '', children: [eventlessTransition, eventTransition] });
+            // @ts-expect-error - Setting readonly property for testing
+            this.id = 'atomicState';
+          }
+        })();
+
+        // Mock getChildrenOfType to return both transitions
+        jest.spyOn(atomicState, 'getChildrenOfType').mockReturnValue([eventlessTransition, eventTransition]);
+
+        // Act
+        const result = atomicState.getEventlessTransitions();
+
+        // Assert
+        expect(result).toEqual([eventlessTransition]);
+        expect(result).toHaveLength(1);
+        expect(result[0]?.isEventLess).toBe(true);
       });
 
-      it.skip('should return all TransitionNode children for compound states', () => {
-        // Test transition collection
+      it('should return eventless transitions for compound states', () => {
+        // Arrange
+        const eventlessTransition = new TransitionNode({
+          transition: { event: '', target: 'target', content: '', children: [] }
+        });
+        const eventTransition = new TransitionNode({
+          transition: { event: 'click', target: 'target', content: '', children: [] }
+        });
+        const childState = new (class extends BaseStateNode {
+          constructor() {
+            super({ content: '', children: [] });
+            // @ts-expect-error - Setting readonly property for testing
+            this.id = 'childState';
+          }
+        })();
+
+        const compoundState = new (class extends BaseStateNode {
+          constructor() {
+            super({ content: '', children: [eventlessTransition, eventTransition, childState] });
+            // @ts-expect-error - Setting readonly property for testing
+            this.id = 'compoundState';
+          }
+        })();
+
+        // Mock getChildrenOfType to return transitions when called with TransitionNode
+        jest.spyOn(compoundState, 'getChildrenOfType').mockImplementation((type) => {
+          if (type === TransitionNode) {
+            return [eventlessTransition, eventTransition];
+          }
+          return [childState]; // For BaseStateNode type
+        });
+
+        // Act
+        const result = compoundState.getEventlessTransitions();
+
+        // Assert
+        expect(result).toEqual([eventlessTransition]);
+        expect(result).toHaveLength(1);
+        expect(result[0]?.isEventLess).toBe(true);
       });
 
-      it.skip('should filter out non-TransitionNode children', () => {
-        // Test type filtering
+      it('should return empty array when no eventless transitions exist', () => {
+        // Arrange
+        const eventTransition = new TransitionNode({
+          transition: { event: 'click', target: 'target', content: '', children: [] }
+        });
+
+        const atomicState = new (class extends BaseStateNode {
+          constructor() {
+            super({ content: '', children: [eventTransition] });
+            // @ts-expect-error - Setting readonly property for testing
+            this.id = 'atomicState';
+          }
+        })();
+
+        // Mock getChildrenOfType to return only event-based transition
+        jest.spyOn(atomicState, 'getChildrenOfType').mockReturnValue([eventTransition]);
+
+        // Act
+        const result = atomicState.getEventlessTransitions();
+
+        // Assert
+        expect(result).toEqual([]);
+        expect(result).toHaveLength(0);
+      });
+
+      it('should filter out non-TransitionNode children', () => {
+        // Arrange
+        const eventlessTransition = new TransitionNode({
+          transition: { event: '', target: 'target', content: '', children: [] }
+        });
+        const finalNode = new FinalNode({
+          final: { id: 'final', content: '', children: [] }
+        });
+
+        const stateWithMixedChildren = new (class extends BaseStateNode {
+          constructor() {
+            super({ content: '', children: [eventlessTransition, finalNode] });
+            // @ts-expect-error - Setting readonly property for testing
+            this.id = 'stateWithMixedChildren';
+          }
+        })();
+
+        // Mock getChildrenOfType to return only TransitionNode children
+        jest.spyOn(stateWithMixedChildren, 'getChildrenOfType').mockReturnValue([eventlessTransition]);
+
+        // Act
+        const result = stateWithMixedChildren.getEventlessTransitions();
+
+        // Assert
+        expect(result).toEqual([eventlessTransition]);
+        expect(stateWithMixedChildren.getChildrenOfType).toHaveBeenCalledWith(TransitionNode);
       });
     });
 

@@ -4,6 +4,7 @@ import { parse } from "./parser";
 import { BaseStateNode, MountResponse } from "./models/base-state";
 import { TransitionNode } from "./nodes";
 import { findLCCA, computeExitSet, buildEntryPath, type ActiveStateEntry } from './utils/transition-utils';
+import { BaseExecutableNode } from "./models/base-executable";
 
 type Tuple<T> = Array<[string, T]>;
 
@@ -167,10 +168,70 @@ export class StateChart {
     return currentState;
   }
 
+  /**
+   * Executes the executable content within transitions according to SCXML specification.
+   * This includes processing elements like <assign>, <script>, <log>, <send>, etc.
+   *
+   * @param transitions - Array of transitions to execute content for
+   * @param state - Current state of the state machine
+   * @returns Promise resolving to the updated state after executing all transition content
+   */
   private async executeTransitionContent(transitions: TransitionNode[], state: Record<string, unknown>): Promise<Record<string, unknown>> {
-    // Implementation for executing transition content
-    // For now, just return the state unchanged
-    return state;
+    let currentState = { ...state };
+
+    // Execute transitions in document order
+    for (const transition of transitions) {
+      // Execute all executable content within this transition
+      currentState = await this.executeTransitionExecutableContent(transition, currentState);
+    }
+
+    return currentState;
+  }
+
+  /**
+   * Executes all executable content within a single transition.
+   * Processes child elements that implement executable content semantics.
+   *
+   * @param transition - The transition containing executable content
+   * @param state - Current state of the state machine
+   * @returns Promise resolving to the updated state after executing transition content
+   */
+  private async executeTransitionExecutableContent(transition: TransitionNode, state: Record<string, unknown>): Promise<Record<string, unknown>> {
+    let currentState = { ...state };
+
+    // Execute all executable content children in document order
+    for (const child of transition.children) {
+      if (this.isExecutableContent(child)) {
+        try {
+          // Execute the executable content and update state
+          const result = await child.run(currentState as Record<string, never>);
+          currentState = { ...currentState, ...result };
+        } catch (error) {
+          // Handle execution errors according to SCXML error handling
+          console.error(`Error executing transition content in ${transition.target}:`, error);
+          // Continue execution - SCXML is resilient to individual content failures
+        }
+      }
+    }
+
+    return currentState;
+  }
+
+  /**
+   * Determines if a node represents executable content that should be executed
+   * during transition processing.
+   *
+   * @param node - The node to check
+   * @returns True if the node is executable content, false otherwise
+   */
+  private isExecutableContent(node: BaseNode): boolean {
+    // Check if the node has a run method (indicating it's executable)
+    // ignore node types where run is not a function
+    if (typeof node.run !== 'function') {
+      return false;
+    }
+
+    return node instanceof BaseExecutableNode;
   }
 
   private enterStates(transitions: TransitionNode[], state: Record<string, unknown>): Record<string, unknown> {

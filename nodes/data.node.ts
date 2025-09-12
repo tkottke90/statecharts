@@ -20,6 +20,7 @@ export class DataNode extends BaseNode implements z.infer<typeof DataNodeAttr> {
   type: string;
   src: string | undefined;
 
+  static label = 'data';
   static schema = DataNodeAttr;
 
   constructor({ data }: DataNodeType) {
@@ -29,16 +30,16 @@ export class DataNode extends BaseNode implements z.infer<typeof DataNodeAttr> {
     this.src = data.src ?? undefined;
   }
 
-  async run(state: Record<string, never>){
+  mount(state: Record<string, never>){
     return {
       ...state,
       [this.id]: this.content
-    } as unknown as Promise<Record<string, never>>;
+    } as unknown as Record<string, never>;
   }
 
   static createFromJSON(jsonInput: Record<string, unknown>): CreateFromJsonResponse<DataNode> {
     const { success, data, error } = this.schema.safeParse(
-      this.getAttributes('data', jsonInput)
+      this.getAttributes(this.label, jsonInput)
     );
 
     if (!success) {

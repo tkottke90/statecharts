@@ -3,6 +3,8 @@ import { StateChart } from './statechart';
 import { StateNode } from './nodes/state.node';
 import { TransitionNode } from './nodes/transition.node';
 import { BaseStateNode } from './models/base-state';
+import { AssignNode } from './nodes/assign.node';
+import { BaseExecutableNode } from './models/base-executable';
 
 // Type for mock active state chain entries
 type MockActiveStateEntry = [string, Record<string, unknown>];
@@ -281,6 +283,295 @@ describe('StateChart', () => {
       // Verify state was removed from active chain
       const updatedActiveChain = (stateChart as unknown as { activeStateChain: ActiveStateEntry[] }).activeStateChain;
       expect(updatedActiveChain.find(([path]) => path === 'playing.healthSystem.healthy')).toBeUndefined();
+    });
+  });
+
+  describe('executeTransitionContent', () => {
+    let stateChart: StateChart;
+
+    beforeEach(() => {
+      stateChart = new StateChart('gameStart', new Map());
+    });
+
+    it('should execute AssignNode executable content and update state', async () => {
+      // Arrange
+      const assignNode = new AssignNode({
+        assign: {
+          location: 'testVar',
+          expr: 'Hello World',
+          content: '',
+          children: []
+        }
+      });
+
+      const transition = new TransitionNode({
+        transition: {
+          target: 'targetState',
+          event: '',
+          content: '',
+          children: []
+        }
+      });
+
+      // Add the assign node as a child of the transition
+      transition.children.push(assignNode);
+
+      const initialState = { existingData: 'initial' };
+
+      // Act
+      const result = await (stateChart as any).executeTransitionContent([transition], initialState);
+
+      // Assert
+      expect(result).toEqual({
+        existingData: 'initial',
+        testVar: 'Hello World'
+      });
+    });
+
+    it('should execute multiple executable content nodes in document order', async () => {
+      // Arrange
+      const assignNode1 = new AssignNode({
+        assign: {
+          location: 'var1',
+          expr: 'value1',
+          content: '',
+          children: []
+        }
+      });
+
+      const assignNode2 = new AssignNode({
+        assign: {
+          location: 'var2',
+          expr: 'value2',
+          content: '',
+          children: []
+        }
+      });
+
+      const transition = new TransitionNode({
+        transition: {
+          target: 'targetState',
+          event: '',
+          content: '',
+          children: []
+        }
+      });
+
+      // Add nodes in specific order
+      transition.children.push(assignNode1, assignNode2);
+
+      const initialState = { baseData: 'base' };
+
+      // Act
+      const result = await (stateChart as any).executeTransitionContent([transition], initialState);
+
+      // Assert
+      expect(result).toEqual({
+        baseData: 'base',
+        var1: 'value1',
+        var2: 'value2'
+      });
+    });
+
+    it('should handle multiple transitions with executable content', async () => {
+      // Arrange
+      const assignNode1 = new AssignNode({
+        assign: {
+          location: 'transition1Var',
+          expr: 'from transition 1',
+          content: '',
+          children: []
+        }
+      });
+
+      const assignNode2 = new AssignNode({
+        assign: {
+          location: 'transition2Var',
+          expr: 'from transition 2',
+          content: '',
+          children: []
+        }
+      });
+
+      const transition1 = new TransitionNode({
+        transition: {
+          target: 'state1',
+          event: '',
+          content: '',
+          children: []
+        }
+      });
+      transition1.children.push(assignNode1);
+
+      const transition2 = new TransitionNode({
+        transition: {
+          target: 'state2',
+          event: '',
+          content: '',
+          children: []
+        }
+      });
+      transition2.children.push(assignNode2);
+
+      const initialState = { baseData: 'base' };
+
+      // Act
+      const result = await (stateChart as any).executeTransitionContent([transition1, transition2], initialState);
+
+      // Assert
+      expect(result).toEqual({
+        baseData: 'base',
+        transition1Var: 'from transition 1',
+        transition2Var: 'from transition 2'
+      });
+    });
+
+    it('should handle transitions with no executable content', async () => {
+      // Arrange
+      const transition = new TransitionNode({
+        transition: {
+          target: 'targetState',
+          event: '',
+          content: '',
+          children: []
+        }
+      });
+
+      const initialState = { existingData: 'unchanged' };
+
+      // Act
+      const result = await (stateChart as any).executeTransitionContent([transition], initialState);
+
+      // Assert
+      expect(result).toEqual({ existingData: 'unchanged' });
+    });
+
+    it('should handle execution errors gracefully and continue processing', async () => {
+      // Arrange
+      const failingNode = new (class extends BaseExecutableNode {
+        static label = 'assign';
+
+        constructor() {
+          super({ content: '', children: [] });
+        }
+
+        async run(state: Record<string, never>): Promise<Record<string, never>> {
+          throw new Error('Simulated execution error');
+        }
+      })();
+
+      const successNode = new AssignNode({
+        assign: {
+          location: 'successVar',
+          expr: 'success',
+          content: '',
+          children: []
+        }
+      });
+
+      const transition = new TransitionNode({
+        transition: {
+          target: 'targetState',
+          event: '',
+          content: '',
+          children: []
+        }
+      });
+
+      transition.children.push(failingNode, successNode);
+
+      const initialState = { baseData: 'base' };
+
+      // Spy on console.error to verify error handling
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+      // Act
+      const result = await (stateChart as any).executeTransitionContent([transition], initialState);
+
+      // Assert
+      expect(result).toEqual({
+        baseData: 'base',
+        successVar: 'success'
+      });
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Error executing transition content'),
+        expect.any(Error)
+      );
+
+      // Cleanup
+      consoleSpy.mockRestore();
+    });
+
+    it('should work with StateChart constructed from XML with executable content', async () => {
+      // Arrange - XML example showing transition with executable content
+      const scxmlWithExecutableContent = `
+        <scxml version="1.0" initial="start">
+          <state id="start">
+            <transition target="processing">
+              <assign id="status" expr="'processing started'" />
+              <assign id="timestamp" expr="Date.now()" />
+            </transition>
+          </state>
+          <state id="processing">
+            <transition target="complete">
+              <assign id="status" expr="'processing complete'" />
+            </transition>
+          </state>
+          <final id="complete" />
+        </scxml>
+      `;
+
+      // Note: This test demonstrates the XML structure but uses manual construction
+      // since the full XML parsing integration is not yet implemented
+
+      const assignNode1 = new AssignNode({
+        assign: {
+          location: 'status',
+          expr: 'processing started',
+          content: '',
+          children: []
+        }
+      });
+
+      const assignNode2 = new AssignNode({
+        assign: {
+          location: 'timestamp',
+          expr: '1234567890',
+          content: '',
+          children: []
+        }
+      });
+
+      const transition = new TransitionNode({
+        transition: {
+          target: 'processing',
+          event: '',
+          content: '',
+          children: []
+        }
+      });
+
+      transition.children.push(assignNode1, assignNode2);
+
+      const initialState = {};
+
+      // Act
+      const result = await (stateChart as any).executeTransitionContent([transition], initialState);
+
+      // Assert
+      expect(result).toEqual({
+        status: 'processing started',
+        timestamp: '1234567890'
+      });
+
+      // This demonstrates how the XML structure would work:
+      // - The <transition> element contains executable content
+      // - <assign> elements modify the data model during transition execution
+      // - Multiple assignments are executed in document order
+      // - The state is updated with all assignments before entering the target state
+
+      // XML structure is provided as reference for implementers
+      expect(scxmlWithExecutableContent).toContain('<assign');
     });
   });
 

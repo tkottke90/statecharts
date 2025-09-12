@@ -45,8 +45,8 @@ describe('Node: <data>', () => {
   });
 
 
-  describe('#run', () => {
-    it('should add the data to the state', async () => {
+  describe('#mount', () => {
+    it('should add the data to the state', () => {
       const { node } = DataNode.createFromJSON({
         data: {
           id: 'test',
@@ -56,7 +56,7 @@ describe('Node: <data>', () => {
         }
       });
 
-      const state = await node!.run({});
+      const state = node!.mount({});
 
       expect(state).toEqual({
         test: 'test'

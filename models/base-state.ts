@@ -19,7 +19,7 @@ export interface MountResponse {
 }
 
 export class BaseStateNode extends BaseNode {
-  readonly allowChildren = true;
+  allowChildren = true;
   readonly id: string = '';
   readonly initial: string | undefined;
 

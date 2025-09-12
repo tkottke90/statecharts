@@ -19,11 +19,13 @@ export const BaseTransitionAttr = BaseNodeAttr.extend({
 })
 
 export class BaseNode implements z.infer<typeof BaseNodeAttr> {
+  isExecutable = false;
   allowChildren: boolean = false;
+
   children: BaseNode[] = [];
   content: string;
-  parent?: BaseNode;
 
+  static label = 'base';
   static schema = BaseNodeAttr;
 
   constructor({ content, children }: z.infer<typeof BaseNodeAttr>) {

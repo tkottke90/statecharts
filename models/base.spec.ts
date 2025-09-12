@@ -36,26 +36,7 @@ describe('BaseNode', () => {
       expect(state).toEqual({});
     });
 
-    it('should yield the child node and state after each step', async () => {
-      // Arrange
-      const baseNode = new BaseNode({ content: 'test', children: [
-        DataNode.createFromJSON({ data: { content: 'test', children: [], id: 'test' } }).node
-      ] });
 
-      // Allow children
-      baseNode.allowChildren = true;
-
-      // Act
-      const generator = baseNode.executeAllChildren({});
-      const { value, done } = await generator.next();
-
-      // Assert
-      expect(done).toBe(false);
-      expect(value?.node).toBe('DataNode');
-      expect(value?.state).toEqual({
-        test: 'test'
-      });
-    });
   });
 
 

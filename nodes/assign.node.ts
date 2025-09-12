@@ -1,0 +1,78 @@
+import z from 'zod';
+import { BaseExecutableNode } from '../models/base-executable';
+import * as _ from 'lodash';
+
+const AssignNodeAttr = BaseExecutableNode.schema.extend({
+  location: z.string().min(1), // Required location expression
+  expr: z.string().optional()  // Optional expression (mutually exclusive with content)
+}).refine(
+  (data) => {
+    // Must have either expr OR content, but not both
+    const hasExpr = data.expr && data.expr.length > 0;
+    const hasContent = data.children && data.children.length > 0;
+    return hasExpr !== hasContent; // XOR - exactly one must be true
+  },
+  { message: "Must specify either 'expr' attribute or child content, but not both" }
+);
+
+export type AssignNodeType = {
+  assign: z.infer<typeof AssignNodeAttr>;
+}
+
+export class AssignNode extends BaseExecutableNode {
+  readonly location: string;
+  readonly expr: string | undefined;
+
+  static label = 'assign';
+  static schema = AssignNodeAttr;
+
+  constructor({ assign }: AssignNodeType) {
+    super(assign);
+
+    this.location = assign.location;
+    this.expr = assign.expr;
+  }
+
+  async run(state: Record<string, never>) {
+    try {
+      if (this.expr) {
+        // Evaluate expression to get value
+  
+        // TODO: Create Expression Evaluator
+        // const value = this.evaluateExpression(this.expr, state);
+        
+        return this.assignToLocation(state, this.location, this.expr);
+      } else {
+        // Use child content as value
+        const value = this.children.map(child => child.content).join('');
+        return this.assignToLocation(state, this.location, value);
+      }
+    } catch (err) {
+      const error = new Error('Assignment Failed: ' + (err as Error).message);
+      error.name = 'AssignNode.Error';
+
+      // Per SCXML spec: place error.execution in internal event queue
+      throw error;
+    }
+  }
+
+  private assignToLocation(state: Record<string, never>, location: string, value: unknown) {
+    return _.set(state, location, value);
+  }
+
+  static createFromJSON(jsonInput: Record<string, unknown>) {
+    const { success, data, error } = this.schema.safeParse(
+      this.getAttributes(this.label, jsonInput)
+    );
+
+    if (!success) {
+      return { success: false, error, node: undefined };
+    }
+    
+    return {
+      success: true,
+      node: new AssignNode({ assign: data }),
+      error: undefined
+    }
+  }
+}

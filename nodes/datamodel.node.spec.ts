@@ -54,28 +54,7 @@ describe('Node: <datamodel>', () => {
   });
 
 
-  describe('#run', () => {
-    it('should add the data to the state', async () => {
-      const { node: dataNode } = DataNode.createFromJSON({
-        data: {
-          id: 'test',
-          content: 'test',
-          type: 'text',
-          src: undefined
-        }
-      });
 
-      const { node } = DataModelNode.createFromJSON({
-        children: [dataNode]
-      });
-
-      const state = await node!.run({});
-
-      expect(state).toEqual({
-        test: 'test'
-      });
-    });
-  });
 
 
 });

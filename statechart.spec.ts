@@ -286,6 +286,311 @@ describe('StateChart', () => {
     });
   });
 
+  describe('enterStates', () => {
+    let stateChart: StateChart;
+
+    beforeEach(() => {
+      stateChart = new StateChart('gameStart', new Map());
+    });
+
+    it('should enter states and call mount handlers', () => {
+      // Arrange
+      // Create a real TransitionNode instance
+      const transition = new TransitionNode({
+        transition: {
+          target: 'playing.healthSystem.healthy',
+          event: '', // eventless transition
+          content: '',
+          children: []
+        }
+      });
+
+      // Create real StateNode instances with custom mount behavior
+      const playingStateNode = new StateNode({
+        state: {
+          id: 'playing',
+          content: '',
+          children: []
+        }
+      });
+
+      const healthSystemStateNode = new StateNode({
+        state: {
+          id: 'healthSystem',
+          content: '',
+          children: []
+        }
+      });
+
+      const healthyStateNode = new StateNode({
+        state: {
+          id: 'healthy',
+          content: '',
+          children: []
+        }
+      });
+
+      // Spy on the mount methods to verify they're called and mock their return values
+      const playingMountSpy = jest.spyOn(playingStateNode, 'mount').mockReturnValue({
+        node: playingStateNode,
+        state: { playingData: 'entered' }
+      });
+
+      const healthSystemMountSpy = jest.spyOn(healthSystemStateNode, 'mount').mockReturnValue({
+        node: healthSystemStateNode,
+        state: { healthSystemData: 'entered' }
+      });
+
+      const healthyMountSpy = jest.spyOn(healthyStateNode, 'mount').mockReturnValue({
+        node: healthyStateNode,
+        state: { healthyData: 'entered' }
+      });
+
+      // Set up states map
+      const statesMap = new Map([
+        ['playing', playingStateNode],
+        ['playing.healthSystem', healthSystemStateNode],
+        ['playing.healthSystem.healthy', healthyStateNode]
+      ]);
+      (stateChart as unknown as { states: Map<string, BaseStateNode> }).states = statesMap;
+
+      // Set up initial active state chain (empty for this test)
+      (stateChart as unknown as { activeStateChain: ActiveStateEntry[] }).activeStateChain = [];
+
+      const initialState = { currentData: 'initial' };
+
+      // Act
+      const result = (stateChart as any).enterStates([transition], initialState);
+
+      // Assert
+      expect(playingMountSpy).toHaveBeenCalledWith(initialState);
+      expect(healthSystemMountSpy).toHaveBeenCalled();
+      expect(healthyMountSpy).toHaveBeenCalled();
+
+      expect(result).toEqual({
+        currentData: 'initial',
+        playingData: 'entered',
+        healthSystemData: 'entered',
+        healthyData: 'entered'
+      });
+
+      // Verify states were added to active chain in correct order
+      const updatedActiveChain = (stateChart as unknown as { activeStateChain: ActiveStateEntry[] }).activeStateChain;
+      expect(updatedActiveChain).toHaveLength(3);
+
+      expect(updatedActiveChain[0][0]).toBe('playing');
+      expect(updatedActiveChain[1][0]).toBe('playing.healthSystem');
+      expect(updatedActiveChain[2][0]).toBe('playing.healthSystem.healthy');
+    });
+
+    it('should handle multiple transitions with different targets', () => {
+      // Arrange
+      const transition1 = new TransitionNode({
+        transition: {
+          target: 'playing.healthSystem.healthy',
+          event: '',
+          content: '',
+          children: []
+        }
+      });
+
+      const transition2 = new TransitionNode({
+        transition: {
+          target: 'playing.scoreSystem.scoring',
+          event: '',
+          content: '',
+          children: []
+        }
+      });
+
+      // Create StateNode instances
+      const playingStateNode = new StateNode({
+        state: { id: 'playing', content: '', children: [] }
+      });
+      const healthSystemStateNode = new StateNode({
+        state: { id: 'healthSystem', content: '', children: [] }
+      });
+      const healthyStateNode = new StateNode({
+        state: { id: 'healthy', content: '', children: [] }
+      });
+      const scoreSystemStateNode = new StateNode({
+        state: { id: 'scoreSystem', content: '', children: [] }
+      });
+      const scoringStateNode = new StateNode({
+        state: { id: 'scoring', content: '', children: [] }
+      });
+
+      // Mock mount methods
+      jest.spyOn(playingStateNode, 'mount').mockReturnValue({
+        node: playingStateNode,
+        state: { playing: true }
+      });
+      jest.spyOn(healthSystemStateNode, 'mount').mockReturnValue({
+        node: healthSystemStateNode,
+        state: { health: 100 }
+      });
+      jest.spyOn(healthyStateNode, 'mount').mockReturnValue({
+        node: healthyStateNode,
+        state: { status: 'healthy' }
+      });
+      jest.spyOn(scoreSystemStateNode, 'mount').mockReturnValue({
+        node: scoreSystemStateNode,
+        state: { score: 0 }
+      });
+      jest.spyOn(scoringStateNode, 'mount').mockReturnValue({
+        node: scoringStateNode,
+        state: { scoring: true }
+      });
+
+      // Set up states map
+      const statesMap = new Map([
+        ['playing', playingStateNode],
+        ['playing.healthSystem', healthSystemStateNode],
+        ['playing.healthSystem.healthy', healthyStateNode],
+        ['playing.scoreSystem', scoreSystemStateNode],
+        ['playing.scoreSystem.scoring', scoringStateNode]
+      ]);
+      (stateChart as unknown as { states: Map<string, BaseStateNode> }).states = statesMap;
+      (stateChart as unknown as { activeStateChain: ActiveStateEntry[] }).activeStateChain = [];
+
+      const initialState = { baseData: 'base' };
+
+      // Act
+      const result = (stateChart as any).enterStates([transition1, transition2], initialState);
+
+      // Assert
+      expect(result).toEqual({
+        baseData: 'base',
+        playing: true,
+        health: 100,
+        status: 'healthy',
+        score: 0,
+        scoring: true
+      });
+
+      // Verify all unique states were added to active chain
+      const updatedActiveChain = (stateChart as unknown as { activeStateChain: ActiveStateEntry[] }).activeStateChain;
+      const chainPaths = updatedActiveChain.map(([path]) => path);
+      expect(chainPaths).toContain('playing');
+      expect(chainPaths).toContain('playing.healthSystem');
+      expect(chainPaths).toContain('playing.healthSystem.healthy');
+      expect(chainPaths).toContain('playing.scoreSystem');
+      expect(chainPaths).toContain('playing.scoreSystem.scoring');
+    });
+
+    it('should handle transitions with no target gracefully', () => {
+      // Arrange
+      const transition = new TransitionNode({
+        transition: {
+          target: '', // No target
+          event: '',
+          content: '',
+          children: []
+        }
+      });
+
+      const initialState = { baseData: 'base' };
+
+      // Act
+      const result = (stateChart as any).enterStates([transition], initialState);
+
+      // Assert
+      expect(result).toEqual({ baseData: 'base' });
+
+      // Verify no states were added to active chain
+      const updatedActiveChain = (stateChart as unknown as { activeStateChain: ActiveStateEntry[] }).activeStateChain;
+      expect(updatedActiveChain).toHaveLength(0);
+    });
+
+    it('should handle states that do not exist in states map', () => {
+      // Arrange
+      const transition = new TransitionNode({
+        transition: {
+          target: 'nonexistent.state',
+          event: '',
+          content: '',
+          children: []
+        }
+      });
+
+      // Set up empty states map
+      (stateChart as unknown as { states: Map<string, BaseStateNode> }).states = new Map();
+      (stateChart as unknown as { activeStateChain: ActiveStateEntry[] }).activeStateChain = [];
+
+      const initialState = { baseData: 'base' };
+
+      // Act
+      const result = (stateChart as any).enterStates([transition], initialState);
+
+      // Assert
+      expect(result).toEqual({ baseData: 'base' });
+
+      // Verify no states were added to active chain
+      const updatedActiveChain = (stateChart as unknown as { activeStateChain: ActiveStateEntry[] }).activeStateChain;
+      expect(updatedActiveChain).toHaveLength(0);
+    });
+
+    it('should maintain proper entry order (shallowest first)', () => {
+      // Arrange
+      const transition = new TransitionNode({
+        transition: {
+          target: 'a.b.c.d',
+          event: '',
+          content: '',
+          children: []
+        }
+      });
+
+      // Create StateNode instances
+      const stateA = new StateNode({ state: { id: 'a', content: '', children: [] } });
+      const stateB = new StateNode({ state: { id: 'b', content: '', children: [] } });
+      const stateC = new StateNode({ state: { id: 'c', content: '', children: [] } });
+      const stateD = new StateNode({ state: { id: 'd', content: '', children: [] } });
+
+      // Track the order of mount calls
+      const mountOrder: string[] = [];
+      jest.spyOn(stateA, 'mount').mockImplementation(() => {
+        mountOrder.push('a');
+        return { node: stateA, state: { a: true } };
+      });
+      jest.spyOn(stateB, 'mount').mockImplementation(() => {
+        mountOrder.push('a.b');
+        return { node: stateB, state: { b: true } };
+      });
+      jest.spyOn(stateC, 'mount').mockImplementation(() => {
+        mountOrder.push('a.b.c');
+        return { node: stateC, state: { c: true } };
+      });
+      jest.spyOn(stateD, 'mount').mockImplementation(() => {
+        mountOrder.push('a.b.c.d');
+        return { node: stateD, state: { d: true } };
+      });
+
+      // Set up states map
+      const statesMap = new Map([
+        ['a', stateA],
+        ['a.b', stateB],
+        ['a.b.c', stateC],
+        ['a.b.c.d', stateD]
+      ]);
+      (stateChart as unknown as { states: Map<string, BaseStateNode> }).states = statesMap;
+      (stateChart as unknown as { activeStateChain: ActiveStateEntry[] }).activeStateChain = [];
+
+      const initialState = {};
+
+      // Act
+      (stateChart as any).enterStates([transition], initialState);
+
+      // Assert - verify mount order is shallowest first
+      expect(mountOrder).toEqual(['a', 'a.b', 'a.b.c', 'a.b.c.d']);
+
+      // Verify active chain order matches entry order
+      const updatedActiveChain = (stateChart as unknown as { activeStateChain: ActiveStateEntry[] }).activeStateChain;
+      const chainPaths = updatedActiveChain.map(([path]) => path);
+      expect(chainPaths).toEqual(['a', 'a.b', 'a.b.c', 'a.b.c.d']);
+    });
+  });
+
   describe('executeTransitionContent', () => {
     let stateChart: StateChart;
 
@@ -446,6 +751,7 @@ describe('StateChart', () => {
       expect(result).toEqual({ existingData: 'unchanged' });
     });
 
+    // TODO: Review this test when we have better error handling
     it('should handle execution errors gracefully and continue processing', async () => {
       // Arrange
       const failingNode = new (class extends BaseExecutableNode {
@@ -455,7 +761,7 @@ describe('StateChart', () => {
           super({ content: '', children: [] });
         }
 
-        async run(state: Record<string, never>): Promise<Record<string, never>> {
+        async run(): Promise<Record<string, never>> {
           throw new Error('Simulated execution error');
         }
       })();

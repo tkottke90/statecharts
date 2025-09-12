@@ -201,13 +201,15 @@ export class StateChart {
 
     // Execute all executable content children in document order
     for (const child of transition.children) {
-      if (this.isExecutableContent(child)) {
+      if (child.isExecutable) {
         try {
           // Execute the executable content and update state
           const result = await child.run(currentState as Record<string, never>);
           currentState = { ...currentState, ...result };
         } catch (error) {
           // Handle execution errors according to SCXML error handling
+
+          // TODO: Log this elsewhere
           console.error(`Error executing transition content in ${transition.target}:`, error);
           // Continue execution - SCXML is resilient to individual content failures
         }
@@ -218,26 +220,64 @@ export class StateChart {
   }
 
   /**
-   * Determines if a node represents executable content that should be executed
-   * during transition processing.
+   * Computes the entry set for a collection of transitions.
    *
-   * @param node - The node to check
-   * @returns True if the node is executable content, false otherwise
+   * This method processes multiple transitions and computes the union of all
+   * states that need to be entered, handling parallel transitions correctly.
+   *
+   * @param transitions - Array of transitions to process
+   * @returns Array of state paths to enter, sorted shallowest-first
    */
-  private isExecutableContent(node: BaseNode): boolean {
-    // Check if the node has a run method (indicating it's executable)
-    // ignore node types where run is not a function
-    if (typeof node.run !== 'function') {
-      return false;
+  private computeEntrySetFromTransitions(transitions: TransitionNode[]): string[] {
+    const allEntryStates = new Set<string>();
+
+    // For each transition, compute its entry set and add to the union
+    for (const transition of transitions) {
+      if (transition.target) {
+        // For entry, we need to build the path from root to target
+        // and filter out states that are already active
+        const targetParts = transition.target.split('.');
+
+        // Build all ancestor paths that need to be entered
+        for (let i = 1; i <= targetParts.length; i++) {
+          const pathToEnter = targetParts.slice(0, i).join('.');
+          if (!this.isActive(pathToEnter)) {
+            allEntryStates.add(pathToEnter);
+          }
+        }
+      }
     }
 
-    return node instanceof BaseExecutableNode;
+    // Convert to array and sort shallowest first (for proper entry order)
+    const entryArray = Array.from(allEntryStates);
+    return entryArray.sort((a, b) => a.split('.').length - b.split('.').length);
   }
 
   private enterStates(transitions: TransitionNode[], state: Record<string, unknown>): Record<string, unknown> {
-    // Implementation for entering states
-    // For now, just return the state unchanged
-    return state;
+    // Compute the complete entry set for all transitions
+    const statesToEnter = this.computeEntrySetFromTransitions(transitions);
+
+    let currentState = { ...state };
+
+    // Sort states in entry order (shallowest first) - already handled by computeEntrySetFromTransitions
+    // Execute onentry handlers and add to active configuration
+    for (const statePath of statesToEnter) {
+      // Find the state node in our states map
+      const stateNode = this.states.get(statePath);
+
+      if (stateNode) {
+        // Execute onentry handler by calling mount method
+        if (typeof stateNode.mount === 'function') {
+          const mountResponse = stateNode.mount(currentState);
+          currentState = { ...currentState, ...mountResponse.state };
+        }
+
+        // Add state to active configuration
+        this.activeStateChain.push([statePath, stateNode]);
+      }
+    }
+
+    return currentState;
   }
 
   async run(input: Record<string, never>, options?: StateChartOptions) {

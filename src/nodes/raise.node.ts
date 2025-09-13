@@ -1,11 +1,11 @@
 import z from 'zod';
 import { BaseExecutableNode } from '../models/base-executable';
-import { EventState } from '../models/internalState';
+import { EventState, SCXMLEvent } from '../models/internalState';
+import { BaseSCXMLError } from '../errors';
 
-class RaiseError extends Error {
+class RaiseNodeBadAttrError extends BaseSCXMLError {
   constructor(message: string) {
-    super(message);
-    this.name = 'RaiseError';
+    super(message, 'error.raise.bad-attribute');
   }
 }
 
@@ -53,24 +53,52 @@ export class RaiseNode extends BaseExecutableNode {
         // eventName = this.evaluateExpression(this.eventexpr, state);
         eventName = this.eventexpr; // Temporary - should be evaluated
       } else {
-        throw new Error('RaiseNode must have either event or eventexpr attribute');
+        // We should never get here because the RaiseNodeAttr schema would prevent it.  But we need
+        // to appease the type checker.
+        throw new RaiseNodeBadAttrError('RaiseNode must have either event or eventexpr attribute');
       }
 
-      // TODO: Add event to internal event queue
-      // For now, we'll just return the unchanged state
-      // In a complete implementation, this would:
-      // 1. Create an SCXMLEvent with the eventName
-      // 2. Add it to the internal event queue
-      // 3. The macrostep would then process this event
+      // Create the internal event according to SCXML spec
+      const eventToRaise: SCXMLEvent = {
+        name: eventName,
+        type: 'internal',
+        sendid: '',
+        origin: '',
+        origintype: '',
+        invokeid: '',
+        data: {}
+      };
 
-      console.log(`RaiseNode: Would raise event "${eventName}"`);
+      // Add the event to the pending internal events list
+      const pendingEvents = state._pendingInternalEvents || [];
 
-      return state;
+      return {
+        ...state,
+        _pendingInternalEvents: [...pendingEvents, eventToRaise]
+      };
     } catch (err) {
-      const error = new RaiseError((err as Error).message);
+      // Determine specific error type based on the error message
+      const error = BaseSCXMLError.fromCatch(err);
 
-      // Per SCXML spec: place error.execution in internal event queue
-      throw error;
+      const errorEvent: SCXMLEvent = {
+        name: error.name,
+        type: 'platform',
+        sendid: '',
+        origin: '',
+        origintype: '',
+        invokeid: '',
+        data: {
+          error: error.message,
+          source: 'raise'
+        }
+      };
+
+      const pendingEvents = state._pendingInternalEvents || [];
+
+      return {
+        ...state,
+        _pendingInternalEvents: [...pendingEvents, errorEvent]
+      };
     }
   }
 

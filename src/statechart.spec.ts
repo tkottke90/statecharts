@@ -19,7 +19,7 @@ describe('StateChart', () => {
     let stateChart: StateChart;
 
     beforeEach(() => {
-      stateChart = new StateChart('gameStart', new Map());
+      stateChart = new StateChart('gameStart', [], new Map());
     });
 
     it('should compute entry set for same-parent transition', () => {
@@ -232,7 +232,7 @@ describe('StateChart', () => {
     let stateChart: StateChart;
 
     beforeEach(() => {
-      stateChart = new StateChart('gameStart', new Map());
+      stateChart = new StateChart('gameStart', [], new Map());
     });
 
     it('should exit states and call unmount handlers', () => {
@@ -279,7 +279,7 @@ describe('StateChart', () => {
 
       // Assert
       expect(unmountSpy).toHaveBeenCalledWith(initialState);
-      expect(result).toEqual({ currentData: 'initial', exitData: 'test' });
+      expect(result).toEqual({ currentData: 'initial', data: { exitData: 'test' } });
 
       // Verify state was removed from active chain
       const updatedActiveChain = (stateChart as unknown as { activeStateChain: ActiveStateEntry[] }).activeStateChain;
@@ -291,7 +291,7 @@ describe('StateChart', () => {
     let stateChart: StateChart;
 
     beforeEach(() => {
-      stateChart = new StateChart('gameStart', new Map());
+      stateChart = new StateChart('gameStart', [], new Map());
     });
 
     it('should enter states and call mount handlers', () => {
@@ -370,9 +370,7 @@ describe('StateChart', () => {
 
       expect(result).toEqual({
         currentData: 'initial',
-        playingData: 'entered',
-        healthSystemData: 'entered',
-        healthyData: 'entered'
+        data: { healthyData: 'entered' }
       });
 
       // Verify states were added to active chain in correct order
@@ -462,11 +460,7 @@ describe('StateChart', () => {
       // Assert
       expect(result).toEqual({
         baseData: 'base',
-        playing: true,
-        health: 100,
-        status: 'healthy',
-        score: 0,
-        scoring: true
+        data: { scoring: true }
       });
 
       // Verify all unique states were added to active chain
@@ -596,7 +590,7 @@ describe('StateChart', () => {
     let stateChart: StateChart;
 
     beforeEach(() => {
-      stateChart = new StateChart('gameStart', new Map());
+      stateChart = new StateChart('gameStart', [], new Map());
     });
 
     it('should execute AssignNode executable content and update state', async () => {
@@ -762,7 +756,7 @@ describe('StateChart', () => {
           super({ content: '', children: [] });
         }
 
-        async run(_state: EventState): Promise<EventState> {
+        async run(): Promise<EventState> {
           throw new Error('Simulated execution error');
         }
       })();

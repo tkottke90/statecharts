@@ -4,6 +4,8 @@ export interface SCXMLEvent {
   type: 'platform' | 'internal' | 'external';
   sendid: string;
   origin: string;
+  origintype: string;
+  invokeid: string;
   data: Record<string, unknown>;
 }
 
@@ -17,6 +19,7 @@ export type EventlessState = BaseInternalState & {};
 
 export interface EventState extends BaseInternalState {
   _event: SCXMLEvent;
+  _pendingInternalEvents?: SCXMLEvent[];
 }
 
 /**
@@ -25,7 +28,8 @@ export interface EventState extends BaseInternalState {
 export function toEventState(eventlessState: EventlessState, event: SCXMLEvent): EventState {
   return {
     ...eventlessState,
-    _event: event
+    _event: event,
+    _pendingInternalEvents: []
   };
 }
 
@@ -33,6 +37,6 @@ export function toEventState(eventlessState: EventlessState, event: SCXMLEvent):
  * Converts an EventState to an EventlessState by removing the _event property
  */
 export function toEventlessState(eventState: EventState): EventlessState {
-  const { _event, ...eventlessState } = eventState;
+  const { _event, _pendingInternalEvents, ...eventlessState } = eventState;
   return eventlessState;
 }

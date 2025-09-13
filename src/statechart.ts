@@ -1,47 +1,50 @@
 import { BaseNode } from "./models";
 import SimpleXML from 'simple-xml-to-json';
-import { parse } from "./parser";
-import { BaseStateNode, MountResponse } from "./models/base-state";
+import { mergeMaps, parse } from "./parser";
+import { BaseStateNode } from "./models/base-state";
 import { TransitionNode } from "./nodes";
 import { findLCCA, computeExitSet, buildEntryPath, type ActiveStateEntry } from './utils/transition-utils';
-import { BaseExecutableNode } from "./models/base-executable";
+import { EventlessState, EventState, toEventState, toEventlessState } from './models/internalState';
+import z from "zod";
 
 type Tuple<T> = Array<[string, T]>;
+
+type Event = 
+  | { type: 'timer', id: string, expiration: number }
+  | { type: 'abort' }
+  | { type: 'timeout' };
 
 interface StateChartOptions {
   abort?: AbortController;
   timeout?: number;
 }
 
+const SCXMLSchema = z.object({
+  initial: z.string().optional(),
+  children: z.array(z.any()).optional()
+});
+
 export class StateChart {
   private states: Map<string, BaseStateNode> = new Map();
   private activeStateChain: Tuple<BaseStateNode> = [];
+  private eventQueue: Event[] = [];
 
+  
   constructor(
     private readonly initial: string,
-    private readonly nodes: Map<string, BaseNode>
-  ) {}
+    private readonly nodes: BaseNode[],
+    stateMap: Map<string, BaseNode>
+  ) {
 
-  * loadState(state: BaseStateNode, data: Record<string, unknown>): Generator<MountResponse, Record<string, unknown>, MountResponse> {
-    let nextState = { ...data };
-    let activeNode = this.states.get(state.id);
-
-    while (activeNode) {
-      // Trigger the nodes mount logic
-      const mountResponse = yield activeNode.mount(nextState);
-
-      // Add the node to the active state chain
-      this.activeStateChain.push([mountResponse.node.id, mountResponse.node]);
-
-      // Update the state and active node
-      nextState = { ...mountResponse.state };
-      activeNode = mountResponse.childPath ? this.states.get(mountResponse.childPath) : undefined;
-    }
-
-    return nextState;
+    // Collect all state notes so we can access them later
+    stateMap.forEach((node, id) => {
+      if (node instanceof BaseStateNode) {
+        this.states.set(id, node);
+      }
+    });
   }
 
-  async macrostep(state: Record<string, never>) {
+  async macrostep(state: EventlessState): Promise<EventlessState> {
     // Initialize transaction list
     const transitions: TransitionNode[] = this.activeStateChain
       .map(([, node]) => node.getEventlessTransitions())
@@ -63,19 +66,23 @@ export class StateChart {
     return state;
   }
 
-  async microstep(state: Record<string, unknown>, transitions: TransitionNode[]): Promise<Record<string, unknown>> {
-    let currentState = { ...state };
+  async microstep(state: EventState, transitions: TransitionNode[]): Promise<EventState> {
+    const currentState = { ...state };
 
-    // Exit states
-    currentState = this.exitStates(transitions, currentState);
+    // Exit states (eventless operation)
+    const eventlessState = toEventlessState(currentState);
+    const exitedState = this.exitStates(transitions, eventlessState);
 
-    // Execute transition content
-    currentState = await this.executeTransitionContent(transitions, currentState);
+    // Execute transition content (event-driven operation)
+    const eventStateForContent = toEventState(exitedState, currentState._event);
+    const contentExecutedState = await this.executeTransitionContent(transitions, eventStateForContent);
 
-    // Enter states
-    currentState = this.enterStates(transitions, currentState);
+    // Enter states (eventless operation)
+    const eventlessStateForEntry = toEventlessState(contentExecutedState);
+    const enteredState = this.enterStates(transitions, eventlessStateForEntry);
 
-    return currentState;
+    // Convert back to EventState for return
+    return toEventState(enteredState, currentState._event);
   }
 
   computeEntrySet(sourcePath: string, targetPath: string): string[] {
@@ -140,7 +147,7 @@ export class StateChart {
     return null;
   }
 
-  private exitStates(transitions: TransitionNode[], state: Record<string, unknown>): Record<string, unknown> {
+  private exitStates(transitions: TransitionNode[], state: EventlessState): EventlessState {
     // Compute the complete exit set for all transitions
     const statesToExit = this.computeExitSetFromTransitions(transitions);
 
@@ -176,7 +183,7 @@ export class StateChart {
    * @param state - Current state of the state machine
    * @returns Promise resolving to the updated state after executing all transition content
    */
-  private async executeTransitionContent(transitions: TransitionNode[], state: Record<string, unknown>): Promise<Record<string, unknown>> {
+  private async executeTransitionContent(transitions: TransitionNode[], state: EventState): Promise<EventState> {
     let currentState = { ...state };
 
     // Execute transitions in document order
@@ -196,7 +203,7 @@ export class StateChart {
    * @param state - Current state of the state machine
    * @returns Promise resolving to the updated state after executing transition content
    */
-  private async executeTransitionExecutableContent(transition: TransitionNode, state: Record<string, unknown>): Promise<Record<string, unknown>> {
+  private async executeTransitionExecutableContent(transition: TransitionNode, state: EventState): Promise<EventState> {
     let currentState = { ...state };
 
     // Execute all executable content children in document order
@@ -204,7 +211,7 @@ export class StateChart {
       if (child.isExecutable) {
         try {
           // Execute the executable content and update state
-          const result = await child.run(currentState as Record<string, never>);
+          const result = await child.run(currentState);
           currentState = { ...currentState, ...result };
         } catch (error) {
           // Handle execution errors according to SCXML error handling
@@ -253,7 +260,7 @@ export class StateChart {
     return entryArray.sort((a, b) => a.split('.').length - b.split('.').length);
   }
 
-  private enterStates(transitions: TransitionNode[], state: Record<string, unknown>): Record<string, unknown> {
+  private enterStates(transitions: TransitionNode[], state: EventlessState): EventlessState {
     // Compute the complete entry set for all transitions
     const statesToEnter = this.computeEntrySetFromTransitions(transitions);
 
@@ -280,27 +287,32 @@ export class StateChart {
     return currentState;
   }
 
-  async run(input: Record<string, never>, options?: StateChartOptions) {
-    const abort = options?.abort ?? new AbortController()
-    let running = true;
+  async execute(input: EventlessState, options?: StateChartOptions): Promise<EventlessState> {
+    // Allow the caller to provide an abort controller
+    // but default to a new one otherwise so that we can
+    // consistently use the signal logic for managing events
+    const abort = options?.abort ?? new AbortController();
     
     // Configure an abort signal
     abort.signal.addEventListener('abort', () => {
-      running = false;
+      this.eventQueue.push({ type: 'abort' });
     });
 
     // If timeout is specified, abort after the specified time
     if (options?.timeout) {
-      setTimeout(() => {
-        abort.abort();
-      }, options.timeout);
+      this.eventQueue.push({
+        type: 'timeout'
+      });
     }
 
-
+    // Run the event loop
+    return await this.macrostep(input);
   }
 
   static fromXML(xmlStr: string) {
-    const { scxml } = SimpleXML.convertXML(xmlStr);
+    const { scxml } = SimpleXML.convertXML(xmlStr) as {
+      scxml: z.infer<typeof SCXMLSchema>
+    };
 
     if (!scxml) {
       throw new Error('Invalid Format: Root Element must be <scxml>');
@@ -310,8 +322,47 @@ export class StateChart {
       throw new Error('Invalid Input: Root element must have `initial` state');
     }
 
-    const { identifiableChildren } = parse(scxml);
+    const { success, error, data } = SCXMLSchema.safeParse(scxml);
 
-    return new StateChart(scxml.initial, identifiableChildren);
+    if (!success) {
+      throw error;
+    }
+
+    // Grab the initial attribute if it is set
+    const initial = data.initial ?? '';
+
+    // Create containers for parsing results
+    const nodes: BaseNode[] = [];
+    const nodeMap = new Map<string, BaseNode>();
+    const nodeErrors = [];
+
+    // Loop over each child in the array and parse them into
+    // Nodes.  This kicks of the recursive process of ingesting
+    // the XML schema to the StateChart.  
+    for (const child of data.children ?? []) {
+
+      // Parse the child from JSON into a Node
+      const { root, identifiableChildren, error } = parse(child);
+      
+      // If there was an error parsing the child we should record it
+      if (error?.length > 0 || !root) {
+        // TODO: record error
+        
+        nodeErrors.push(error);
+        continue;
+      }
+
+      // If there was an error parsing any of the nested children
+      // we should record them as well
+
+      // Collect all of the children in the array
+      nodes.push(root);
+      
+      // Add the child with their full paths to the node map
+      // so that we can access them by their full path later
+      mergeMaps(identifiableChildren, nodeMap);
+    }
+
+    return new StateChart(initial, nodes, nodeMap);
   }
 }

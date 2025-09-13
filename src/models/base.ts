@@ -1,4 +1,5 @@
 import z from 'zod';
+import { EventlessState, EventState } from './internalState';
 
 export const BaseNodeAttr = z.object({
   content: z.string().optional().default(''),
@@ -33,22 +34,26 @@ export class BaseNode implements z.infer<typeof BaseNodeAttr> {
     this.children = children;
   }
 
+  get label() {
+    return Object.getPrototypeOf(this).constructor.label;
+  }
+
   /**
    * Helper function for nodes that execute all the children 
    * sequentially.
    * @param state 
    * @returns 
    */
-  async * executeAllChildren(state: Record<string, never>) {
+  async * executeAllChildren(state: EventlessState | EventState) {
     if (!this.allowChildren) {
       return state;
     }
-    
+
     // Clone state for internal use
     let internalState = { ...state };
 
     for (const child of this.children) {
-      internalState = await child.run(state);
+      internalState = await child.run(internalState);
 
       yield {
         node: Object.getPrototypeOf(child).constructor.name ?? 'Node',
@@ -69,12 +74,12 @@ export class BaseNode implements z.infer<typeof BaseNodeAttr> {
    * @param state The current state
    * @returns The new state
    */
-  async run(state: Record<string, never>) {
-    return state
+  async run(state: EventlessState | EventState): Promise<EventlessState | EventState> {
+    return state;
   }
 
   static get name() {
-    return Object.getPrototypeOf(this).constructor.name
+    return Object.getPrototypeOf(this).constructor.label;
   }
 
   static getAttributes(key: string, jsonInput: Record<string, unknown>) {

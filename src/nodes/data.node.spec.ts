@@ -56,10 +56,12 @@ describe('Node: <data>', () => {
         }
       });
 
-      const state = node!.mount({});
+      const state = node!.mount({ data: {} });
 
       expect(state).toEqual({
-        test: 'test'
+        data: {
+          test: 'test'
+        }
       });
     });
   });

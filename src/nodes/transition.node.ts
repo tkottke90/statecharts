@@ -1,5 +1,6 @@
 import z from 'zod';
 import { BaseNode, BaseNodeAttr, CreateFromJsonResponse } from '../models';
+import { EventlessState } from '../models/internalState';
 
 const TransitionNodeAttr = BaseNodeAttr.extend({
   event: z.string().optional().default(''),
@@ -36,7 +37,7 @@ export class TransitionNode extends BaseNode implements z.infer<typeof Transitio
     return this.target === '';
   }
 
-  async run(state: Record<string, never>){
+  async run(state: EventlessState): Promise<EventlessState> {
     return state;
   }
 

@@ -1,6 +1,7 @@
 import z from 'zod';
 import { BaseExecutableNode } from '../models/base-executable';
 import * as _ from 'lodash';
+import { EventState } from '../models/internalState';
 
 const AssignNodeAttr = BaseExecutableNode.schema.extend({
   location: z.string().min(1), // Required location expression
@@ -33,7 +34,7 @@ export class AssignNode extends BaseExecutableNode {
     this.expr = assign.expr;
   }
 
-  async run(state: Record<string, never>) {
+  async run(state: EventState): Promise<EventState> {
     try {
       if (this.expr) {
         // Evaluate expression to get value
@@ -56,8 +57,11 @@ export class AssignNode extends BaseExecutableNode {
     }
   }
 
-  private assignToLocation(state: Record<string, never>, location: string, value: unknown) {
-    return _.set(state, location, value);
+  private assignToLocation(state: EventState, location: string, value: unknown): EventState {
+    // Create a new state with the assignment
+    const updatedState = { ...state };
+    _.set(updatedState, location, value);
+    return updatedState;
   }
 
   static createFromJSON(jsonInput: Record<string, unknown>) {

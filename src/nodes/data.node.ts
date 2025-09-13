@@ -1,5 +1,6 @@
 import z from 'zod';
 import { BaseNode, BaseStateAttr, CreateFromJsonResponse } from '../models';
+import { EventlessState } from '../models/internalState';
 
 const DataNodeAttr = BaseStateAttr.extend({
   type: z.string().optional().default(''),
@@ -30,11 +31,14 @@ export class DataNode extends BaseNode implements z.infer<typeof DataNodeAttr> {
     this.src = data.src ?? undefined;
   }
 
-  mount(state: Record<string, never>){
+  mount(state: EventlessState): EventlessState {
     return {
       ...state,
-      [this.id]: this.content
-    } as unknown as Record<string, never>;
+      data: {
+        ...state.data,
+        [this.id]: this.content
+      }
+    };
   }
 
   static createFromJSON(jsonInput: Record<string, unknown>): CreateFromJsonResponse<DataNode> {

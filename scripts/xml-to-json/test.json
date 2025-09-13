@@ -1,0 +1,43 @@
+{
+  "scxml": {
+    "initial": "main",
+    "children": [
+      {
+        "datamodel": {
+          "children": [
+            {
+              "data": {
+                "id": "message",
+                "content": "This is a test message"
+              }
+            },
+            {
+              "data": {
+                "id": "tokens",
+                "type": "number"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "id": "main",
+          "children": [
+            {
+              "transition": {
+                "event": "*",
+                "target": "send:channel"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "final": {
+          "id": "send:channel"
+        }
+      }
+    ]
+  }
+}

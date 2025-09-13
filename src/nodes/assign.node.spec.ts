@@ -1,5 +1,23 @@
 import { AssignNode } from './assign.node';
 import { BaseNode } from '../models/base';
+import { EventState, SCXMLEvent } from '../models/internalState';
+
+// Helper function to create test EventState
+function createTestEventState(data: Record<string, unknown> = {}): EventState {
+  const mockEvent: SCXMLEvent = {
+    name: 'test.event',
+    type: 'internal',
+    sendid: 'test-send-id',
+    origin: 'test-origin',
+    data: {}
+  };
+
+  return {
+    _event: mockEvent,
+    data: { ...data },
+    ...data // Also spread data at root level for backward compatibility with tests
+  };
+}
 
 describe('AssignNode', () => {
   describe('constructor', () => {
@@ -58,18 +76,18 @@ describe('AssignNode', () => {
         }
       });
 
-      const initialState = { user: { id: 1 } };
+      const initialState = createTestEventState({ user: { id: 1 } });
 
       // Act
-      const result = await assignNode.run(initialState as Record<string, never>);
+      const result = await assignNode.run(initialState);
 
       // Assert
-      expect(result).toEqual({
-        user: {
-          id: 1,
-          name: 'John Doe'
-        }
+      expect(result.user).toEqual({
+        id: 1,
+        name: 'John Doe'
       });
+      expect(result._event).toBeDefined();
+      expect(result.data).toBeDefined();
     });
 
     it('should assign content value to location when no expr provided', async () => {

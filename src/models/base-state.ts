@@ -2,6 +2,7 @@ import z from "zod";
 import { TransitionNode } from "../nodes/transition.node";
 import { BaseNode, BaseNodeAttr } from "./base";
 import { InitialNode } from "../nodes/initial.node";
+import { EventlessState } from "./internalState";
 
 export const BaseStateNodeAttr = BaseNodeAttr.extend({
   id: z.string().min(1),
@@ -13,7 +14,7 @@ export type StateNodeType = {
 };
 
 export interface MountResponse {
-  state: Record<string, unknown>;
+  state: EventlessState;
   node: BaseStateNode;
   childPath?: string;
 }
@@ -23,8 +24,8 @@ export class BaseStateNode extends BaseNode {
   readonly id: string = '';
   readonly initial: string | undefined;
 
-  protected onentry: (state: Record<string, unknown>) => Record<string, unknown> = (state) => state;
-  protected onexit: (state: Record<string, unknown>) => Record<string, unknown> = (state) => state;
+  protected onentry: (state: EventlessState) => EventlessState = (state) => state;
+  protected onexit: (state: EventlessState) => EventlessState = (state) => state;
 
 
   /**
@@ -91,7 +92,7 @@ export class BaseStateNode extends BaseNode {
    * @param state The current state
    * @returns The new state
    */
-  mount(state: Record<string, unknown>): MountResponse {
+  mount(state: EventlessState): MountResponse {
     // If we found an Atomic state, we do not not need to look deeper
     if (this.isAtomic) {
       return { state: this.onentry(state), node: this };
@@ -114,7 +115,7 @@ export class BaseStateNode extends BaseNode {
    * @param state The current state
    * @returns The new state
    */
-  unmount(state: Record<string, unknown>) {
+  unmount(state: EventlessState): EventlessState {
     return this.onexit(state);
   }
 }

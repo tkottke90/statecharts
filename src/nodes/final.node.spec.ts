@@ -50,7 +50,7 @@ describe('Node: <final>', () => {
       });
 
       // Act
-      const state = await node!.run({});
+      const state = await node!.run({ data: {} });
 
       // Assert
       expect(state).toEqual({});

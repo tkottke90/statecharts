@@ -1,5 +1,6 @@
 import z from 'zod';
 import { BaseNodeAttr, BaseNode, CreateFromJsonResponse } from '../models';
+import { EventlessState } from '../models/internalState';
 
 export type DataModelNodeType = {
     datamodel: z.infer<typeof BaseNodeAttr>;
@@ -20,13 +21,13 @@ export class DataModelNode extends BaseNode implements z.infer<typeof BaseNodeAt
     this.allowChildren = true;
   }
 
-  async run(state: Record<string, never>) {
+  async run(state: EventlessState): Promise<EventlessState> {
     let nextState = { ...state };
 
     for await (const { node, state } of this.executeAllChildren(nextState)) {
       // TODO: Record the state changes
-      
-      nextState = state;
+
+      nextState = state as EventlessState;
     }
 
     return nextState;

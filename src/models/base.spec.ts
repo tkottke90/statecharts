@@ -19,7 +19,7 @@ describe('BaseNode', () => {
       ] });
 
       // Act
-      const generator = node.executeAllChildren({});
+      const generator = node.executeAllChildren({ data: {} });
 
       // Assert
       expect(generator).toHaveProperty('next');
@@ -30,10 +30,10 @@ describe('BaseNode', () => {
       const node = new BaseNode({ content: 'test', children: [] });
 
       // Act
-      const state = await node.run({});
+      const state = await node.run({ data: {} });
 
       // Assert
-      expect(state).toEqual({});
+      expect(state).toEqual({ data: {} });
     });
 
 

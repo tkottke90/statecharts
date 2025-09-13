@@ -36,12 +36,6 @@ export class StateNode
     this.initial = state.initial ?? '';
   }
 
-  async run(state: Record<string, never>) {
-    const nextState = { ...state };
-
-    return nextState;
-  }
-
   static createFromJSON(
     jsonInput: Record<string, unknown>,
   ): CreateFromJsonResponse<StateNode> {

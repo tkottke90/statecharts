@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<scxml
+  initial="pre-process"
+>
+  <datamodel>
+    <data id="message">This is a test message</data>
+    <data id="tokens" type="number"></data>
+  </datamodel>
+
+  <state id="pre-process" initial="">
+    <datamodel>
+      <data id="intent"></data>
+    </datamodel>
+
+    <state id="intent">
+      <onentry>
+        <llm-chat engine="ollama" model="mistral:7b" response="intent" tokens="tokens" timeout="10000">
+
+          <system>
+            <role>You are an AI Intent Classifier</role>
+            <task>Determine the user's intent from their message.</task>
+            <output>
+              <intent description="The intent of the user's message" />
+            </output>
+          </system>
+
+          <user>
+            <content>$.message</content>
+          </user>
+
+        </llm-chat>
+      </onentry>
+    </state>
+
+    <state id="summerize">
+      <onentry>
+        <llm-chat engine="ollama" model="mistral:7b" response="summary" tokens="tokens" timeout="10000">
+
+          <system>
+            <role>You are an AI Assistant specializing in reviewing text and generating summaries</role>
+            <task>Generate a concise and coherent summary from the given Context.</task>
+            <guidelines>
+              <item>Condense the provided text into a well-written summary that captures the main ideas, key points, and insights presented in the context.</item>
+              <item>Prioritize clarity and brevity while retaining the essential information.</item>
+              <item>Aim to convey the context's core message and any supporting details that contribute to a comprehensive understanding.</item>
+              <item>Craft the summary to be self-contained, ensuring that readers can grasp the content even if they haven't read the context.</item>
+              <item>Provide context where necessary and avoid excessive technical jargon or verbosity.</item>
+              <item>The goal is to create a summary that effectively communicates the context's content while being easily digestible and engaging.</item>
+            </guidelines>
+            <output>
+              <summary description="A concise and coherent summary of the context" />
+            </output>
+          </system>
+
+          <user>
+            <content>$.message</content>
+          </user>
+
+        </llm-chat>
+      </onentry>
+    </state>
+
+
+    <transition event="*" target="send:channel" cond="$.intent != ''" />
+  </state>
+
+  <state id="" initial="process">
+
+  
+  </state>
+
+  <final id="send:channel"></final>
+  <final id="*"></final>
+</scxml>

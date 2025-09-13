@@ -5,6 +5,7 @@ import { TransitionNode } from './nodes/transition.node';
 import { BaseStateNode } from './models/base-state';
 import { AssignNode } from './nodes/assign.node';
 import { BaseExecutableNode } from './models/base-executable';
+import { EventState } from './models/internalState';
 
 // Type for mock active state chain entries
 type MockActiveStateEntry = [string, Record<string, unknown>];
@@ -259,7 +260,7 @@ describe('StateChart', () => {
       healthyStateNode.children.push(transition);
 
       // Spy on the unmount method to verify it's called and mock its return value
-      const unmountSpy = jest.spyOn(healthyStateNode, 'unmount').mockReturnValue({ exitData: 'test' });
+      const unmountSpy = jest.spyOn(healthyStateNode, 'unmount').mockReturnValue({ data: { exitData: 'test' } });
 
       // Set up active state chain with real StateNode instances
       const activeStateChain: ActiveStateEntry[] = [
@@ -333,17 +334,17 @@ describe('StateChart', () => {
       // Spy on the mount methods to verify they're called and mock their return values
       const playingMountSpy = jest.spyOn(playingStateNode, 'mount').mockReturnValue({
         node: playingStateNode,
-        state: { playingData: 'entered' }
+        state: { data: { playingData: 'entered' } }
       });
 
       const healthSystemMountSpy = jest.spyOn(healthSystemStateNode, 'mount').mockReturnValue({
         node: healthSystemStateNode,
-        state: { healthSystemData: 'entered' }
+        state: { data: { healthSystemData: 'entered' } }
       });
 
       const healthyMountSpy = jest.spyOn(healthyStateNode, 'mount').mockReturnValue({
         node: healthyStateNode,
-        state: { healthyData: 'entered' }
+        state: { data: { healthyData: 'entered' } }
       });
 
       // Set up states map
@@ -423,23 +424,23 @@ describe('StateChart', () => {
       // Mock mount methods
       jest.spyOn(playingStateNode, 'mount').mockReturnValue({
         node: playingStateNode,
-        state: { playing: true }
+        state: { data: { playing: true } }
       });
       jest.spyOn(healthSystemStateNode, 'mount').mockReturnValue({
         node: healthSystemStateNode,
-        state: { health: 100 }
+        state: { data: { health: 100 } }
       });
       jest.spyOn(healthyStateNode, 'mount').mockReturnValue({
         node: healthyStateNode,
-        state: { status: 'healthy' }
+        state: { data: { status: 'healthy' } }
       });
       jest.spyOn(scoreSystemStateNode, 'mount').mockReturnValue({
         node: scoreSystemStateNode,
-        state: { score: 0 }
+        state: { data: { score: 0 } }
       });
       jest.spyOn(scoringStateNode, 'mount').mockReturnValue({
         node: scoringStateNode,
-        state: { scoring: true }
+        state: { data: { scoring: true } }
       });
 
       // Set up states map
@@ -551,19 +552,19 @@ describe('StateChart', () => {
       const mountOrder: string[] = [];
       jest.spyOn(stateA, 'mount').mockImplementation(() => {
         mountOrder.push('a');
-        return { node: stateA, state: { a: true } };
+        return { node: stateA, state: { data: { a: true } } };
       });
       jest.spyOn(stateB, 'mount').mockImplementation(() => {
         mountOrder.push('a.b');
-        return { node: stateB, state: { b: true } };
+        return { node: stateB, state: { data: { b: true } } };
       });
       jest.spyOn(stateC, 'mount').mockImplementation(() => {
         mountOrder.push('a.b.c');
-        return { node: stateC, state: { c: true } };
+        return { node: stateC, state: { data: { c: true } } };
       });
       jest.spyOn(stateD, 'mount').mockImplementation(() => {
         mountOrder.push('a.b.c.d');
-        return { node: stateD, state: { d: true } };
+        return { node: stateD, state: { data: { d: true } } };
       });
 
       // Set up states map
@@ -761,7 +762,7 @@ describe('StateChart', () => {
           super({ content: '', children: [] });
         }
 
-        async run(): Promise<Record<string, never>> {
+        async run(_state: EventState): Promise<EventState> {
           throw new Error('Simulated execution error');
         }
       })();

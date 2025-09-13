@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<scxml
+  initial="main"
+>
+  <datamodel>
+    <data id="message">This is a test message</data>
+    <data id="tokens" type="number"></data>
+  </datamodel>
+
+  <state id="main">
+    <transition event="*" target="send:channel"></transition>
+  </state>
+
+  <final id="send:channel"></final>
+</scxml>

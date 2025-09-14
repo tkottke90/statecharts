@@ -191,21 +191,4 @@ describe('Node: <final>', () => {
       });
     });
   });
-
-  describe.skip('#run', () => {
-    it('should return the current state', async () => {
-      // Arrange
-      const { node } = FinalNode.createFromJSON({
-        final: {
-          id: 'test'
-        }
-      });
-
-      // Act
-      const state = await node!.run({ data: {} });
-
-      // Assert
-      expect(state).toEqual({});
-    });
-  });
 });

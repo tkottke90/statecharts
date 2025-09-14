@@ -28,7 +28,6 @@ export class StateChart {
   private states: Map<string, BaseStateNode> = new Map();
   private activeStateChain: Tuple<BaseStateNode> = [];
   private eventQueue: Event[] = [];
-
   
   constructor(
     private readonly initial: string,

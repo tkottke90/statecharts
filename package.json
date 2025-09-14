@@ -11,8 +11,9 @@
     "./nodes": "./dist/nodes/index.js"
   },
   "scripts": {
-    "test": "jest",
-    "test:watch": "jest --watchAll",
+    "format": "eslint --fix . && prettier --write .",
+    "test": "jest --verbose",
+    "test:watch": "jest --watchAll --verbose",
     "xml2json": "node scripts/xml-to-json/test.cjs"
   },
   "keywords": [],

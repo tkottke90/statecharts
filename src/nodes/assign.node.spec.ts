@@ -1,9 +1,9 @@
 import { AssignNode } from './assign.node';
 import { BaseNode } from '../models/base';
-import { EventState, SCXMLEvent } from '../models/internalState';
+import { InternalState, SCXMLEvent } from '../models/internalState';
 
-// Helper function to create test EventState
-function createTestEventState(data: Record<string, unknown> = {}): EventState {
+// Helper function to create test InternalState
+function createTestEventState(data: Record<string, unknown> = {}): InternalState {
   const mockEvent: SCXMLEvent = {
     name: 'test.event',
     type: 'internal',

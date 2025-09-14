@@ -1,6 +1,6 @@
 import z from 'zod';
 import { BaseExecutableNode } from '../models/base-executable';
-import { EventState, SCXMLEvent } from '../models/internalState';
+import { InternalState, SCXMLEvent } from '../models/internalState';
 import { BaseSCXMLError } from '../errors';
 
 class RaiseNodeBadAttrError extends BaseSCXMLError {
@@ -40,7 +40,7 @@ export class RaiseNode extends BaseExecutableNode {
     this.eventexpr = raise.eventexpr;
   }
 
-  async run(state: EventState): Promise<EventState> {
+  async run(state: InternalState): Promise<InternalState> {
     try {
       let eventName: string;
 

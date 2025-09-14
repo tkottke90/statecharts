@@ -1,9 +1,9 @@
 
 import { RaiseNode } from './raise.node';
-import { EventState, SCXMLEvent } from '../models/internalState';
+import { InternalState, SCXMLEvent } from '../models/internalState';
 
 describe('RaiseNode', () => {
-  let mockEventState: EventState;
+  let mockEventState: InternalState;
 
   beforeEach(() => {
     mockEventState = {
@@ -111,7 +111,7 @@ describe('RaiseNode', () => {
         data: {}
       };
 
-      const stateWithExistingEvents: EventState = {
+      const stateWithExistingEvents: InternalState = {
         ...mockEventState,
         _pendingInternalEvents: [existingEvent]
       };
@@ -132,7 +132,7 @@ describe('RaiseNode', () => {
     });
 
     it('should handle state with no existing pending events', async () => {
-      const stateWithoutPendingEvents: EventState = {
+      const stateWithoutPendingEvents: InternalState = {
         ...mockEventState,
         _pendingInternalEvents: undefined
       };
@@ -164,7 +164,7 @@ describe('RaiseNode', () => {
           });
         }
 
-        async run(state: EventState): Promise<EventState> {
+        async run(state: InternalState): Promise<InternalState> {
           // Simulate the error condition by throwing the same error
           try {
             throw new Error('RaiseNode must have either event or eventexpr attribute');
@@ -233,7 +233,7 @@ describe('RaiseNode', () => {
           });
         }
 
-        async run(state: EventState): Promise<EventState> {
+        async run(state: InternalState): Promise<InternalState> {
           // Simulate an unknown error condition
           try {
             throw new Error('Some unexpected error occurred');

@@ -5,7 +5,7 @@ import { TransitionNode } from './nodes/transition.node';
 import { BaseStateNode } from './models/base-state';
 import { AssignNode } from './nodes/assign.node';
 import { BaseExecutableNode } from './models/base-executable';
-import { EventState } from './models/internalState';
+import { InternalState } from './models/internalState';
 
 // Type for mock active state chain entries
 type MockActiveStateEntry = [string, Record<string, unknown>];
@@ -756,7 +756,7 @@ describe('StateChart', () => {
           super({ content: '', children: [] });
         }
 
-        async run(): Promise<EventState> {
+        async run(): Promise<InternalState> {
           throw new Error('Simulated execution error');
         }
       })();

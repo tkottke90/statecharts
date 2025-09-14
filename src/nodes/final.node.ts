@@ -2,7 +2,7 @@ import z from 'zod';
 import { CreateFromJsonResponse } from '../models';
 import { StateNodeAttr } from './state.node';
 import { BaseStateNode, MountResponse } from '../models/base-state';
-import { EventlessState } from '../models/internalState';
+import { InternalState, SCXMLEvent, addPendingEvent } from '../models/internalState';
 
 const FinalNodeAttr = StateNodeAttr;
 
@@ -26,10 +26,69 @@ export class FinalNode extends BaseStateNode implements z.infer<typeof FinalNode
     this.id = final.id;
   }
 
-  mount(state: EventlessState): MountResponse {
-    const { node, state: nextState } = super.mount(state);
+  mount(state: InternalState): MountResponse {
+    try {
+      // Call parent mount first
+      const { node, state: nextState } = super.mount(state);
 
-    return { state: nextState, node };
+      // Generate done.state.{parent_id} event when entering final state
+      const parentId = this.getParentStateId();
+      if (parentId) {
+        const doneEvent: SCXMLEvent = {
+          name: `done.state.${parentId}`,
+          type: 'internal',
+          sendid: '',
+          origin: '',
+          origintype: '',
+          invokeid: '',
+          data: {}
+        };
+
+        // Add the done event to pending internal events
+        const stateWithEvent = addPendingEvent(nextState, doneEvent);
+        return { state: stateWithEvent, node };
+      }
+
+      return { state: nextState, node };
+    } catch (err) {
+      // Handle errors according to SCXML error naming convention
+      const errorMessage = (err as Error).message;
+      const errorEvent: SCXMLEvent = {
+        name: 'error.final.mount-failed',
+        type: 'platform',
+        sendid: '',
+        origin: '',
+        origintype: '',
+        invokeid: '',
+        data: { error: errorMessage, source: 'final' }
+      };
+
+      const stateWithError = addPendingEvent(state, errorEvent);
+      return { state: stateWithError, node: this };
+    }
+  }
+
+  /**
+   * Determines the parent state ID from the current final state's ID.
+   * This is used to generate the appropriate done.state.{parent_id} event.
+   *
+   * @returns The parent state ID, or null if this is a top-level final state
+   */
+  private getParentStateId(): string | null {
+    if (!this.id) {
+      return null;
+    }
+
+    // Split the state path and remove the last segment to get parent
+    const pathSegments = this.id.split('.');
+    if (pathSegments.length <= 1) {
+      // This is a top-level final state (child of <scxml>)
+      // According to SCXML spec, reaching a top-level final state terminates the state machine
+      return null;
+    }
+
+    // Return the parent state ID
+    return pathSegments.slice(0, -1).join('.');
   }
 
   static createFromJSON(jsonInput: Record<string, unknown>): CreateFromJsonResponse<FinalNode> {

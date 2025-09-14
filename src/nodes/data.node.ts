@@ -1,6 +1,6 @@
 import z from 'zod';
 import { BaseNode, BaseStateAttr, CreateFromJsonResponse } from '../models';
-import { EventlessState } from '../models/internalState';
+import { InternalState } from '../models/internalState';
 
 const DataNodeAttr = BaseStateAttr.extend({
   type: z.string().optional().default(''),
@@ -31,7 +31,7 @@ export class DataNode extends BaseNode implements z.infer<typeof DataNodeAttr> {
     this.src = data.src ?? undefined;
   }
 
-  mount(state: EventlessState): EventlessState {
+  mount(state: InternalState): InternalState {
     return {
       ...state,
       data: {

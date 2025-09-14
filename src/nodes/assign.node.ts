@@ -1,7 +1,7 @@
 import z from 'zod';
 import { BaseExecutableNode } from '../models/base-executable';
 import * as _ from 'lodash';
-import { EventState } from '../models/internalState';
+import { InternalState } from '../models/internalState';
 
 const AssignNodeAttr = BaseExecutableNode.schema.extend({
   location: z.string().min(1), // Required location expression
@@ -34,14 +34,14 @@ export class AssignNode extends BaseExecutableNode {
     this.expr = assign.expr;
   }
 
-  async run(state: EventState): Promise<EventState> {
+  async run(state: InternalState): Promise<InternalState> {
     try {
       if (this.expr) {
         // Evaluate expression to get value
-  
+
         // TODO: Create Expression Evaluator
         // const value = this.evaluateExpression(this.expr, state);
-        
+
         return this.assignToLocation(state, this.location, this.expr);
       } else {
         // Use child content as value
@@ -57,7 +57,7 @@ export class AssignNode extends BaseExecutableNode {
     }
   }
 
-  private assignToLocation(state: EventState, location: string, value: unknown): EventState {
+  private assignToLocation(state: InternalState, location: string, value: unknown): InternalState {
     // Create a new state with the assignment
     const updatedState = { ...state };
     _.set(updatedState, location, value);

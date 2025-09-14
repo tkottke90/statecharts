@@ -1,5 +1,5 @@
 import z from 'zod';
-import { EventlessState, EventState } from './internalState';
+import { InternalState } from './internalState';
 
 export const BaseNodeAttr = z.object({
   content: z.string().optional().default(''),
@@ -39,12 +39,12 @@ export class BaseNode implements z.infer<typeof BaseNodeAttr> {
   }
 
   /**
-   * Helper function for nodes that execute all the children 
+   * Helper function for nodes that execute all the children
    * sequentially.
-   * @param state 
-   * @returns 
+   * @param state
+   * @returns
    */
-  async * executeAllChildren(state: EventlessState | EventState) {
+  async * executeAllChildren(state: InternalState) {
     if (!this.allowChildren) {
       return state;
     }
@@ -74,7 +74,7 @@ export class BaseNode implements z.infer<typeof BaseNodeAttr> {
    * @param state The current state
    * @returns The new state
    */
-  async run(state: EventlessState | EventState): Promise<EventlessState | EventState> {
+  async run(state: InternalState): Promise<InternalState> {
     return state;
   }
 

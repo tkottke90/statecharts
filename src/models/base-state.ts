@@ -2,7 +2,7 @@ import z from "zod";
 import { TransitionNode } from "../nodes/transition.node";
 import { BaseNode, BaseNodeAttr } from "./base";
 import { InitialNode } from "../nodes/initial.node";
-import { EventlessState } from "./internalState";
+import { InternalState } from "./internalState";
 
 export const BaseStateNodeAttr = BaseNodeAttr.extend({
   id: z.string().min(1),
@@ -14,7 +14,7 @@ export type StateNodeType = {
 };
 
 export interface MountResponse {
-  state: EventlessState;
+  state: InternalState;
   node: BaseStateNode;
   childPath?: string;
 }
@@ -24,8 +24,8 @@ export class BaseStateNode extends BaseNode {
   readonly id: string = '';
   readonly initial: string | undefined;
 
-  protected onentry: (state: EventlessState) => EventlessState = (state) => state;
-  protected onexit: (state: EventlessState) => EventlessState = (state) => state;
+  protected onentry: (state: InternalState) => InternalState = (state) => state;
+  protected onexit: (state: InternalState) => InternalState = (state) => state;
 
 
   /**
@@ -92,7 +92,7 @@ export class BaseStateNode extends BaseNode {
    * @param state The current state
    * @returns The new state
    */
-  mount(state: EventlessState): MountResponse {
+  mount(state: InternalState): MountResponse {
     // If we found an Atomic state, we do not not need to look deeper
     if (this.isAtomic) {
       return { state: this.onentry(state), node: this };
@@ -102,7 +102,7 @@ export class BaseStateNode extends BaseNode {
     const initialState = this.initialState;
 
     // If this is a compound state with a valid initial child state, we should
-    // communicate back to the state chart 
+    // communicate back to the state chart
     if (initialState) {
       return { state, node: this, childPath: initialState };
     }
@@ -115,7 +115,7 @@ export class BaseStateNode extends BaseNode {
    * @param state The current state
    * @returns The new state
    */
-  unmount(state: EventlessState): EventlessState {
+  unmount(state: InternalState): InternalState {
     return this.onexit(state);
   }
 }

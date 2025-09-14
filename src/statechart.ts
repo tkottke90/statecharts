@@ -4,7 +4,7 @@ import { mergeMaps, parse } from "./parser";
 import { BaseStateNode } from "./models/base-state";
 import { TransitionNode } from "./nodes";
 import { findLCCA, computeExitSet, buildEntryPath, type ActiveStateEntry } from './utils/transition-utils';
-import { EventlessState, EventState, toEventState, toEventlessState } from './models/internalState';
+import { InternalState, withEventContext, clearEventContext } from './models/internalState';
 import z from "zod";
 
 type Tuple<T> = Array<[string, T]>;
@@ -44,7 +44,7 @@ export class StateChart {
     });
   }
 
-  async macrostep(state: EventlessState): Promise<EventlessState> {
+  async macrostep(state: InternalState): Promise<InternalState> {
     // Initialize transaction list
     const transitions: TransitionNode[] = this.activeStateChain
       .map(([, node]) => node.getEventlessTransitions())
@@ -52,9 +52,9 @@ export class StateChart {
 
     let macrostepDone = false;
     while (!macrostepDone) {
-      
 
-      
+
+
 
 
       // When we reach this line the macrostep is done and we can return
@@ -66,23 +66,19 @@ export class StateChart {
     return state;
   }
 
-  async microstep(state: EventState, transitions: TransitionNode[]): Promise<EventState> {
-    const currentState = { ...state };
+  async microstep(state: InternalState, transitions: TransitionNode[]): Promise<InternalState> {
+    let currentState = { ...state };
 
-    // Exit states (eventless operation)
-    const eventlessState = toEventlessState(currentState);
-    const exitedState = this.exitStates(transitions, eventlessState);
+    // Exit states
+    currentState = this.exitStates(transitions, currentState);
 
-    // Execute transition content (event-driven operation)
-    const eventStateForContent = toEventState(exitedState, currentState._event);
-    const contentExecutedState = await this.executeTransitionContent(transitions, eventStateForContent);
+    // Execute transition content
+    currentState = await this.executeTransitionContent(transitions, currentState);
 
-    // Enter states (eventless operation)
-    const eventlessStateForEntry = toEventlessState(contentExecutedState);
-    const enteredState = this.enterStates(transitions, eventlessStateForEntry);
+    // Enter states
+    currentState = this.enterStates(transitions, currentState);
 
-    // Convert back to EventState for return
-    return toEventState(enteredState, currentState._event);
+    return currentState;
   }
 
   computeEntrySet(sourcePath: string, targetPath: string): string[] {
@@ -147,7 +143,7 @@ export class StateChart {
     return null;
   }
 
-  private exitStates(transitions: TransitionNode[], state: EventlessState): EventlessState {
+  private exitStates(transitions: TransitionNode[], state: InternalState): InternalState {
     // Compute the complete exit set for all transitions
     const statesToExit = this.computeExitSetFromTransitions(transitions);
 
@@ -183,7 +179,7 @@ export class StateChart {
    * @param state - Current state of the state machine
    * @returns Promise resolving to the updated state after executing all transition content
    */
-  private async executeTransitionContent(transitions: TransitionNode[], state: EventState): Promise<EventState> {
+  private async executeTransitionContent(transitions: TransitionNode[], state: InternalState): Promise<InternalState> {
     let currentState = { ...state };
 
     // Execute transitions in document order
@@ -203,7 +199,7 @@ export class StateChart {
    * @param state - Current state of the state machine
    * @returns Promise resolving to the updated state after executing transition content
    */
-  private async executeTransitionExecutableContent(transition: TransitionNode, state: EventState): Promise<EventState> {
+  private async executeTransitionExecutableContent(transition: TransitionNode, state: InternalState): Promise<InternalState> {
     let currentState = { ...state };
 
     // Execute all executable content children in document order
@@ -260,7 +256,7 @@ export class StateChart {
     return entryArray.sort((a, b) => a.split('.').length - b.split('.').length);
   }
 
-  private enterStates(transitions: TransitionNode[], state: EventlessState): EventlessState {
+  private enterStates(transitions: TransitionNode[], state: InternalState): InternalState {
     // Compute the complete entry set for all transitions
     const statesToEnter = this.computeEntrySetFromTransitions(transitions);
 
@@ -287,7 +283,7 @@ export class StateChart {
     return currentState;
   }
 
-  async execute(input: EventlessState, options?: StateChartOptions): Promise<EventlessState> {
+  async execute(input: InternalState, options?: StateChartOptions): Promise<InternalState> {
     // Allow the caller to provide an abort controller
     // but default to a new one otherwise so that we can
     // consistently use the signal logic for managing events

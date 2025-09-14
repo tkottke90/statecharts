@@ -51,6 +51,7 @@
     "jest.config.mjs",
     "dist/**/*",
     "**/*.spec.ts",
-    "**/*.test.ts"
+    "**/*.test.ts",
+    "src/test_utils/**/*"
   ]
 }

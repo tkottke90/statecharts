@@ -1,4 +1,6 @@
 
+import { Queue } from './event-queue';
+
 export interface SCXMLEvent {
   name: string;
   type: 'platform' | 'internal' | 'external';
@@ -32,23 +34,13 @@ export interface InternalState {
 export type EventlessState = InternalState;
 export type EventState = InternalState & { _event: SCXMLEvent };
 
-/**
- * Helper function to set event context in state during event processing
- */
-export function withEventContext(state: InternalState, event: SCXMLEvent): InternalState {
-  return {
-    ...state,
-    _event: event,
-    _pendingInternalEvents: state._pendingInternalEvents || []
-  };
-}
-
-/**
- * Helper function to clear event context from state after event processing
- */
-export function clearEventContext(state: InternalState): InternalState {
-  const { _event, ...stateWithoutEvent } = state;
-  return stateWithoutEvent;
+export function processPendingEvents(state: InternalState, queue: Queue<SCXMLEvent>): void {
+  if (state._pendingInternalEvents) {
+    state._pendingInternalEvents.forEach(event => {
+      queue.enqueue(event);
+    });
+    delete state._pendingInternalEvents;
+  }
 }
 
 /**
@@ -59,45 +51,4 @@ export function addPendingEvent(state: InternalState, event: SCXMLEvent): Intern
     ...state,
     _pendingInternalEvents: [...(state._pendingInternalEvents || []), event]
   };
-}
-
-/**
- * Helper function to safely add multiple events to the pending internal events queue
- */
-export function addPendingEvents(state: InternalState, events: SCXMLEvent[]): InternalState {
-  return {
-    ...state,
-    _pendingInternalEvents: [...(state._pendingInternalEvents || []), ...events]
-  };
-}
-
-/**
- * Helper function to extract and clear pending internal events from state
- */
-export function extractPendingEvents(state: InternalState): { state: InternalState; events: SCXMLEvent[] } {
-  const events = state._pendingInternalEvents || [];
-  const { _pendingInternalEvents, ...stateWithoutPending } = state;
-  return {
-    state: stateWithoutPending,
-    events
-  };
-}
-
-// Legacy conversion functions for backward compatibility during migration
-// TODO: Remove these once all code is updated to use InternalState directly
-
-/**
- * @deprecated Use withEventContext() instead
- * Converts an EventlessState to an EventState by adding the _event property
- */
-export function toEventState(eventlessState: EventlessState, event: SCXMLEvent): EventState {
-  return withEventContext(eventlessState, event) as EventState;
-}
-
-/**
- * @deprecated Use clearEventContext() instead
- * Converts an EventState to an EventlessState by removing the _event property
- */
-export function toEventlessState(eventState: EventState): EventlessState {
-  return clearEventContext(eventState);
 }

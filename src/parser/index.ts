@@ -2,6 +2,7 @@ import z from "zod";
 import { BaseNode, CreateFromJsonResponse, Node } from "../models";
 import { DataNode, DataModelNode, FinalNode, StateNode, TransitionNode } from "../nodes";
 import { InitialNode } from "../nodes/initial.node";
+import { SCXMLNode } from "../nodes/scxml.node";
 
 export function mergeMaps(sourceMap: Map<string, BaseNode>, targetMap: Map<string, BaseNode>) {
   for (const [ key, value ] of sourceMap) {
@@ -24,6 +25,9 @@ export function parseType(input: Record<string, unknown>): CreateFromJsonRespons
     }
     case 'initial': {
       return InitialNode.createFromJSON(input);
+    }
+    case 'scxml': {
+      return SCXMLNode.createFromJSON(input);
     }
     case 'state': {
       return StateNode.createFromJSON(input);

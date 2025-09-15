@@ -4,6 +4,7 @@ import { parse, parseType, mergeMaps } from "./index";
 import { BaseStateNode } from '../models/base-state';
 import { DataNode, DataModelNode, FinalNode, StateNode, TransitionNode } from "../nodes";
 import { InitialNode } from "../nodes/initial.node";
+import { SCXMLNode } from "../nodes/scxml.node";
 
 const xml = `
 <state id="healthSystem">
@@ -645,6 +646,25 @@ describe('Parser', () => {
 
       // Cleanup
       InitialNode.createFromJSON = originalCreateFromJSON;
+    });
+
+    it('should correctly identify scxml node type and call SCXMLNode.createFromJSON', () => {
+      // Arrange
+      const input = { scxml: { version: '1.0', content: '', children: [] } };
+      const expectedResponse = { success: true, error: undefined, node: {} };
+
+      const originalCreateFromJSON = SCXMLNode.createFromJSON;
+      SCXMLNode.createFromJSON = jest.fn().mockReturnValue(expectedResponse);
+
+      // Act
+      const result = parseType(input);
+
+      // Assert
+      expect(SCXMLNode.createFromJSON).toHaveBeenCalledWith(input);
+      expect(result).toEqual(expectedResponse);
+
+      // Cleanup
+      SCXMLNode.createFromJSON = originalCreateFromJSON;
     });
 
     it('should correctly identify state node type and call StateNode.createFromJSON', () => {

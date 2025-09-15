@@ -2,6 +2,7 @@ import z from 'zod';
 import { BaseExecutableNode } from '../models/base-executable';
 import { InternalState, SCXMLEvent } from '../models/internalState';
 import { BaseSCXMLError } from '../errors';
+import { evaluateExpression } from '../parser/expressions.nodejs';
 
 class RaiseNodeBadAttrError extends BaseSCXMLError {
   constructor(message: string) {
@@ -49,9 +50,7 @@ export class RaiseNode extends BaseExecutableNode {
         eventName = this.event;
       } else if (this.eventexpr) {
         // Evaluate expression to get event name
-        // TODO: Create Expression Evaluator
-        // eventName = this.evaluateExpression(this.eventexpr, state);
-        eventName = this.eventexpr; // Temporary - should be evaluated
+        eventName = evaluateExpression(this.eventexpr, state);
       } else {
         // We should never get here because the RaiseNodeAttr schema would prevent it.  But we need
         // to appease the type checker.

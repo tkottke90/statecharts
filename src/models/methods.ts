@@ -1,8 +1,6 @@
 import z from "zod";
 import { BaseNode } from "./base";
 
-export interface CreateFromJsonResponse<T extends BaseNode> {
-  success: boolean;
-  node: T | undefined;
-  error: z.ZodError | Error | undefined;
-}
+export type CreateFromJsonResponse<T extends BaseNode> =
+| { success: true, node: T, error: undefined } 
+| { success: false, node: undefined, error: z.ZodError | Error };

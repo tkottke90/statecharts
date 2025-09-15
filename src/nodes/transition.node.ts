@@ -1,10 +1,12 @@
 import z from 'zod';
 import { BaseNode, BaseNodeAttr, CreateFromJsonResponse } from '../models';
-import { InternalState } from '../models/internalState';
+import { addPendingEvent, InternalState } from '../models/internalState';
+import { evaluateExpression } from '../parser/expressions.nodejs';
 
 const TransitionNodeAttr = BaseNodeAttr.extend({
   event: z.string().optional().default(''),
-  target: z.string().min(1)
+  target: z.string().min(1),
+  cond: z.string().optional()
 })
 
 export type TransitionNodeType = {
@@ -19,6 +21,7 @@ export type TransitionNodeType = {
 export class TransitionNode extends BaseNode implements z.infer<typeof TransitionNodeAttr> {
   readonly event: string;
   readonly target: string;
+  readonly cond: string | undefined;
 
   static label = 'transition';
   static schema = TransitionNodeAttr;
@@ -27,6 +30,7 @@ export class TransitionNode extends BaseNode implements z.infer<typeof Transitio
     super(transition);
     this.event = transition.event;
     this.target = transition.target;
+    this.cond = transition.cond;
   }
 
   get isEventLess() {
@@ -37,8 +41,65 @@ export class TransitionNode extends BaseNode implements z.infer<typeof Transitio
     return this.target === '';
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  getTarget(state: InternalState) {
+    return this.target;
+
+    // TODO: Figure out how to determine if target is an expression or a literal
+    // return evaluateExpression(this.target, state);
+  }
+
+  checkCondition(state: InternalState): boolean {
+    if (!this.cond) return true;
+
+    try {
+      return evaluateExpression(this.cond, state) === 'true';
+    } catch (err) {
+      state = addPendingEvent(state, {
+        name: 'error.transition.condition-failed',
+        type: 'platform',
+        sendid: '',
+        origin: '',
+        origintype: '',
+        invokeid: '',
+        data: {
+          error: (err as Error).message,
+          source: 'transition'
+        }
+      });
+
+      return false;
+    }
+  }
+
   async run(state: InternalState): Promise<InternalState> {
-    return state;
+    let currentState = { ...state };
+
+    // Execute all executable content children in document order
+    for (const child of this.children) {
+      if (child.isExecutable) {
+        try {
+          // Execute the executable content and update state
+          const result = await child.run(currentState);
+          currentState = { ...currentState, ...result };
+        } catch (error) {
+          currentState = addPendingEvent(currentState, {
+            name: 'error.transaction.execution-failed',
+            type: 'platform',
+            sendid: '',
+            origin: '',
+            origintype: '',
+            invokeid: '',
+            data: {
+              error: (error as Error).message,
+              source: 'transition'
+            }
+          });
+        }
+      }
+    }
+    
+    return currentState;
   }
 
   static createFromJSON(jsonInput: Record<string, unknown>): CreateFromJsonResponse<TransitionNode> {

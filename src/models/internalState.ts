@@ -20,6 +20,7 @@ export interface InternalState {
   // System variables (always present)
   _name?: string;
   _sessionId?: string;
+  _datamodel?: string;
   data: Record<string, unknown>;
 
   // Event context (optional - only present during event processing)
@@ -29,9 +30,6 @@ export interface InternalState {
   _pendingInternalEvents?: SCXMLEvent[];
 }
 
-// Legacy type aliases for backward compatibility during migration
-// TODO: Remove these once all code is updated to use InternalState
-export type EventlessState = InternalState;
 export type EventState = InternalState & { _event: SCXMLEvent };
 
 export function processPendingEvents(state: InternalState, queue: Queue<SCXMLEvent>): void {

@@ -2,6 +2,7 @@ import z from 'zod';
 import { BaseExecutableNode } from '../models/base-executable';
 import * as _ from 'lodash';
 import { InternalState } from '../models/internalState';
+import { evaluateExpression } from '../parser/expressions.nodejs';
 
 const AssignNodeAttr = BaseExecutableNode.schema.extend({
   location: z.string().min(1), // Required location expression
@@ -38,15 +39,16 @@ export class AssignNode extends BaseExecutableNode {
     try {
       if (this.expr) {
         // Evaluate expression to get value
+        
+        const value = evaluateExpression(this.expr, state);
 
-        // TODO: Create Expression Evaluator
-        // const value = this.evaluateExpression(this.expr, state);
-
-        return this.assignToLocation(state, this.location, this.expr);
-      } else {
+        return this.assignToLocation(state, this.location, value);
+      } else if (this.children.length > 0) {
         // Use child content as value
         const value = this.children.map(child => child.content).join('');
         return this.assignToLocation(state, this.location, value);
+      } else {
+        return this.assignToLocation(state, this.location, this.content);
       }
     } catch (err) {
       const error = new Error('Assignment Failed: ' + (err as Error).message);
@@ -60,7 +62,7 @@ export class AssignNode extends BaseExecutableNode {
   private assignToLocation(state: InternalState, location: string, value: unknown): InternalState {
     // Create a new state with the assignment
     const updatedState = { ...state };
-    _.set(updatedState, location, value);
+    _.set(updatedState.data, location, value);
     return updatedState;
   }
 

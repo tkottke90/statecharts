@@ -3,7 +3,8 @@
 export class BaseSCXMLError extends Error {
   constructor(
     message: string,
-    readonly name: string = 'error.base'
+    readonly name: string = 'error.base',
+    public metadata: Record<string, unknown> = {}
   ) {
     super(message);
   }

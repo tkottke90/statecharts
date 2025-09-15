@@ -6,11 +6,26 @@ import { BaseStateNode } from './models/base-state';
 import { AssignNode } from './nodes/assign.node';
 import { BaseExecutableNode } from './models/base-executable';
 import { InternalState } from './models/internalState';
+import { SCXMLNode } from './nodes/scxml.node';
 
 // Type for mock active state chain entries
 type MockActiveStateEntry = [string, Record<string, unknown>];
 // Type for real active state chain entries
 type ActiveStateEntry = [string, BaseStateNode];
+
+// Helper function to create a mock SCXMLNode for testing
+function createMockSCXMLNode(): SCXMLNode {
+  return new SCXMLNode({
+    scxml: {
+      version: '1.0',
+      initial: 'gameStart',
+      name: 'TestStateMachine',
+      datamodel: 'ecmascript',
+      content: '',
+      children: []
+    }
+  });
+}
 
 describe('StateChart', () => {
 
@@ -19,7 +34,7 @@ describe('StateChart', () => {
     let stateChart: StateChart;
 
     beforeEach(() => {
-      stateChart = new StateChart('gameStart', [], new Map());
+      stateChart = new StateChart('gameStart', createMockSCXMLNode(), new Map());
     });
 
     it('should compute entry set for same-parent transition', () => {
@@ -232,7 +247,7 @@ describe('StateChart', () => {
     let stateChart: StateChart;
 
     beforeEach(() => {
-      stateChart = new StateChart('gameStart', [], new Map());
+      stateChart = new StateChart('gameStart', createMockSCXMLNode(), new Map());
     });
 
     it('should exit states and call unmount handlers', () => {
@@ -291,7 +306,7 @@ describe('StateChart', () => {
     let stateChart: StateChart;
 
     beforeEach(() => {
-      stateChart = new StateChart('gameStart', [], new Map());
+      stateChart = new StateChart('gameStart', createMockSCXMLNode(), new Map());
     });
 
     it('should enter states and call mount handlers', () => {
@@ -590,7 +605,7 @@ describe('StateChart', () => {
     let stateChart: StateChart;
 
     beforeEach(() => {
-      stateChart = new StateChart('gameStart', [], new Map());
+      stateChart = new StateChart('gameStart', createMockSCXMLNode(), new Map());
     });
 
     it('should execute AssignNode executable content and update state', async () => {
@@ -598,7 +613,7 @@ describe('StateChart', () => {
       const assignNode = new AssignNode({
         assign: {
           location: 'testVar',
-          expr: 'Hello World',
+          expr: '"Hello World"', // Proper JavaScript string literal
           content: '',
           children: []
         }
@@ -616,7 +631,11 @@ describe('StateChart', () => {
       // Add the assign node as a child of the transition
       transition.children.push(assignNode);
 
-      const initialState = { existingData: 'initial' };
+      const initialState = {
+        existingData: 'initial',
+        _datamodel: 'ecmascript', // Add datamodel for expression evaluation
+        data: {} // Add required data property
+      };
 
       // Act
       const result = await (stateChart as any).executeTransitionContent([transition], initialState);
@@ -624,7 +643,9 @@ describe('StateChart', () => {
       // Assert
       expect(result).toEqual({
         existingData: 'initial',
-        testVar: 'Hello World'
+        testVar: 'Hello World',
+        _datamodel: 'ecmascript',
+        data: {}
       });
     });
 
@@ -633,7 +654,7 @@ describe('StateChart', () => {
       const assignNode1 = new AssignNode({
         assign: {
           location: 'var1',
-          expr: 'value1',
+          expr: '"value1"', // Proper JavaScript string literal
           content: '',
           children: []
         }
@@ -642,7 +663,7 @@ describe('StateChart', () => {
       const assignNode2 = new AssignNode({
         assign: {
           location: 'var2',
-          expr: 'value2',
+          expr: '"value2"', // Proper JavaScript string literal
           content: '',
           children: []
         }
@@ -660,7 +681,11 @@ describe('StateChart', () => {
       // Add nodes in specific order
       transition.children.push(assignNode1, assignNode2);
 
-      const initialState = { baseData: 'base' };
+      const initialState = {
+        baseData: 'base',
+        _datamodel: 'ecmascript', // Add datamodel for expression evaluation
+        data: {} // Add required data property
+      };
 
       // Act
       const result = await (stateChart as any).executeTransitionContent([transition], initialState);
@@ -669,7 +694,9 @@ describe('StateChart', () => {
       expect(result).toEqual({
         baseData: 'base',
         var1: 'value1',
-        var2: 'value2'
+        var2: 'value2',
+        _datamodel: 'ecmascript',
+        data: {}
       });
     });
 
@@ -678,7 +705,7 @@ describe('StateChart', () => {
       const assignNode1 = new AssignNode({
         assign: {
           location: 'transition1Var',
-          expr: 'from transition 1',
+          expr: '"from transition 1"', // Proper JavaScript string literal
           content: '',
           children: []
         }
@@ -687,7 +714,7 @@ describe('StateChart', () => {
       const assignNode2 = new AssignNode({
         assign: {
           location: 'transition2Var',
-          expr: 'from transition 2',
+          expr: '"from transition 2"', // Proper JavaScript string literal
           content: '',
           children: []
         }
@@ -713,7 +740,11 @@ describe('StateChart', () => {
       });
       transition2.children.push(assignNode2);
 
-      const initialState = { baseData: 'base' };
+      const initialState = {
+        baseData: 'base',
+        _datamodel: 'ecmascript', // Add datamodel for expression evaluation
+        data: {} // Add required data property
+      };
 
       // Act
       const result = await (stateChart as any).executeTransitionContent([transition1, transition2], initialState);
@@ -722,7 +753,9 @@ describe('StateChart', () => {
       expect(result).toEqual({
         baseData: 'base',
         transition1Var: 'from transition 1',
-        transition2Var: 'from transition 2'
+        transition2Var: 'from transition 2',
+        _datamodel: 'ecmascript',
+        data: {}
       });
     });
 
@@ -764,7 +797,7 @@ describe('StateChart', () => {
       const successNode = new AssignNode({
         assign: {
           location: 'successVar',
-          expr: 'success',
+          expr: '"success"', // Proper JavaScript string literal
           content: '',
           children: []
         }
@@ -781,7 +814,11 @@ describe('StateChart', () => {
 
       transition.children.push(failingNode, successNode);
 
-      const initialState = { baseData: 'base' };
+      const initialState = {
+        baseData: 'base',
+        _datamodel: 'ecmascript', // Add datamodel for expression evaluation
+        data: {} // Add required data property
+      };
 
       // Spy on console.error to verify error handling
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
@@ -792,7 +829,23 @@ describe('StateChart', () => {
       // Assert
       expect(result).toEqual({
         baseData: 'base',
-        successVar: 'success'
+        successVar: 'success',
+        _datamodel: 'ecmascript',
+        data: {},
+        _pendingInternalEvents: [
+          {
+            name: 'error.transaction.execution-failed',
+            type: 'platform',
+            sendid: '',
+            origin: '',
+            origintype: '',
+            invokeid: '',
+            data: {
+              error: 'Simulated execution error',
+              source: 'transition'
+            }
+          }
+        ]
       });
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining('Error executing transition content'),
@@ -828,7 +881,7 @@ describe('StateChart', () => {
       const assignNode1 = new AssignNode({
         assign: {
           location: 'status',
-          expr: 'processing started',
+          expr: '"processing started"', // Proper JavaScript string literal
           content: '',
           children: []
         }
@@ -837,7 +890,7 @@ describe('StateChart', () => {
       const assignNode2 = new AssignNode({
         assign: {
           location: 'timestamp',
-          expr: '1234567890',
+          expr: '"1234567890"', // Proper JavaScript string literal
           content: '',
           children: []
         }
@@ -854,7 +907,10 @@ describe('StateChart', () => {
 
       transition.children.push(assignNode1, assignNode2);
 
-      const initialState = {};
+      const initialState = {
+        _datamodel: 'ecmascript', // Add datamodel for expression evaluation
+        data: {} // Add required data property
+      };
 
       // Act
       const result = await (stateChart as any).executeTransitionContent([transition], initialState);
@@ -862,7 +918,9 @@ describe('StateChart', () => {
       // Assert
       expect(result).toEqual({
         status: 'processing started',
-        timestamp: '1234567890'
+        timestamp: '1234567890',
+        _datamodel: 'ecmascript',
+        data: {}
       });
 
       // This demonstrates how the XML structure would work:

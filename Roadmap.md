@@ -332,23 +332,74 @@ Basic event-driven state machines can be built and used today. The core SCXML ev
 - Comprehensive unit tests for history tracking
 - Documentation and examples for debugging workflows
 
-## Phase 7: Advanced Features 🚀
+## Phase 7: Multi-Environment Support 🌐
+
+**Priority: MEDIUM** - Enable browser and universal JavaScript runtime support
+
+**Why This Matters:** Currently limited to Node.js environments. Expanding to browsers and other JavaScript runtimes would significantly increase adoption and use cases.
+
+### 7.1 Environment Detection & Abstraction
+- [ ] Runtime environment detection (Node.js, Browser, Web Workers, Deno, Bun)
+- [ ] Parser abstraction layer (XMLParser interface)
+- [ ] Environment-specific parser implementations
+- [ ] Conditional module loading system
+
+### 7.2 Browser-Specific Implementation
+- [ ] Browser-compatible XML parser (DOMParser-based)
+- [ ] CSP-compliant expression evaluation (no eval/Function)
+- [ ] Browser-optimized bundle (tree-shakeable)
+- [ ] Web Worker compatibility
+- [ ] TypeScript browser type definitions
+
+### 7.3 Node.js-Specific Optimizations
+- [ ] Fast XML parser integration (`fast-xml-parser`)
+- [ ] VM-based secure expression evaluation
+- [ ] File system integration for SCXML loading
+- [ ] Stream-based processing for large documents
+
+### 7.4 Universal Build System
+- [ ] Webpack/Rollup configuration for multi-target builds
+- [ ] Package.json export maps for environment-specific entry points
+- [ ] Build-time parser substitution
+- [ ] Environment-specific feature flags
+
+### 7.5 Expression Evaluation Strategy
+- [ ] **Node.js**: VM-based sandboxing (maximum security)
+- [ ] **Browser**: Function constructor with CSP compliance
+- [ ] **Fallback**: Simple property access only
+- [ ] Universal expression evaluator with environment detection
+
+**Deliverables:**
+- Universal expression evaluator with environment-specific implementations
+- Browser and Node.js build targets with optimized parsers
+- Comprehensive cross-environment test suite
+- Documentation for environment-specific features and limitations
+- Migration guide for Node.js-only users
+
+**Benefits:**
+- ✅ **Broader Adoption** - Works in browsers, Node.js, Deno, Bun
+- ✅ **Smaller Bundles** - Environment-specific optimizations
+- ✅ **Better Performance** - Optimal parsers for each environment
+- ✅ **Security** - CSP-compliant browser version
+- ✅ **Future-Proof** - Ready for new JavaScript runtimes
+
+## Phase 8: Advanced Features 🚀
 
 **Priority: LOW** - Nice-to-have features for complete SCXML support
 
-### 7.1 History States
+### 8.1 History States
 - [ ] HistoryNode class (shallow and deep)
 - [ ] State configuration recording
 - [ ] History state restoration
 - [ ] Default history transitions
 
-### 7.2 Additional Executable Content
+### 8.2 Additional Executable Content
 - [ ] `<if>`, `<elseif>`, `<else>` conditional execution
 - [ ] `<foreach>` iteration
 - [ ] `<script>` arbitrary code execution
 - [ ] `<log>` debugging output
 
-### 7.3 External Communication
+### 8.3 External Communication
 - [ ] `<send>` element for external events
 - [ ] `<invoke>` element for external services
 - [ ] Event I/O processors

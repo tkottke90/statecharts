@@ -16,6 +16,7 @@ describe('RaiseNode', () => {
         invokeid: 'test-invoke-id',
         data: { currentData: 'test' }
       },
+      _datamodel: 'ecmascript', // Add datamodel for expression evaluation
       data: { counter: 1 },
       _pendingInternalEvents: []
     };
@@ -80,7 +81,7 @@ describe('RaiseNode', () => {
     it('should add internal event to pending events with event expression', async () => {
       const raiseNode = new RaiseNode({
         raise: {
-          eventexpr: 'dynamic.event',
+          eventexpr: '"dynamic.event"', // Proper JavaScript string literal
           content: '',
           children: []
         }
@@ -90,7 +91,7 @@ describe('RaiseNode', () => {
 
       expect(result._pendingInternalEvents).toHaveLength(1);
       expect(result._pendingInternalEvents![0]).toEqual({
-        name: 'dynamic.event', // Currently uses expression as-is (TODO: implement expression evaluator)
+        name: 'dynamic.event', // Expression evaluates to this string
         type: 'internal',
         sendid: '',
         origin: '',

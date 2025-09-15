@@ -2,7 +2,7 @@ import { BaseNode } from "./models";
 import SimpleXML from 'simple-xml-to-json';
 import { mergeMaps, parse } from "./parser";
 import { BaseStateNode } from "./models/base-state";
-import { TransitionNode } from "./nodes";
+import { SCXMLNode, TransitionNode } from "./nodes";
 import { findLCCA, computeExitSet, buildEntryPath, type ActiveStateEntry } from './utils/transition-utils';
 import { InternalState, processPendingEvents, SCXMLEvent } from './models/internalState';
 import { Queue } from './models/event-queue';
@@ -15,11 +15,6 @@ interface StateChartOptions {
   timeout?: number;
 }
 
-const SCXMLSchema = z.object({
-  initial: z.string().optional(),
-  children: z.array(z.any()).optional()
-});
-
 export class StateChart {
   private states: Map<string, BaseStateNode> = new Map();
   private activeStateChain: Tuple<BaseStateNode> = [];
@@ -30,7 +25,7 @@ export class StateChart {
   
   constructor(
     private readonly initial: string,
-    private readonly nodes: BaseNode[],
+    private readonly root: SCXMLNode,
     stateMap: Map<string, BaseNode>
   ) {
 
@@ -71,13 +66,11 @@ export class StateChart {
   private selectTransitions(event: SCXMLEvent, state: InternalState): TransitionNode[] {
     const enabledTransitions: TransitionNode[] = [];
 
-    for (const [statePath, stateNode] of this.activeStateChain) {
+    for (const [, stateNode] of this.activeStateChain) {
       const transitions = stateNode.getTransitions();
 
       for (const transition of transitions) {
-        if (this.eventMatches(event, transition.event)) {
-          // TODO: Add condition matching when TransitionNode supports 'cond' attribute
-          // && this.conditionMatches(transition.cond, state)
+        if (this.eventMatches(event, transition.event) && transition.checkCondition(state)) {
           enabledTransitions.push(transition);
         }
       }
@@ -98,13 +91,6 @@ export class StateChart {
 
     // Exact match
     return event.name === eventDescriptor;
-  }
-
-  // Helper method for condition matching (placeholder for now)
-  private conditionMatches(condition?: string, state?: InternalState): boolean {
-    // TODO: Implement condition evaluation
-    // For now, return true if no condition specified
-    return !condition || condition.trim() === '';
   }
 
   // Helper method to remove conflicting transitions (placeholder for now)
@@ -286,38 +272,7 @@ export class StateChart {
     // Execute transitions in document order
     for (const transition of transitions) {
       // Execute all executable content within this transition
-      currentState = await this.executeTransitionExecutableContent(transition, currentState);
-    }
-
-    return currentState;
-  }
-
-  /**
-   * Executes all executable content within a single transition.
-   * Processes child elements that implement executable content semantics.
-   *
-   * @param transition - The transition containing executable content
-   * @param state - Current state of the state machine
-   * @returns Promise resolving to the updated state after executing transition content
-   */
-  private async executeTransitionExecutableContent(transition: TransitionNode, state: InternalState): Promise<InternalState> {
-    let currentState = { ...state };
-
-    // Execute all executable content children in document order
-    for (const child of transition.children) {
-      if (child.isExecutable) {
-        try {
-          // Execute the executable content and update state
-          const result = await child.run(currentState);
-          currentState = { ...currentState, ...result };
-        } catch (error) {
-          // Handle execution errors according to SCXML error handling
-
-          // TODO: Log this elsewhere
-          console.error(`Error executing transition content in ${transition.target}:`, error);
-          // Continue execution - SCXML is resilient to individual content failures
-        }
-      }
+      currentState = await transition.run(currentState); // Fixed: use currentState instead of state
     }
 
     return currentState;
@@ -417,24 +372,23 @@ export class StateChart {
       throw new Error('Invalid Input: Root element must have `initial` state');
     }
 
-    const { success, error, data } = SCXMLSchema.safeParse(scxml);
+    const { node, success, error  } = SCXMLNode.createFromJSON( scxml );
 
     if (!success) {
       throw error;
     }
 
     // Grab the initial attribute if it is set
-    const initial = data.initial ?? '';
+    const initial = node.initial ?? '';
 
     // Create containers for parsing results
-    const nodes: BaseNode[] = [];
     const nodeMap = new Map<string, BaseNode>();
     const nodeErrors = [];
 
     // Loop over each child in the array and parse them into
     // Nodes.  This kicks of the recursive process of ingesting
     // the XML schema to the StateChart.  
-    for (const child of data.children ?? []) {
+    for (const child of scxml.children ?? []) {
 
       // Parse the child from JSON into a Node
       const { root, identifiableChildren, error } = parse(child);
@@ -451,13 +405,13 @@ export class StateChart {
       // we should record them as well
 
       // Collect all of the children in the array
-      nodes.push(root);
+      node.children.push(root);
       
       // Add the child with their full paths to the node map
       // so that we can access them by their full path later
       mergeMaps(identifiableChildren, nodeMap);
     }
 
-    return new StateChart(initial, nodes, nodeMap);
+    return new StateChart(initial, node, nodeMap);
   }
 }

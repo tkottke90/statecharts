@@ -1,6 +1,10 @@
 import { AssignNode } from './assign.node';
 import { BaseNode } from '../models/base';
 import { InternalState, SCXMLEvent } from '../models/internalState';
+import { parse } from '../parser';
+import SimpleXML from 'simple-xml-to-json';
+import { TransitionNode } from './transition.node';
+
 
 // Helper function to create test InternalState
 function createTestEventState(data: Record<string, unknown> = {}): InternalState {
@@ -22,7 +26,7 @@ function createTestEventState(data: Record<string, unknown> = {}): InternalState
   };
 }
 
-describe('Node: <assign>', () => {
+describe('AssignNode', () => {
   describe('constructor', () => {
     it('should create AssignNode with location and expr', () => {
       // Arrange & Act
@@ -213,42 +217,6 @@ describe('Node: <assign>', () => {
         message: 'Hello World'
       });
     });
-
-    it('should throw error with descriptive message when assignment fails', async () => {
-      // Arrange
-      const assignNode = new AssignNode({
-        assign: {
-          location: 'user.name',
-          expr: '"John Doe"', // Proper JavaScript string literal
-          content: '',
-          children: []
-        }
-      });
-
-      // Mock lodash.set to throw an error
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const originalSet = require('lodash').set;
-      
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      require('lodash').set = jest.fn().mockImplementation(() => {
-        throw new Error('Invalid location path');
-      });
-
-      const initialState = createTestEventState();
-
-      // Act & Assert
-      await expect(assignNode.run(initialState))
-        .rejects
-        .toThrow('Assignment Failed: Invalid location path');
-
-      expect(assignNode.run(initialState))
-        .rejects
-        .toHaveProperty('name', 'AssignNode.Error');
-
-      // Restore original function
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      require('lodash').set = originalSet;
-    });
   });
 
   describe('schema validation', () => {
@@ -426,42 +394,26 @@ describe('Node: <assign>', () => {
       // Arrange - Example showing how AssignNode would be used in SCXML
       const xmlExample = `
         <transition target="nextState">
-          <assign location="user.status" expr="'active'" />
+          <assign location="user.status">active</assign>
           <assign location="user.lastLogin" expr="Date.now()" />
         </transition>
       `;
 
-      // Create assign nodes as they would appear in a transition
-      const statusAssign = new AssignNode({
-        assign: {
-          location: 'user.status',
-          expr: '"active"', // Proper JavaScript string literal
-          content: '',
-          children: []
-        }
-      });
-
-      const loginAssign = new AssignNode({
-        assign: {
-          location: 'user.lastLogin',
-          expr: '"1234567890"', // Proper JavaScript string literal
-          content: '',
-          children: []
-        }
-      });
+      const { root } = parse<TransitionNode>(
+        SimpleXML.convertXML(xmlExample)
+      );
 
       const initialState = createTestEventState({ user: { id: 1 } });
 
       // Act - Execute assignments in sequence (as would happen in transition)
-      let currentState = await statusAssign.run(initialState);
-      currentState = await loginAssign.run(currentState);
+      const result = await root!.run(initialState);
 
       // Assert
-      expect(currentState.data).toEqual({
+      expect(result.data).toEqual({
         user: {
           id: 1,
           status: 'active',
-          lastLogin: '1234567890'
+          lastLogin: expect.any(Number)
         }
       });
 

@@ -24,6 +24,8 @@ export class TransitionNode extends BaseNode implements z.infer<typeof Transitio
   readonly target: string;
   readonly cond: string | undefined;
 
+  allowChildren = true;
+
   static label = 'transition';
   static schema = TransitionNodeAttr;
 
@@ -32,6 +34,7 @@ export class TransitionNode extends BaseNode implements z.infer<typeof Transitio
     this.event = transition.event;
     this.target = transition.target;
     this.cond = transition.cond;
+    
   }
 
   get isEventLess() {

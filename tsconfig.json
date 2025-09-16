@@ -52,6 +52,7 @@
     "dist/**/*",
     "**/*.spec.ts",
     "**/*.test.ts",
-    "src/test_utils/**/*"
+    "src/test_utils/**/*",
+    "examples/**/*"
   ]
 }

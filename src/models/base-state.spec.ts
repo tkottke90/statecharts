@@ -3,6 +3,10 @@ import { BaseStateNode } from './base-state';
 import { TransitionNode } from '../nodes/transition.node';
 import { FinalNode } from '../nodes/final.node';
 import { InitialNode } from '../nodes/initial.node';
+import { OnEntryNode } from '../nodes/onentry.node.';
+import { OnExitNode } from '../nodes/onexit.node.';
+import { InternalState } from './internalState';
+import { AssignNode } from '../nodes/assign.node';
 
 describe('BaseStateNode', () => {
 
@@ -440,54 +444,132 @@ describe('BaseStateNode', () => {
   });
 
   describe('#mount', () => {
-    it.skip('should call onentry for atomic states', () => {
-      // Test atomic state mounting
+    it('should execute OnEntryNode instances for atomic states', async () => {
+      // Arrange
+      const onEntryNode = new OnEntryNode({
+        onentry: { content: '', children: [
+          new AssignNode({
+            assign: { location: 'entryExecuted', content: 'yes', children: [] }
+          })
+        ] }
+      });
+
+      // Mock the run method to track execution
+      const runSpy = jest.spyOn(onEntryNode, 'run');
+
+      const atomicState = new (class extends BaseStateNode {
+        constructor() {
+          super({ content: '', children: [onEntryNode] });
+          // @ts-expect-error - Setting readonly property for testing
+          this.id = 'atomicState';
+        }
+      })();
+
+      const initialState: InternalState = { data: { initial: 'value' } };
+
+      // Act
+      const result = await atomicState.mount(initialState);
+
+      // Assert
+      expect(runSpy).toHaveBeenCalledWith(initialState);
+      expect(result.state.data.entryExecuted).toBe('yes');
+      expect(result.node).toBe(atomicState);
+      expect(result.childPath).toBeUndefined();
     });
 
-    it.skip('should return state from onentry for atomic states', () => {
-      // Test atomic state return value
-    });
+    it('should return compound state path when initial state exists', async () => {
+      // Arrange
+      const compoundState = new (class extends BaseStateNode {
+        constructor() {
+          super({ content: '', children: [] });
+          // @ts-expect-error - Setting readonly property for testing
+          this.id = 'compoundState';
+          // @ts-expect-error - Setting readonly property for testing
+          this.initial = 'childState';
+        }
 
-    it.skip('should return compound state path for compound states with initial', () => {
-      // Test compound state path generation
-    });
+        get isAtomic() {
+          return false; // Compound state
+        }
+      })();
 
-    it.skip('should return state id and state for compound states with initial', () => {
-      // Test compound state return format
-    });
+      const initialState: InternalState = { data: {} };
 
-    it.skip('should return just state id when no initial state found', () => {
-      // Test fallback behavior
-    });
+      // Act
+      const result = await compoundState.mount(initialState);
 
-    it.skip('should handle nested state paths correctly', () => {
-      // Test path construction
-    });
-
-    it.skip('should not call onentry for compound states', () => {
-      // Test compound state behavior
+      // Assert
+      expect(result.childPath).toBe('childState');
+      expect(result.node).toBe(compoundState);
     });
   });
 
   describe('#unmount', () => {
-    it.skip('should call onexit handler', () => {
-      // Test onexit execution
+    it('should execute OnExitNode instances', async () => {
+      // Arrange
+      const onExitNode = new OnExitNode({
+        onexit: { content: '', children: [
+          new AssignNode({
+            assign: { location: 'exitExecuted', content: 'yes', children: [] }
+          })
+        ] }
+      });
+
+      // Mock the run method to track execution
+      const runSpy = jest.spyOn(onExitNode, 'run');
+
+      const stateNode = new (class extends BaseStateNode {
+        constructor() {
+          super({ content: '', children: [onExitNode] });
+          // @ts-expect-error - Setting readonly property for testing
+          this.id = 'testState';
+        }
+      })();
+
+      const initialState: InternalState = { data: { initial: 'value' } };
+
+      // Act
+      const result = await stateNode.unmount(initialState);
+
+      // Assert
+      expect(runSpy).toHaveBeenCalledWith(initialState);
+      expect(result.data.exitExecuted).toBe('yes');
     });
 
-    it.skip('should pass current state to onexit', () => {
-      // Test parameter passing
-    });
+    it('should execute multiple OnExitNode instances', async () => {
+      // Arrange
+      const onExitNode1 = new OnExitNode({
+        onexit: { content: '', children: [
+          new AssignNode({
+            assign: { location: 'step1', content: 'true', children: [] }
+          })
+        ] }
+      });
 
-    it.skip('should return result from onexit handler', () => {
-      // Test return value
-    });
+      const onExitNode2 = new OnExitNode({
+        onexit: { content: '', children: [
+          new AssignNode({
+            assign: { location: 'step2', content: 'true', children: [] }
+          })
+        ] }
+      });
 
-    it.skip('should work with custom onexit handlers', () => {
-      // Test custom handler integration
-    });
+      const stateNode = new (class extends BaseStateNode {
+        constructor() {
+          super({ content: '', children: [onExitNode1, onExitNode2] });
+          // @ts-expect-error - Setting readonly property for testing
+          this.id = 'testState';
+        }
+      })();
 
-    it.skip('should handle state modifications in onexit', () => {
-      // Test state modification
+      const initialState: InternalState = { data: {} };
+
+      // Act
+      const result = await stateNode.unmount(initialState);
+
+      // Assert
+      expect(result.data.step1).toBe('true');
+      expect(result.data.step2).toBe('true');
     });
   });
 

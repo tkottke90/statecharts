@@ -1,5 +1,6 @@
 import z from 'zod';
-import { BaseNode, BaseStateAttr, CreateFromJsonResponse } from '../models';
+import { BaseNode, BaseStateAttr } from '../models/base';
+import { CreateFromJsonResponse } from '../models/methods';
 import { InternalState } from '../models/internalState';
 
 const DataNodeAttr = BaseStateAttr.extend({

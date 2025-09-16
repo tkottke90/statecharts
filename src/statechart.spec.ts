@@ -642,10 +642,11 @@ describe('StateChart', () => {
 
       // Assert
       expect(result).toEqual({
-        existingData: 'initial',
-        testVar: 'Hello World',
+        existingData: 'initial', // This stays at root level (was in initial state)
         _datamodel: 'ecmascript',
-        data: {}
+        data: {
+          testVar: 'Hello World' // AssignNode correctly assigns to data model
+        }
       });
     });
 
@@ -692,11 +693,12 @@ describe('StateChart', () => {
 
       // Assert
       expect(result).toEqual({
-        baseData: 'base',
-        var1: 'value1',
-        var2: 'value2',
+        baseData: 'base', // This stays at root level (was in initial state)
         _datamodel: 'ecmascript',
-        data: {}
+        data: {
+          var1: 'value1', // AssignNode correctly assigns to data model
+          var2: 'value2'  // AssignNode correctly assigns to data model
+        }
       });
     });
 
@@ -751,11 +753,12 @@ describe('StateChart', () => {
 
       // Assert
       expect(result).toEqual({
-        baseData: 'base',
-        transition1Var: 'from transition 1',
-        transition2Var: 'from transition 2',
+        baseData: 'base', // This stays at root level (was in initial state)
         _datamodel: 'ecmascript',
-        data: {}
+        data: {
+          transition1Var: 'from transition 1', // AssignNode correctly assigns to data model
+          transition2Var: 'from transition 2'  // AssignNode correctly assigns to data model
+        }
       });
     });
 
@@ -820,18 +823,16 @@ describe('StateChart', () => {
         data: {} // Add required data property
       };
 
-      // Spy on console.error to verify error handling
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-
       // Act
       const result = await (stateChart as any).executeTransitionContent([transition], initialState);
 
-      // Assert
+      // Assert - Error handling generates structured error events instead of console logging
       expect(result).toEqual({
-        baseData: 'base',
-        successVar: 'success',
+        baseData: 'base', // This stays at root level (was in initial state)
         _datamodel: 'ecmascript',
-        data: {},
+        data: {
+          successVar: 'success' // AssignNode correctly assigns to data model
+        },
         _pendingInternalEvents: [
           {
             name: 'error.transaction.execution-failed',
@@ -847,13 +848,6 @@ describe('StateChart', () => {
           }
         ]
       });
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Error executing transition content'),
-        expect.any(Error)
-      );
-
-      // Cleanup
-      consoleSpy.mockRestore();
     });
 
     it('should work with StateChart constructed from XML with executable content', async () => {
@@ -917,10 +911,11 @@ describe('StateChart', () => {
 
       // Assert
       expect(result).toEqual({
-        status: 'processing started',
-        timestamp: '1234567890',
         _datamodel: 'ecmascript',
-        data: {}
+        data: {
+          status: 'processing started', // AssignNode correctly assigns to data model
+          timestamp: '1234567890'       // AssignNode correctly assigns to data model
+        }
       });
 
       // This demonstrates how the XML structure would work:

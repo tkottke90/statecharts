@@ -1,8 +1,8 @@
 import z from 'zod';
-import { CreateFromJsonResponse } from '../models';
-import { StateNodeAttr } from './state.node';
 import { BaseStateNode, MountResponse } from '../models/base-state';
 import { InternalState, SCXMLEvent, addPendingEvent } from '../models/internalState';
+import { CreateFromJsonResponse } from '../models/methods';
+import { StateNodeAttr } from './state.node';
 
 const FinalNodeAttr = StateNodeAttr;
 
@@ -26,10 +26,10 @@ export class FinalNode extends BaseStateNode implements z.infer<typeof FinalNode
     this.id = final.id;
   }
 
-  mount(state: InternalState): MountResponse {
+  async mount(state: InternalState): Promise<MountResponse> {
     try {
       // Call parent mount first
-      const { node, state: nextState } = super.mount(state);
+      const { node, state: nextState } = await super.mount(state);
 
       // Generate done.state.{parent_id} event when entering final state
       const parentId = this.getParentStateId();

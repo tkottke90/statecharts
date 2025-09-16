@@ -42,16 +42,4 @@ describe('Node: <state>', () => {
       expect(node).toBeInstanceOf(StateNode);
     });
   });
-
-  describe('#run', () => {
-    
-
-
-
-
-
-
-
-
-  });
 });

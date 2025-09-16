@@ -2,3 +2,5 @@ export * from './base';
 export * from './methods';
 export * from './event-queue';
 export * from './internalState';
+export * from './base-state';
+export * from './base-executable';

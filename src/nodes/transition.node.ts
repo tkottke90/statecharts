@@ -1,5 +1,6 @@
 import z from 'zod';
-import { BaseNode, BaseNodeAttr, CreateFromJsonResponse } from '../models';
+import { BaseNode, BaseNodeAttr } from '../models/base';
+import { CreateFromJsonResponse } from '../models/methods';
 import { addPendingEvent, InternalState } from '../models/internalState';
 import { evaluateExpression } from '../parser/expressions.nodejs';
 

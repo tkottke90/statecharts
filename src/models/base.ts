@@ -52,7 +52,7 @@ export class BaseNode implements z.infer<typeof BaseNodeAttr> {
     // Clone state for internal use
     let internalState = { ...state };
 
-    for (const child of this.children) {
+    for (const child of this.children.filter(child => child.isExecutable)) {
       internalState = await child.run(internalState);
 
       yield {

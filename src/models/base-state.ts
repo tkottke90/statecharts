@@ -3,6 +3,8 @@ import { TransitionNode } from "../nodes/transition.node";
 import { BaseNode, BaseNodeAttr } from "./base";
 import { InitialNode } from "../nodes/initial.node";
 import { InternalState } from "./internalState";
+import { OnEntryNode } from "../nodes/onentry.node.";
+import { OnExitNode } from "../nodes/onexit.node.";
 
 export const BaseStateNodeAttr = BaseNodeAttr.extend({
   id: z.string().min(1),
@@ -23,9 +25,6 @@ export class BaseStateNode extends BaseNode {
   allowChildren = true;
   readonly id: string = '';
   readonly initial: string | undefined;
-
-  protected onentry: (state: InternalState) => InternalState = (state) => state;
-  protected onexit: (state: InternalState) => InternalState = (state) => state;
 
 
   /**
@@ -97,14 +96,53 @@ export class BaseStateNode extends BaseNode {
   }
 
   /**
+   * Utility function for getting all onentry nodes for the state.
+   * @returns A list of all onentry nodes
+   */
+  getOnEntryNodes() {
+    return this.children.filter(
+      (child) => {
+        if (child instanceof OnEntryNode && child.hasExecutableChildren) {
+          return true;
+        }
+        return false;
+      }
+    );
+  }
+
+  /**
+   * Utility function for getting all onexit nodes for the state.
+   * @returns A list of all onexit nodes
+   */
+  getOnExitNodes() {
+    return this.children.filter(
+      (child) => {
+        if (child instanceof OnExitNode && child.hasExecutableChildren) {
+          return true;
+        }
+        return false;
+      }
+    );
+  }
+
+  /**
    * Triggers the onentry behavior for the state.
+   * Executes all OnEntryNode instances in document order.
    * @param state The current state
    * @returns The new state
    */
-  mount(state: InternalState): MountResponse {
-    // If we found an Atomic state, we do not not need to look deeper
+  async mount(state: InternalState): Promise<MountResponse> {
+    // Execute all onentry nodes in document order
+    let currentState = { ...state };
+    const onEntryNodes = this.getOnEntryNodes();
+
+    for (const onEntryNode of onEntryNodes) {
+      currentState = await onEntryNode.run(currentState);
+    }
+
+    // If we found an Atomic state, we do not need to look deeper
     if (this.isAtomic) {
-      return { state: this.onentry(state), node: this };
+      return { state: currentState, node: this };
     }
 
     // Check for an initial state - this infers that the state is a compound state
@@ -113,18 +151,27 @@ export class BaseStateNode extends BaseNode {
     // If this is a compound state with a valid initial child state, we should
     // communicate back to the state chart
     if (initialState) {
-      return { state, node: this, childPath: initialState };
+      return { state: currentState, node: this, childPath: initialState };
     }
 
-    return { state, node: this };
+    return { state: currentState, node: this };
   }
 
   /**
    * Triggers the onexit behavior for the state.
+   * Executes all OnExitNode instances in document order.
    * @param state The current state
    * @returns The new state
    */
-  unmount(state: InternalState): InternalState {
-    return this.onexit(state);
+  async unmount(state: InternalState): Promise<InternalState> {
+    // Execute all onexit nodes in document order
+    let currentState = { ...state };
+    const onExitNodes = this.getOnExitNodes();
+
+    for (const onExitNode of onExitNodes) {
+      currentState = await onExitNode.run(currentState);
+    }
+
+    return currentState;
   }
 }

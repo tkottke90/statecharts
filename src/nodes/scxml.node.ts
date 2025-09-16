@@ -1,5 +1,6 @@
 import z from 'zod';
-import { BaseNode, BaseNodeAttr, CreateFromJsonResponse } from '../models';
+import { BaseNode, BaseNodeAttr } from '../models/base';
+import { CreateFromJsonResponse } from '../models/methods';
 
 const SCXML_VERSIONS = ['1.0', '1.1'] as const;
 type SCXMLVersion = (typeof SCXML_VERSIONS)[number];

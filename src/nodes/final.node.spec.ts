@@ -42,7 +42,7 @@ describe('Node: <final>', () => {
   });
 
   describe('#mount', () => {
-    it('should generate done.state.{parent_id} event when entering final state with parent', () => {
+    it('should generate done.state.{parent_id} event when entering final state with parent', async () => {
       // Arrange
       const { node } = FinalNode.createFromJSON({
         id: 'playing.healthSystem.dead' // Has parent 'playing.healthSystem'
@@ -55,7 +55,7 @@ describe('Node: <final>', () => {
       };
 
       // Act
-      const result = node!.mount(initialState);
+      const result = await node!.mount(initialState);
 
       // Assert
       expect(result.state._pendingInternalEvents).toHaveLength(1);
@@ -75,7 +75,7 @@ describe('Node: <final>', () => {
       expect(result.state._sessionId).toEqual(initialState._sessionId);
     });
 
-    it('should not generate done event for top-level final state', () => {
+    it('should not generate done event for top-level final state', async () => {
       // Arrange
       const { node } = FinalNode.createFromJSON({
         id: 'terminated' // Top-level final state (no parent)
@@ -88,7 +88,7 @@ describe('Node: <final>', () => {
       };
 
       // Act
-      const result = node!.mount(initialState);
+      const result = await node!.mount(initialState);
 
       // Assert
       expect(result.state._pendingInternalEvents).toBeUndefined();
@@ -99,7 +99,7 @@ describe('Node: <final>', () => {
       expect(result.state._sessionId).toEqual(initialState._sessionId);
     });
 
-    it('should handle final state with single-segment ID (no parent)', () => {
+    it('should handle final state with single-segment ID (no parent)', async () => {
       // Arrange
       const { node } = FinalNode.createFromJSON({
         id: 'terminated' // Single segment ID (no parent)
@@ -112,7 +112,7 @@ describe('Node: <final>', () => {
       };
 
       // Act
-      const result = node!.mount(initialState);
+      const result = await node!.mount(initialState);
 
       // Assert
       expect(result.state._pendingInternalEvents).toBeUndefined();
@@ -123,7 +123,7 @@ describe('Node: <final>', () => {
       expect(result.state._sessionId).toEqual(initialState._sessionId);
     });
 
-    it('should generate done event for deeply nested final state', () => {
+    it('should generate done event for deeply nested final state', async () => {
       // Arrange
       const { node } = FinalNode.createFromJSON({
         id: 'game.playing.level1.boss.defeated' // Parent: 'game.playing.level1.boss'
@@ -136,7 +136,7 @@ describe('Node: <final>', () => {
       };
 
       // Act
-      const result = node!.mount(initialState);
+      const result = await node!.mount(initialState);
 
       // Assert
       expect(result.state._pendingInternalEvents).toHaveLength(1);
@@ -151,7 +151,7 @@ describe('Node: <final>', () => {
       });
     });
 
-    it('should preserve existing pending events when adding done event', () => {
+    it('should preserve existing pending events when adding done event', async () => {
       // Arrange
       const { node } = FinalNode.createFromJSON({
         id: 'playing.combat.victory'
@@ -175,7 +175,7 @@ describe('Node: <final>', () => {
       };
 
       // Act
-      const result = node!.mount(initialState);
+      const result = await node!.mount(initialState);
 
       // Assert
       expect(result.state._pendingInternalEvents).toHaveLength(2);

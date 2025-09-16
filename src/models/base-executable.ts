@@ -9,4 +9,8 @@ export class BaseExecutableNode extends BaseNode {
   async run(state: InternalState): Promise<InternalState> {
     return state;
   }
+
+  get hasExecutableChildren() {
+    return this.children.some(child => child.isExecutable);
+  }
 }

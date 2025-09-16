@@ -157,13 +157,13 @@ export class StateChart {
     let currentState = { ...state };
 
     // Exit states
-    currentState = this.exitStates(transitions, currentState);
+    currentState = await this.exitStates(transitions, currentState);
 
     // Execute transition content
     currentState = await this.executeTransitionContent(transitions, currentState);
 
     // Enter states
-    currentState = this.enterStates(transitions, currentState);
+    currentState = await this.enterStates(transitions, currentState);
 
     return currentState;
   }
@@ -230,7 +230,7 @@ export class StateChart {
     return null;
   }
 
-  private exitStates(transitions: TransitionNode[], state: InternalState): InternalState {
+  private async exitStates(transitions: TransitionNode[], state: InternalState): Promise<InternalState> {
     // Compute the complete exit set for all transitions
     const statesToExit = this.computeExitSetFromTransitions(transitions);
 
@@ -247,7 +247,7 @@ export class StateChart {
 
         // Execute onexit handler by calling unmount method
         if (typeof stateNode.unmount === 'function') {
-          currentState = { ...currentState, ...stateNode.unmount(currentState) };
+          currentState = { ...currentState, ...await stateNode.unmount(currentState) };
         }
 
         // Remove state from active configuration
@@ -312,7 +312,7 @@ export class StateChart {
     return entryArray.sort((a, b) => a.split('.').length - b.split('.').length);
   }
 
-  private enterStates(transitions: TransitionNode[], state: InternalState): InternalState {
+  private async enterStates(transitions: TransitionNode[], state: InternalState): Promise<InternalState> {
     // Compute the complete entry set for all transitions
     const statesToEnter = this.computeEntrySetFromTransitions(transitions);
 
@@ -327,7 +327,7 @@ export class StateChart {
       if (stateNode) {
         // Execute onentry handler by calling mount method
         if (typeof stateNode.mount === 'function') {
-          const mountResponse = stateNode.mount(currentState);
+          const mountResponse = await stateNode.mount(currentState);
           currentState = { ...currentState, ...mountResponse.state };
         }
 

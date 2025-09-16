@@ -1,6 +1,6 @@
+import * as _ from 'lodash';
 import z from 'zod';
 import { BaseExecutableNode } from '../models/base-executable';
-import * as _ from 'lodash';
 import { InternalState } from '../models/internalState';
 import { evaluateExpression } from '../parser/expressions.nodejs';
 

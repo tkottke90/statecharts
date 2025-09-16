@@ -1,7 +1,8 @@
 export type {
+  BaseExecutableNode,
   BaseNode,
   BaseStateNode,
-  BaseExecutableNode,
+  CreateFromJsonResponse,
   InternalState,
   SCXMLEvent
 } from './models';

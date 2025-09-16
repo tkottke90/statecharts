@@ -2,7 +2,7 @@
 import { RaiseNode } from './raise.node';
 import { InternalState, SCXMLEvent } from '../models/internalState';
 
-describe('RaiseNode', () => {
+describe('Node: <raise>', () => {
   let mockEventState: InternalState;
 
   beforeEach(() => {

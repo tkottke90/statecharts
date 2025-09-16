@@ -250,7 +250,7 @@ describe('StateChart', () => {
       stateChart = new StateChart('gameStart', createMockSCXMLNode(), new Map());
     });
 
-    it('should exit states and call unmount handlers', () => {
+    it('should exit states and call unmount handlers', async () => {
       // Arrange
       // Create a real TransitionNode instance
       const transition = new TransitionNode({
@@ -275,7 +275,7 @@ describe('StateChart', () => {
       healthyStateNode.children.push(transition);
 
       // Spy on the unmount method to verify it's called and mock its return value
-      const unmountSpy = jest.spyOn(healthyStateNode, 'unmount').mockReturnValue({ data: { exitData: 'test' } });
+      const unmountSpy = jest.spyOn(healthyStateNode, 'unmount').mockResolvedValue({ data: { exitData: 'test' } });
 
       // Set up active state chain with real StateNode instances
       const activeStateChain: ActiveStateEntry[] = [
@@ -290,7 +290,7 @@ describe('StateChart', () => {
 
 
       // Act
-      const result = (stateChart as any).exitStates([transition], initialState);
+      const result = await (stateChart as any).exitStates([transition], initialState);
 
       // Assert
       expect(unmountSpy).toHaveBeenCalledWith(initialState);
@@ -309,7 +309,7 @@ describe('StateChart', () => {
       stateChart = new StateChart('gameStart', createMockSCXMLNode(), new Map());
     });
 
-    it('should enter states and call mount handlers', () => {
+    it('should enter states and call mount handlers', async () => {
       // Arrange
       // Create a real TransitionNode instance
       const transition = new TransitionNode({
@@ -347,17 +347,17 @@ describe('StateChart', () => {
       });
 
       // Spy on the mount methods to verify they're called and mock their return values
-      const playingMountSpy = jest.spyOn(playingStateNode, 'mount').mockReturnValue({
+      const playingMountSpy = jest.spyOn(playingStateNode, 'mount').mockResolvedValue({
         node: playingStateNode,
         state: { data: { playingData: 'entered' } }
       });
 
-      const healthSystemMountSpy = jest.spyOn(healthSystemStateNode, 'mount').mockReturnValue({
+      const healthSystemMountSpy = jest.spyOn(healthSystemStateNode, 'mount').mockResolvedValue({
         node: healthSystemStateNode,
         state: { data: { healthSystemData: 'entered' } }
       });
 
-      const healthyMountSpy = jest.spyOn(healthyStateNode, 'mount').mockReturnValue({
+      const healthyMountSpy = jest.spyOn(healthyStateNode, 'mount').mockResolvedValue({
         node: healthyStateNode,
         state: { data: { healthyData: 'entered' } }
       });
@@ -376,7 +376,7 @@ describe('StateChart', () => {
       const initialState = { currentData: 'initial' };
 
       // Act
-      const result = (stateChart as any).enterStates([transition], initialState);
+      const result = await (stateChart as any).enterStates([transition], initialState);
 
       // Assert
       expect(playingMountSpy).toHaveBeenCalledWith(initialState);
@@ -397,7 +397,7 @@ describe('StateChart', () => {
       expect(updatedActiveChain[2][0]).toBe('playing.healthSystem.healthy');
     });
 
-    it('should handle multiple transitions with different targets', () => {
+    it('should handle multiple transitions with different targets', async () => {
       // Arrange
       const transition1 = new TransitionNode({
         transition: {
@@ -435,23 +435,23 @@ describe('StateChart', () => {
       });
 
       // Mock mount methods
-      jest.spyOn(playingStateNode, 'mount').mockReturnValue({
+      jest.spyOn(playingStateNode, 'mount').mockResolvedValue({
         node: playingStateNode,
         state: { data: { playing: true } }
       });
-      jest.spyOn(healthSystemStateNode, 'mount').mockReturnValue({
+      jest.spyOn(healthSystemStateNode, 'mount').mockResolvedValue({
         node: healthSystemStateNode,
         state: { data: { health: 100 } }
       });
-      jest.spyOn(healthyStateNode, 'mount').mockReturnValue({
+      jest.spyOn(healthyStateNode, 'mount').mockResolvedValue({
         node: healthyStateNode,
         state: { data: { status: 'healthy' } }
       });
-      jest.spyOn(scoreSystemStateNode, 'mount').mockReturnValue({
+      jest.spyOn(scoreSystemStateNode, 'mount').mockResolvedValue({
         node: scoreSystemStateNode,
         state: { data: { score: 0 } }
       });
-      jest.spyOn(scoringStateNode, 'mount').mockReturnValue({
+      jest.spyOn(scoringStateNode, 'mount').mockResolvedValue({
         node: scoringStateNode,
         state: { data: { scoring: true } }
       });
@@ -470,7 +470,7 @@ describe('StateChart', () => {
       const initialState = { baseData: 'base' };
 
       // Act
-      const result = (stateChart as any).enterStates([transition1, transition2], initialState);
+      const result = await (stateChart as any).enterStates([transition1, transition2], initialState);
 
       // Assert
       expect(result).toEqual({
@@ -488,7 +488,7 @@ describe('StateChart', () => {
       expect(chainPaths).toContain('playing.scoreSystem.scoring');
     });
 
-    it('should handle transitions with no target gracefully', () => {
+    it('should handle transitions with no target gracefully', async () => {
       // Arrange
       const transition = new TransitionNode({
         transition: {
@@ -502,7 +502,7 @@ describe('StateChart', () => {
       const initialState = { baseData: 'base' };
 
       // Act
-      const result = (stateChart as any).enterStates([transition], initialState);
+      const result = await (stateChart as any).enterStates([transition], initialState);
 
       // Assert
       expect(result).toEqual({ baseData: 'base' });
@@ -512,7 +512,7 @@ describe('StateChart', () => {
       expect(updatedActiveChain).toHaveLength(0);
     });
 
-    it('should handle states that do not exist in states map', () => {
+    it('should handle states that do not exist in states map', async () => {
       // Arrange
       const transition = new TransitionNode({
         transition: {
@@ -530,7 +530,7 @@ describe('StateChart', () => {
       const initialState = { baseData: 'base' };
 
       // Act
-      const result = (stateChart as any).enterStates([transition], initialState);
+      const result = await (stateChart as any).enterStates([transition], initialState);
 
       // Assert
       expect(result).toEqual({ baseData: 'base' });
@@ -540,7 +540,7 @@ describe('StateChart', () => {
       expect(updatedActiveChain).toHaveLength(0);
     });
 
-    it('should maintain proper entry order (shallowest first)', () => {
+    it('should maintain proper entry order (shallowest first)', async () => {
       // Arrange
       const transition = new TransitionNode({
         transition: {
@@ -559,19 +559,19 @@ describe('StateChart', () => {
 
       // Track the order of mount calls
       const mountOrder: string[] = [];
-      jest.spyOn(stateA, 'mount').mockImplementation(() => {
+      jest.spyOn(stateA, 'mount').mockImplementation(async () => {
         mountOrder.push('a');
         return { node: stateA, state: { data: { a: true } } };
       });
-      jest.spyOn(stateB, 'mount').mockImplementation(() => {
+      jest.spyOn(stateB, 'mount').mockImplementation(async () => {
         mountOrder.push('a.b');
         return { node: stateB, state: { data: { b: true } } };
       });
-      jest.spyOn(stateC, 'mount').mockImplementation(() => {
+      jest.spyOn(stateC, 'mount').mockImplementation(async () => {
         mountOrder.push('a.b.c');
         return { node: stateC, state: { data: { c: true } } };
       });
-      jest.spyOn(stateD, 'mount').mockImplementation(() => {
+      jest.spyOn(stateD, 'mount').mockImplementation(async () => {
         mountOrder.push('a.b.c.d');
         return { node: stateD, state: { data: { d: true } } };
       });
@@ -589,7 +589,7 @@ describe('StateChart', () => {
       const initialState = {};
 
       // Act
-      (stateChart as any).enterStates([transition], initialState);
+      await (stateChart as any).enterStates([transition], initialState);
 
       // Assert - verify mount order is shallowest first
       expect(mountOrder).toEqual(['a', 'a.b', 'a.b.c', 'a.b.c.d']);

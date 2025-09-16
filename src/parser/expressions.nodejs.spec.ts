@@ -1,7 +1,7 @@
 import { evaluateExpression } from './expressions.nodejs';
 import { InternalState } from '../models/internalState';
 
-describe('Expression Evaluation: Node', () => {
+describe('Parser: Expression Evaluation', () => {
   it('should evaluate simple expressions', () => {
     // Arrange
     const expression = '2 + 2';

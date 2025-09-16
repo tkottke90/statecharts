@@ -2,21 +2,26 @@
 
 ## Overview
 
-This roadmap outlines the path to a complete W3C SCXML-compliant state machine implementation. **Phase 1 (Event System Foundation) is now functionally complete** - basic event-driven state machines are fully operational! The current codebase has excellent architectural foundations with a **unified InternalState interface**, comprehensive node-based parsing, and a **complete SCXML-compliant event processing system**.
+This roadmap outlines the path to a complete W3C SCXML-compliant state machine implementation. **Phases 1-3 are now complete** - production-ready state machines with full expression evaluation are operational! The current codebase has excellent architectural foundations with a **unified InternalState interface**, comprehensive node-based parsing, **complete SCXML-compliant event processing system**, and **secure expression evaluation**.
 
-## 🎉 **MAJOR MILESTONE: Event-Driven State Machines Working!**
+## 🎉 **MAJOR MILESTONE: Production-Ready State Machines with Expression Support!**
 
 ### **What Works Right Now:**
 - ✅ **Complete Event System** - Internal/external event queues with SCXML-compliant processing
 - ✅ **Event Generation** - `<raise>` elements and `<final>` state completion events
 - ✅ **Event Matching** - Exact match + wildcard patterns (`error.*`)
 - ✅ **Transition Execution** - Event-driven state transitions fully operational
+- ✅ **Expression Evaluation** - ECMAScript expressions with secure Node.js VM execution
+- ✅ **Conditional Logic** - `cond` attribute support for conditional transitions
+- ✅ **Data Manipulation** - `<assign>` elements with full expression support
+- ✅ **Dynamic Events** - `<raise>` with `eventexpr` for computed event names
 - ✅ **Public API** - `sendEvent()` and `sendEventByName()` for external events
 - ✅ **System Variables** - `_event`, `_name`, `_sessionId` available during processing
-- ✅ **173 Passing Tests** - Comprehensive test coverage
+- ✅ **Entry/Exit Actions** - `<onentry>` and `<onexit>` elements with executable content
+- ✅ **230+ Passing Tests** - Comprehensive test coverage with expression evaluation and lifecycle management
 
-### **Ready for Real Usage:**
-Basic event-driven state machines can be built and used today. The core SCXML event processing loop is complete and compliant with the W3C specification.
+### **Ready for Production Usage:**
+Complete state machines with conditional logic, data manipulation, and dynamic event generation can be built and deployed today. The core SCXML specification is implemented with secure expression evaluation.
 
 ## 🎉 **Major Architectural Improvement Completed**
 
@@ -51,7 +56,7 @@ Basic event-driven state machines can be built and used today. The core SCXML ev
 - [x] ~~EventlessState/EventState interface pattern~~ → **Unified InternalState interface** ✨
 - [x] Node-based parsing system with comprehensive error handling
 - [x] BaseNode, BaseStateNode, BaseExecutableNode class hierarchy (updated for unified state)
-- [x] Comprehensive unit test coverage (139 passed, 41 skipped, 17 todo)
+- [x] Comprehensive unit test coverage (230 passed, 28 skipped, 17 todo)
 
 **SCXML Elements**
 - [x] `<scxml>` - **Root element with full W3C compliance** (version, initial, name, datamodel) ✨
@@ -141,7 +146,7 @@ Basic event-driven state machines can be built and used today. The core SCXML ev
 - ✅ **System variables integration** (`_event`, `_name`, `_sessionId`) ✨
 - ✅ **Complete event matching logic** (exact match + wildcards) ✨
 - ✅ **Multiple transition handling** (all matching transitions execute) ✨
-- ✅ **Comprehensive unit tests** (173 passed, 40 skipped, 17 todo) ✨
+- ✅ **Comprehensive unit tests** (230 passed, 28 skipped, 17 todo) ✨
 
 **🎯 RESULT: Basic event-driven state machines are fully operational!**
 
@@ -194,76 +199,86 @@ Basic event-driven state machines can be built and used today. The core SCXML ev
 - Initial state configuration computation from `initial` attribute
 - Session lifecycle management using `name` attribute
 
-## Phase 3: Expression Evaluator 🧮 **NEXT PRIORITY**
+## Phase 3: Expression Evaluator 🧮 **MAJOR PROGRESS - CORE FUNCTIONALITY COMPLETE**
 
-**Priority: HIGH** - Unblocks conditional logic and data manipulation
+**Status: CORE FUNCTIONALITY COMPLETE** - Expression evaluation system operational with ECMAScript support
 
-**Why This is Next:** With Phase 1 (Event System) and Phase 2 (Root Element) complete, the next logical step is implementing expression evaluation to enable conditional transitions, data manipulation, and dynamic event generation.
+**Achievement:** Complete expression evaluation system with Node.js VM-based security, ECMAScript data model support, and integration with AssignNode and TransitionNode for conditional logic and data manipulation.
 
-### 3.1 Basic Expression Engine
-- [ ] Simple expression parser (variables, literals, operators)
-- [ ] Data model access (`data.variableName`)
-- [ ] System variable access (`_event.name`)
-- [ ] Basic arithmetic and comparison operators
+### 3.1 Basic Expression Engine ✅ **COMPLETED**
+- [x] **Node.js VM-based expression evaluator** - **COMPLETED** ✅
+- [x] **Data model access** (`data.variableName`) - **COMPLETED** ✅
+- [x] **System variable access** (`_event.name`) - **COMPLETED** ✅
+- [x] **ECMAScript data model support** - **COMPLETED** ✅
+- [x] **Secure sandboxed execution** with readonly data protection - **COMPLETED** ✅
 
-### 3.2 Condition Evaluation
-- [ ] `cond` attribute evaluation in transitions
-- [ ] Boolean expression support
-- [ ] Error handling for invalid expressions
-- [ ] Integration with transition selection
+### 3.2 Condition Evaluation ✅ **COMPLETED**
+- [x] **`cond` attribute evaluation in transitions** - **COMPLETED** ✅
+- [x] **Boolean expression support** - **COMPLETED** ✅
+- [x] **Error handling for invalid expressions** - **COMPLETED** ✅
+- [x] **Integration with transition selection** - **COMPLETED** ✅
 
-### 3.3 Assignment Expressions
-- [ ] Complete AssignNode.run() implementation
-- [ ] Location expression evaluation
-- [ ] Value expression evaluation
-- [ ] Lodash integration for deep property access
+### 3.3 Assignment Expressions ✅ **COMPLETED**
+- [x] **Complete AssignNode.run() implementation** - **COMPLETED** ✅
+- [x] **Location expression evaluation** - **COMPLETED** ✅
+- [x] **Value expression evaluation** - **COMPLETED** ✅
+- [x] **Lodash integration for deep property access** - **COMPLETED** ✅
+- [x] **Proper data model assignment** (assigns to `state.data`) - **COMPLETED** ✅
 
-### 3.4 Event Expressions
-- [x] Complete RaiseNode.run() implementation - **COMPLETED**
-- [x] Static event name support - **COMPLETED**
-- [ ] `eventexpr` attribute evaluation (needs expression evaluator)
-- [ ] Dynamic event name generation
+### 3.4 Event Expressions ✅ **COMPLETED**
+- [x] **Complete RaiseNode.run() implementation** - **COMPLETED** ✅
+- [x] **Static event name support** - **COMPLETED** ✅
+- [x] **`eventexpr` attribute evaluation** - **COMPLETED** ✅
+- [x] **Dynamic event name generation** - **COMPLETED** ✅
 
-**Completed in Phase 3:**
-- ✅ **RaiseNode implementation** with static event names (unified state interface) ✨
-- ✅ **Structured error handling** with `error.raise.*` events
-- ✅ **FinalNode event generation** with `done.state.{parent_id}` events ✨
-- ✅ **Comprehensive unit tests** for both RaiseNode and FinalNode ✨
+**✅ PHASE 3 ACHIEVEMENTS - COMPLETE EXPRESSION EVALUATION SYSTEM:**
+- ✅ **Node.js VM-based expression evaluator** with secure sandboxing ✨
+- ✅ **ECMAScript data model support** (defaulting to 'ecmascript' when undefined) ✨
+- ✅ **Complete AssignNode implementation** with proper data model assignment ✨
+- ✅ **TransitionNode condition evaluation** (`cond` attribute support) ✨
+- ✅ **RaiseNode dynamic event generation** (`eventexpr` attribute support) ✨
+- ✅ **Comprehensive error handling** with graceful fallbacks ✨
+- ✅ **Security-first design** with readonly data protection ✨
+- ✅ **Full test suite integration** with proper expression syntax ✨
 
-**Remaining Deliverables:**
-- Expression evaluator utility class
-- Updated AssignNode implementation (unified state interface)
-- RaiseNode `eventexpr` support
-- Condition evaluation in transition selection
-- Expression evaluation unit tests
+**🎯 RESULT: Conditional logic and data manipulation fully operational!**
 
-## Phase 4: Entry/Exit Actions 🚪
+## Phase 4: Entry/Exit Actions ✅ **COMPLETED**
 
-**Priority: MEDIUM** - Important for complete SCXML semantics
+**Status: COMPLETE** - Full SCXML-compliant entry/exit actions implemented
 
-### 4.1 `<onentry>` Element
-- [ ] OnentryNode class implementation
-- [ ] Executable content support
-- [ ] Integration with state mounting
-- [ ] Multiple onentry handlers per state
+**Achievement:** Complete implementation of `<onentry>` and `<onexit>` elements with full executable content support, proper state lifecycle integration, and comprehensive test coverage.
 
-### 4.2 `<onexit>` Element  
-- [ ] OnexitNode class implementation
-- [ ] Executable content support
-- [ ] Integration with state unmounting
-- [ ] Multiple onexit handlers per state
+### 4.1 `<onentry>` Element ✅ **COMPLETED**
+- [x] **OnEntryNode class implementation** - **COMPLETED** ✅
+- [x] **Executable content support** - **COMPLETED** ✅
+- [x] **Integration with state mounting** - **COMPLETED** ✅
+- [x] **Multiple onentry handlers per state** - **COMPLETED** ✅
 
-### 4.3 StateChart Integration
-- [ ] Update mount/unmount to execute onentry/onexit
-- [ ] Proper execution order (exit → transition → entry)
-- [ ] Error handling in entry/exit actions
-- [ ] State lifecycle event generation
+### 4.2 `<onexit>` Element ✅ **COMPLETED**
+- [x] **OnExitNode class implementation** - **COMPLETED** ✅
+- [x] **Executable content support** - **COMPLETED** ✅
+- [x] **Integration with state unmounting** - **COMPLETED** ✅
+- [x] **Multiple onexit handlers per state** - **COMPLETED** ✅
 
-**Deliverables:**
-- OnentryNode and OnexitNode classes (unified state interface)
-- Updated BaseStateNode with onentry/onexit support (unified state interface)
-- Integration with existing mount/unmount system (unified state interface)
-- Entry/exit action unit tests
+### 4.3 StateChart Integration ✅ **COMPLETED**
+- [x] **Update mount/unmount to execute onentry/onexit** - **COMPLETED** ✅
+- [x] **Proper execution order (exit → transition → entry)** - **COMPLETED** ✅
+- [x] **Error handling in entry/exit actions** - **COMPLETED** ✅
+- [x] **State lifecycle event generation** - **COMPLETED** ✅
+
+**✅ PHASE 4 ACHIEVEMENTS - COMPLETE ENTRY/EXIT ACTIONS:**
+- ✅ **OnEntryNode and OnExitNode classes** extending BaseExecutableNode ✨
+- ✅ **Full executable content support** (assign, raise, etc.) ✨
+- ✅ **Document order execution** of multiple handlers per state ✨
+- ✅ **BaseStateNode async integration** with mount/unmount lifecycle ✨
+- ✅ **StateChart async integration** with exitStates/enterStates methods ✨
+- ✅ **SCXML specification compliance** for entry/exit semantics ✨
+- ✅ **Comprehensive unit tests** (48 tests: 20 OnEntry + 21 OnExit + 7 integration) ✨
+- ✅ **Circular dependency resolution** using label-based filtering ✨
+- ✅ **Production-ready implementation** with full error handling ✨
+
+**🎯 RESULT: Complete state lifecycle management with entry/exit actions!**
 
 ## Phase 5: Parallel States 🔀
 
@@ -426,19 +441,24 @@ Basic event-driven state machines can be built and used today. The core SCXML ev
 - [x] **Complete SCXML documents parse successfully** ✅
 - [x] **Root element attributes processed correctly** (version, initial, name, datamodel) ✅
 - [x] **W3C SCXML specification compliance** for Section 3.2.1 ✅
-- [x] **Comprehensive datamodel attribute support** (null, ecmascript, xpath) ✅
+- [x] **Comprehensive datamodel attribute support** (null, ecmascript) ✅
 - [x] **Parser integration complete** with full validation ✅
 
-### Phase 3 Complete ✅
-- [ ] Conditional transitions work (`cond` attribute)
-- [ ] `<assign>` elements modify data model
-- [ ] `<raise>` elements generate internal events
-- [ ] Expression errors handled gracefully
+### Phase 3 Complete ✅ **MAJOR MILESTONE ACHIEVED - EXPRESSION EVALUATION SYSTEM**
+- [x] **Conditional transitions work** (`cond` attribute with ECMAScript expressions) ✅
+- [x] **`<assign>` elements modify data model** (complete implementation with lodash) ✅
+- [x] **`<raise>` elements generate internal events** (static and dynamic with `eventexpr`) ✅
+- [x] **Expression errors handled gracefully** (structured error events) ✅
+- [x] **Node.js VM-based secure evaluation** (sandboxed execution) ✅
+- [x] **ECMAScript data model support** (full JavaScript expression support) ✅
 
-### Phase 4 Complete ✅
-- [ ] `<onentry>` and `<onexit>` actions execute
-- [ ] State lifecycle events fire correctly
-- [ ] Multiple entry/exit handlers supported
+### Phase 4 Complete ✅ **MAJOR MILESTONE ACHIEVED - COMPLETE ENTRY/EXIT ACTIONS**
+- [x] **`<onentry>` and `<onexit>` actions execute** (OnEntryNode and OnExitNode classes) ✅
+- [x] **State lifecycle events fire correctly** (async mount/unmount integration) ✅
+- [x] **Multiple entry/exit handlers supported** (document order execution) ✅
+- [x] **Full executable content support** (assign, raise, etc. in entry/exit actions) ✅
+- [x] **SCXML specification compliance** (proper entry/exit semantics) ✅
+- [x] **Comprehensive test coverage** (48 tests passing) ✅
 
 ### Phase 5 Complete ✅
 - [ ] Parallel states work with multiple active children
@@ -447,22 +467,28 @@ Basic event-driven state machines can be built and used today. The core SCXML ev
 
 ## Getting Started
 
-1. **Review Current Tests**: Run `npm test` to see current test coverage (186 passed!)
+1. **Review Current Tests**: Run `npm test` to see current test coverage (230+ passed!)
 2. **Phase 1 Complete**: ✅ Event system foundation is fully operational
 3. **Phase 2 Complete**: ✅ SCXML root element with full W3C compliance
-4. **Start with Phase 3**: Expression evaluator for conditional logic and data manipulation
-5. **Incremental Development**: Each phase builds on the previous
-6. **Test-Driven**: Write tests for each new feature
-7. **SCXML Compliance**: Reference W3C spec for exact semantics
+4. **Phase 3 Complete**: ✅ Expression evaluator with conditional logic and data manipulation
+5. **Phase 4 Complete**: ✅ Entry/exit actions (`<onentry>` and `<onexit>` elements)
+6. **Start with Phase 5**: Parallel states (`<parallel>` elements)
+7. **Incremental Development**: Each phase builds on the previous
+8. **Test-Driven**: Write tests for each new feature
+9. **SCXML Compliance**: Reference W3C spec for exact semantics
 
-### **Current Status: Ready for Real Usage with Complete SCXML Documents!**
+### **Current Status: Production-Ready State Machines with Complete Lifecycle Management!**
 - ✅ **Event-driven state machines work** - Send events, trigger transitions
 - ✅ **Internal event generation** - `<raise>` and `<final>` elements operational
 - ✅ **External event API** - `sendEvent()` and `sendEventByName()` ready
 - ✅ **Wildcard matching** - `error.*` patterns supported
 - ✅ **Complete SCXML documents** - `<scxml>` root element with full W3C compliance
-- ✅ **Data model support** - null, ecmascript, xpath data models
-- 🎯 **Next: Expression evaluator** for conditional logic and data manipulation
+- ✅ **Data model support** - ECMAScript expressions with secure evaluation
+- ✅ **Conditional transitions** - `cond` attribute with JavaScript expressions
+- ✅ **Data manipulation** - `<assign>` elements with full expression support
+- ✅ **Dynamic events** - `<raise>` with `eventexpr` for computed event names
+- ✅ **Entry/exit actions** - `<onentry>` and `<onexit>` elements with executable content
+- 🎯 **Next: Parallel states** for concurrent state functionality
 
 ## Resources
 
@@ -470,6 +496,6 @@ Basic event-driven state machines can be built and used today. The core SCXML ev
 - [Current Implementation](./src/statechart.ts) - **Unified state model** ✨
 - [Unified State Interface](./src/models/internalState.ts) - **New simplified architecture** ✨
 - [Node Implementations](./src/nodes/) - **All updated for unified state** ✨
-- [Test Suite](./src/) - **139 passed, 41 skipped, 17 todo** ✨
+- [Test Suite](./src/) - **230 passed, 28 skipped, 17 todo** ✨
 - [Error Event Naming Standard](./docs/error-event-naming-standard.md) - Structured error handling
 - [Error Documentation](./docs/Errors.md) - Comprehensive error reference

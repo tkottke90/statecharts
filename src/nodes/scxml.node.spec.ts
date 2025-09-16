@@ -1,6 +1,6 @@
 import { SCXMLNode } from './scxml.node';
 
-describe('SCXMLNode', () => {
+describe('Node: <scxml>', () => {
   describe('constructor', () => {
     it('should create SCXMLNode with minimal attributes', () => {
       const node = new SCXMLNode({

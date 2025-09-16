@@ -23,7 +23,7 @@ function createTestEventState(data: Record<string, unknown> = {}): InternalState
   };
 }
 
-describe('OnEntryNode', () => {
+describe('Node: <onentry>', () => {
   describe('constructor', () => {
     it('should create OnEntryNode with default properties', () => {
       // Arrange & Act

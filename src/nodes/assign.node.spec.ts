@@ -22,7 +22,7 @@ function createTestEventState(data: Record<string, unknown> = {}): InternalState
   };
 }
 
-describe('AssignNode', () => {
+describe('Node: <assign>', () => {
   describe('constructor', () => {
     it('should create AssignNode with location and expr', () => {
       // Arrange & Act

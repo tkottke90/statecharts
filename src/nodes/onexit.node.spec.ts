@@ -23,7 +23,7 @@ function createTestEventState(data: Record<string, unknown> = {}): InternalState
   };
 }
 
-describe('OnExitNode', () => {
+describe('Node: <onexit>', () => {
   describe('constructor', () => {
     it('should create OnExitNode with default properties', () => {
       // Arrange & Act

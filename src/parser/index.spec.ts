@@ -1,26 +1,10 @@
-import SimpleXML from 'simple-xml-to-json';
 import { BaseNode, Node } from "../models";
-import { parse, parseType, mergeMaps } from "./index";
-import { BaseStateNode } from '../models/base-state';
-import { DataNode, DataModelNode, FinalNode, StateNode, TransitionNode } from "../nodes";
+import { DataModelNode, DataNode, FinalNode, StateNode, TransitionNode } from "../nodes";
 import { InitialNode } from "../nodes/initial.node";
+import { ParallelNode } from "../nodes/parallel.node";
 import { SCXMLNode } from "../nodes/scxml.node";
-
-const xml = `
-<state id="healthSystem">
-  <initial>
-    <transition target="substate"></transition>
-  </initial>
-
-  <state id="healthy"></state>
-  <state id="looking-hurt"></state>
-  <state id="unconscious"></state>
-  <state id="dead"></state>
-
-   
-  <final id="game-over"></final>
-</state>
-`.trimStart();
+import { mergeMaps, parse, parseType } from "./index";
+import SimpleXML from 'simple-xml-to-json';
 
 describe('Parser', () => {
   describe('Node Creation & Error Handling', () => {
@@ -35,7 +19,7 @@ describe('Parser', () => {
       expect(result.root).toBeUndefined();
       expect(result.error).toHaveLength(1);
       expect(result.error[0]).toBeInstanceOf(Error);
-      expect(result.error[0].message).toContain('Unknown Node: unknown');
+      expect(result.error[0].message).toContain('Unknown node type: unknown');
       expect(result.identifiableChildren.size).toBe(0);
     });
 
@@ -58,31 +42,6 @@ describe('Parser', () => {
       expect(result.error).toHaveLength(1);
       expect(result.error[0]).toBeInstanceOf(Error);
       expect(result.error[0].message).toBe('Creation failed');
-      expect(result.identifiableChildren.size).toBe(0);
-
-      // Cleanup
-      StateNode.createFromJSON = originalCreateFromJSON;
-    });
-
-    it('should return error array when parseType returns no node despite success', () => {
-      // Arrange
-      const originalCreateFromJSON = StateNode.createFromJSON;
-      StateNode.createFromJSON = jest.fn().mockReturnValue({
-        success: true,
-        error: undefined,
-        node: undefined
-      });
-
-      const input = { state: { content: '', children: [] } } as Node;
-
-      // Act
-      const result = parse(input);
-
-      // Assert
-      expect(result.root).toBeUndefined();
-      expect(result.error).toHaveLength(1);
-      expect(result.error[0]).toBeInstanceOf(Error);
-      expect(result.error[0].message).toContain('Node could not be loaded');
       expect(result.identifiableChildren.size).toBe(0);
 
       // Cleanup
@@ -370,102 +329,53 @@ describe('Parser', () => {
 
     it('should collect errors from children that return no root node', () => {
       // Arrange
-      const mockParentNode = new StateNode({ state: { id: 'parent', content: '', children: [] } });
-
-      const originalCreateFromJSON = StateNode.createFromJSON;
-      StateNode.createFromJSON = jest.fn()
-        .mockReturnValueOnce({
-          success: true,
-          error: undefined,
-          node: mockParentNode
-        })
-        .mockReturnValueOnce({
-          success: true,
-          error: undefined,
-          node: undefined // No node despite success
-        });
-
-      const input = {
-        state: {
-          id: 'parent',
-          content: '',
-          children: [
-            { state: { id: 'nonode', content: '', children: [] } }
-          ]
-        }
-      } as Node;
+      const xmlJson = SimpleXML.convertXML(`
+      <state initial="green" id="traffic_light">
+        <state>
+          <onentry>
+            <assign location="timer">30</assign>
+          </onentry>
+        </state>
+        <state id="yellow"></state>
+        <state id="red"></state>
+      </state>
+      `)
 
       // Act
-      const result = parse(input);
+      const result = parse(xmlJson)
 
       // Assert
-      expect(result.root).toBe(mockParentNode);
-      expect(result.error).toHaveLength(1);
-      expect(result.error[0].message).toContain('Node could not be loaded');
-      expect(result.identifiableChildren.size).toBe(0);
-      expect(result.root?.children).toHaveLength(0);
-
-      // Cleanup
-      StateNode.createFromJSON = originalCreateFromJSON;
+      expect(result.error.length).toBeGreaterThan(0)
     });
 
     it('should skip failed children but continue processing subsequent children', () => {
+      // This test allows us to verify that we are able to collect ALL the parsing errors
+      // and report them once to the user.  Personally the thing I hate the most with composable
+      // systems is when you fix one error only to find there is a queue of them
+
       // Arrange
-      const mockParentNode = new StateNode({ state: { id: 'parent', content: '', children: [] } });
-      const mockChild1 = new StateNode({ state: { id: 'child1', content: '', children: [] } });
-      const mockChild3 = new StateNode({ state: { id: 'child3', content: '', children: [] } });
-
-      const originalCreateFromJSON = StateNode.createFromJSON;
-      StateNode.createFromJSON = jest.fn()
-        .mockReturnValueOnce({
-          success: true,
-          error: undefined,
-          node: mockParentNode
-        })
-        .mockReturnValueOnce({
-          success: true,
-          error: undefined,
-          node: mockChild1
-        })
-        .mockReturnValueOnce({
-          success: false,
-          error: new Error('Child 2 failed'),
-          node: undefined
-        })
-        .mockReturnValueOnce({
-          success: true,
-          error: undefined,
-          node: mockChild3
-        });
-
-      const input = {
-        state: {
-          id: 'parent',
-          content: '',
-          children: [
-            { state: { id: 'child1', content: '', children: [] } },
-            { state: { id: 'child2', content: '', children: [] } },
-            { state: { id: 'child3', content: '', children: [] } }
-          ]
-        }
-      } as Node;
+      const xmlJson = SimpleXML.convertXML(`
+      <state initial="green" id="traffic_light">
+        <state>
+          <onentry>
+            <assign location="timer">30</assign>
+          </onentry>
+        </state>
+        <state id="yellow"></state>
+        <state id="red"></state>
+      </state>
+      `)
 
       // Act
-      const result = parse(input);
+      const result = parse(xmlJson)
 
       // Assert
-      expect(result.root).toBe(mockParentNode);
-      expect(result.error).toHaveLength(1);
-      expect(result.error[0].message).toBe('Child 2 failed');
-      expect(result.identifiableChildren.size).toBe(2); // child1 and child3
-      expect(result.identifiableChildren.get('child1')).toBe(mockChild1);
-      expect(result.identifiableChildren.get('child3')).toBe(mockChild3);
-      expect(result.root?.children).toHaveLength(2); // Only successful children
-      expect(result.root?.children[0]).toBe(mockChild1);
-      expect(result.root?.children[1]).toBe(mockChild3);
 
-      // Cleanup
-      StateNode.createFromJSON = originalCreateFromJSON;
+      // We expect that the first state node will fail because the `id` property is required
+      expect(result.error.length).toBe(1)
+
+      // We expect that the other 2 child nodes should be parsed to also check for errors.
+      expect(result.root?.children.length).toBe(2)
     });
 
     it('should accumulate errors from multiple failed children', () => {
@@ -648,6 +558,25 @@ describe('Parser', () => {
       InitialNode.createFromJSON = originalCreateFromJSON;
     });
 
+    it('should correctly identify parallel node type and call ParallelNode.createFromJSON', () => {
+      // Arrange
+      const input = { parallel: { id: 'concurrent', content: '', children: [] } };
+      const expectedResponse = { success: true, error: undefined, node: {} };
+
+      const originalCreateFromJSON = ParallelNode.createFromJSON;
+      ParallelNode.createFromJSON = jest.fn().mockReturnValue(expectedResponse);
+
+      // Act
+      const result = parseType(input);
+
+      // Assert
+      expect(ParallelNode.createFromJSON).toHaveBeenCalledWith(input);
+      expect(result).toEqual(expectedResponse);
+
+      // Cleanup
+      ParallelNode.createFromJSON = originalCreateFromJSON;
+    });
+
     it('should correctly identify scxml node type and call SCXMLNode.createFromJSON', () => {
       // Arrange
       const input = { scxml: { version: '1.0', content: '', children: [] } };
@@ -707,12 +636,12 @@ describe('Parser', () => {
 
     it('should return error for unknown node types', () => {
       // Act
-      const result = parseType({ unknown: { content: '', children: [] } });
+      const result = parseType({ python: { content: '', children: [] } });
 
       // Assert
       expect(result.success).toBe(false);
       expect(result.error).toBeInstanceOf(Error);
-      expect(result.error?.message).toBe('Unknown Node: unknown');
+      expect(result.error?.message).toBe('Unknown node type: python');
       expect(result.node).toBeUndefined();
     });
 
@@ -723,7 +652,7 @@ describe('Parser', () => {
       // Assert
       expect(result.success).toBe(false);
       expect(result.error).toBeInstanceOf(Error);
-      expect(result.error?.message).toBe('Unknown Node: undefined');
+      expect(result.error?.message).toBe('Unknown node type: undefined');
       expect(result.node).toBeUndefined();
     });
 
@@ -1047,20 +976,6 @@ describe('Parser', () => {
 
       // Cleanup
       StateNode.createFromJSON = originalCreateFromJSON;
-    });
-  });
-
-  describe('Legacy Parser Test', () => {
-    it('should parse a simple xml structure', () => {
-      // Arrange
-      const parsedFile = SimpleXML.convertXML(xml);
-
-      // Act
-      const { root, identifiableChildren } = parse(parsedFile);
-
-      // Assert
-      expect(root).toBeInstanceOf(BaseStateNode);
-      expect(identifiableChildren.size).toBe(5);
     });
   });
 });

@@ -1,8 +1,10 @@
 import { BaseNode } from "./models";
 import SimpleXML from 'simple-xml-to-json';
-import { mergeMaps, parse } from "./parser";
+import { parse } from "./parser";
 import { BaseStateNode } from "./models/base-state";
-import { SCXMLNode, TransitionNode } from "./nodes";
+import { InitialNode, SCXMLNode, TransitionNode } from "./nodes";
+import { DataModelNode } from "./nodes/datamodel.node";
+import { ParallelNode } from "./nodes/parallel.node";
 import { findLCCA, computeExitSet, buildEntryPath, type ActiveStateEntry } from './utils/transition-utils';
 import { InternalState, processPendingEvents, SCXMLEvent } from './models/internalState';
 import { Queue } from './models/event-queue';
@@ -24,7 +26,7 @@ export class StateChart {
   private externalEventQueue = new Queue<SCXMLEvent>();
   
   constructor(
-    private readonly initial: string,
+    private initial: string,
     private readonly root: SCXMLNode,
     stateMap: Map<string, BaseNode>
   ) {
@@ -35,6 +37,176 @@ export class StateChart {
         this.states.set(id, node);
       }
     });
+
+    // Initialize the state machine by entering the initial state configuration
+    // Note: This is synchronous initialization - no mount handlers are executed
+    this.initializeActiveStateChain();
+  }
+
+  /**
+   * Initializes the activeStateChain by entering the initial state configuration.
+   * This method handles the initial state entry according to SCXML specification,
+   * including entering parallel states and their child states.
+   */
+  private initializeActiveStateChain(): void {
+    if (!this.initial) {
+      // Check for <initial> node
+      const [ initialNode ] = this.root.getChildrenOfType(InitialNode)
+
+      if (initialNode) {
+        this.initial = initialNode.content;
+      }
+    }
+
+    // We do not have an initial attribute OR an <initial> node
+    // then grab the first state element
+    if (!this.initial) {
+      const [ firstStateNode ] = this.root.getChildrenOfType(BaseStateNode);
+
+      if (firstStateNode) {
+        this.initial = firstStateNode.id;
+      }
+    }
+
+    if (!this.initial) {
+      const err = new Error('Could not identify an initial state from the provided configuration')
+      err.name = 'StateChart.InitializationError'
+
+      throw err;
+    }
+
+    // Build the path to the initial state and all its ancestors
+    const initialStateParts = this.initial.split('.');
+    const statesToEnter: string[] = [];
+
+    // Build all ancestor paths that need to be entered (shallowest first)
+    for (let i = 1; i <= initialStateParts.length; i++) {
+      const pathToEnter = initialStateParts.slice(0, i).join('.');
+      statesToEnter.push(pathToEnter);
+    }
+
+    // Enter each state in the path without executing mount handlers (initialization only)
+    for (const statePath of statesToEnter) {
+      this.addStateToActiveChainSync(statePath);
+    }
+  }
+
+  /**
+   * Synchronous version of addStateToActiveChain for initialization.
+   * Does not execute mount handlers, only adds states to activeStateChain.
+   */
+  private addStateToActiveChainSync(statePath: string): void {
+    const stateNode = this.states.get(statePath);
+
+    if (!stateNode) {
+      return;
+    }
+
+    // Add state to active configuration first
+    this.activeStateChain.push([statePath, stateNode]);
+
+    // Handle parallel state initialization - enter all child states simultaneously
+    if (stateNode instanceof ParallelNode) {
+      const childStates = stateNode.activeChildStates;
+
+      for (const childState of childStates) {
+        if (childState.id) {
+          const childPath = `${statePath}.${childState.id}`;
+          this.addStateToActiveChainSync(childPath);
+        }
+      }
+    }
+    // Handle compound state initialization - enter the initial child state
+    else if (!stateNode.isAtomic) {
+      const initialChildState = stateNode.initialState;
+      if (initialChildState) {
+        const childPath = `${statePath}.${initialChildState}`;
+        this.addStateToActiveChainSync(childPath);
+      }
+    }
+  }
+
+  /**
+   * Shared method for adding a state and its required child states to the activeStateChain.
+   * Handles parallel states, compound states, and proper state hierarchy.
+   *
+   * @param statePath - The path of the state to add
+   * @param executeMountHandlers - Whether to execute mount handlers (onentry actions)
+   * @param currentState - Current state data (required if executeMountHandlers is true)
+   * @returns Updated state data if mount handlers were executed
+   */
+  private async addStateToActiveChain(
+    statePath: string,
+    executeMountHandlers: boolean,
+    currentState?: InternalState
+  ): Promise<InternalState | void> {
+    const stateNode = this.states.get(statePath);
+    let updatedState = currentState;
+
+    if (!stateNode) {
+      return updatedState;
+    }
+
+    // Execute mount handler if requested
+    if (executeMountHandlers && updatedState) {
+      if (typeof stateNode.mount === 'function') {
+        const mountResponse = await stateNode.mount(updatedState);
+        updatedState = { ...updatedState, ...mountResponse.state };
+
+        // Handle parallel state entry using mount response
+        if (stateNode instanceof ParallelNode && mountResponse.childPath) {
+          const childStateIds = mountResponse.childPath.split(',').filter(id => id.trim());
+
+          for (const childId of childStateIds) {
+            const childPath = `${statePath}.${childId.trim()}`;
+            const childResult = await this.addStateToActiveChain(childPath, true, updatedState);
+            if (childResult) {
+              updatedState = childResult;
+            }
+
+            // Handle compound states within parallel regions
+            const childStateNode = this.states.get(childPath);
+            if (childStateNode && childResult) {
+              const grandChildMountResponse = await childStateNode.mount(childResult);
+              updatedState = { ...updatedState, ...grandChildMountResponse.state };
+
+              if (grandChildMountResponse.childPath) {
+                const grandChildPath = `${childPath}.${grandChildMountResponse.childPath}`;
+                const grandChildResult = await this.addStateToActiveChain(grandChildPath, true, updatedState);
+                if (grandChildResult) {
+                  updatedState = grandChildResult;
+                }
+              }
+            }
+          }
+        }
+      }
+    } else {
+      // Handle parallel state entry without mount handlers (initialization)
+      if (stateNode instanceof ParallelNode) {
+        const childStates = stateNode.activeChildStates;
+
+        for (const childState of childStates) {
+          if (childState.id) {
+            const childPath = `${statePath}.${childState.id}`;
+            await this.addStateToActiveChain(childPath, false);
+          }
+        }
+      }
+      // Handle compound state entry without mount handlers
+      else if (!stateNode.isAtomic) {
+        const initialChildState = stateNode.initialState;
+        if (initialChildState) {
+          const childPath = `${statePath}.${initialChildState}`;
+          await this.addStateToActiveChain(childPath, false);
+        }
+      }
+    }
+
+    // Add state to active configuration
+    this.activeStateChain.push([statePath, stateNode]);
+
+    return updatedState;
   }
 
   // Public API for external event injection
@@ -318,22 +490,33 @@ export class StateChart {
 
     let currentState = { ...state };
 
-    // Sort states in entry order (shallowest first) - already handled by computeEntrySetFromTransitions
-    // Execute onentry handlers and add to active configuration
+    // Enter each state with mount handlers (execute onentry actions)
     for (const statePath of statesToEnter) {
-      // Find the state node in our states map
-      const stateNode = this.states.get(statePath);
-
-      if (stateNode) {
-        // Execute onentry handler by calling mount method
-        if (typeof stateNode.mount === 'function') {
-          const mountResponse = await stateNode.mount(currentState);
-          currentState = { ...currentState, ...mountResponse.state };
-        }
-
-        // Add state to active configuration
-        this.activeStateChain.push([statePath, stateNode]);
+      const result = await this.addStateToActiveChain(statePath, true, currentState);
+      if (result) {
+        currentState = result;
       }
+    }
+
+    return currentState;
+  }
+
+  /**
+   * Initialize the data model according to SCXML specification.
+   * This should be called before entering the initial state configuration.
+   *
+   * @param state - The initial state to populate with data model values
+   * @returns Updated state with initialized data model
+   */
+  private async initializeDataModel(state: InternalState): Promise<InternalState> {
+    // Find all datamodel nodes in the root SCXML node
+    const dataModelNodes = this.root.getChildrenOfType(DataModelNode);
+
+    let currentState = { ...state };
+
+    // Execute each datamodel node to initialize the data
+    for (const dataModelNode of dataModelNodes) {
+      currentState = await dataModelNode.run(currentState);
     }
 
     return currentState;
@@ -344,7 +527,7 @@ export class StateChart {
     // but default to a new one otherwise so that we can
     // consistently use the signal logic for managing events
     const abort = options?.abort ?? new AbortController();
-    
+
     // Configure an abort signal
     abort.signal.addEventListener('abort', () => {
       this.sendEventByName('abort');
@@ -355,63 +538,35 @@ export class StateChart {
       this.sendEventByName('timeout');
     }
 
+    // SCXML Specification: Initialize the data model before entering initial states
+    const currentState = await this.initializeDataModel(input);
+
     // Run the event loop
-    return await this.macrostep(input);
+    return await this.macrostep(currentState);
   }
 
   static fromXML(xmlStr: string) {
-    const { scxml } = SimpleXML.convertXML(xmlStr) as {
-      scxml: z.infer<typeof SCXMLSchema>
+    const parsedXML = SimpleXML.convertXML(xmlStr) as {
+      scxml: z.infer<typeof SCXMLNode.schema>
     };
 
-    if (!scxml) {
+    // If the root node is not an scxml node, then we should not even try parsing
+    if (!parsedXML.scxml) {
       throw new Error('Invalid Format: Root Element must be <scxml>');
     }
 
-    if (!scxml.initial) {
-      throw new Error('Invalid Input: Root element must have `initial` state');
+    const { root, identifiableChildren, error } = parse<SCXMLNode>(parsedXML);
+
+    // We should fail if we do not get a root node back
+    if (!root) {
+      throw new Error('Could not parse the provided XML into a valid StateChart');
     }
 
-    const { node, success, error  } = SCXMLNode.createFromJSON( scxml );
-
-    if (!success) {
-      throw error;
+    // We should fail if there were any node errors
+    if (error.length > 0) {
+      throw error[0];
     }
 
-    // Grab the initial attribute if it is set
-    const initial = node.initial ?? '';
-
-    // Create containers for parsing results
-    const nodeMap = new Map<string, BaseNode>();
-    const nodeErrors = [];
-
-    // Loop over each child in the array and parse them into
-    // Nodes.  This kicks of the recursive process of ingesting
-    // the XML schema to the StateChart.  
-    for (const child of scxml.children ?? []) {
-
-      // Parse the child from JSON into a Node
-      const { root, identifiableChildren, error } = parse(child);
-      
-      // If there was an error parsing the child we should record it
-      if (error?.length > 0 || !root) {
-        // TODO: record error
-        
-        nodeErrors.push(error);
-        continue;
-      }
-
-      // If there was an error parsing any of the nested children
-      // we should record them as well
-
-      // Collect all of the children in the array
-      node.children.push(root);
-      
-      // Add the child with their full paths to the node map
-      // so that we can access them by their full path later
-      mergeMaps(identifiableChildren, nodeMap);
-    }
-
-    return new StateChart(initial, node, nodeMap);
+    return new StateChart(root.initial, root, identifiableChildren);
   }
 }

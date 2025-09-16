@@ -1,6 +1,7 @@
 import z from "zod";
 import { BaseExecutableNode, BaseExecutableNodeAttr } from "../models/base-executable";
 import { InternalState } from "../models/internalState";
+import { CreateFromJsonResponse } from "../models/methods";
 
 const OnExitNodeAttr = BaseExecutableNodeAttr;
 
@@ -27,7 +28,7 @@ export class OnExitNode extends BaseExecutableNode {
     return nextState;
   }
 
-  static createFromJSON(jsonInput: Record<string, unknown>) {
+  static createFromJSON(jsonInput: Record<string, unknown>): CreateFromJsonResponse<OnExitNode> {
     const { success, data, error } = this.schema.safeParse(
       this.getAttributes(this.label, jsonInput)
     );

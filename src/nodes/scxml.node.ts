@@ -34,6 +34,7 @@ export class SCXMLNode extends BaseNode implements z.infer<typeof SCXMLNodeAttr>
 
   constructor({ scxml }: SCXMLNodeType) {
     super(scxml);
+    this.allowChildren = true;
     this.initial = scxml.initial ?? '';
     this.name = scxml.name ?? '';
     this.version = scxml.version;
@@ -54,7 +55,7 @@ export class SCXMLNode extends BaseNode implements z.infer<typeof SCXMLNodeAttr>
     
     return {
       success: true,
-      node: new SCXMLNode({ scxml: data }),
+      node: new SCXMLNode({ scxml: { ...data } }),
       error: undefined
     }
   }

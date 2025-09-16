@@ -3,6 +3,7 @@ import { BaseExecutableNode } from '../models/base-executable';
 import { InternalState, SCXMLEvent } from '../models/internalState';
 import { BaseSCXMLError } from '../errors';
 import { evaluateExpression } from '../parser/expressions.nodejs';
+import { CreateFromJsonResponse } from '../models';
 
 class RaiseNodeBadAttrError extends BaseSCXMLError {
   constructor(message: string) {
@@ -101,7 +102,7 @@ export class RaiseNode extends BaseExecutableNode {
     }
   }
 
-  static createFromJSON(jsonInput: Record<string, unknown>) {
+  static createFromJSON(jsonInput: Record<string, unknown>): CreateFromJsonResponse<RaiseNode> {
     const { success, data, error } = this.schema.safeParse(
       this.getAttributes(this.label, jsonInput)
     );

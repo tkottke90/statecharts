@@ -2,6 +2,7 @@ import * as _ from 'lodash';
 import z from 'zod';
 import { BaseExecutableNode } from '../models/base-executable';
 import { InternalState } from '../models/internalState';
+import { CreateFromJsonResponse } from '../models/methods';
 import { evaluateExpression } from '../parser/expressions.nodejs';
 
 const AssignNodeAttr = BaseExecutableNode.schema.extend({
@@ -66,7 +67,7 @@ export class AssignNode extends BaseExecutableNode {
     return updatedState;
   }
 
-  static createFromJSON(jsonInput: Record<string, unknown>) {
+  static createFromJSON(jsonInput: Record<string, unknown>): CreateFromJsonResponse<AssignNode> {
     const { success, data, error } = this.schema.safeParse(
       this.getAttributes(this.label, jsonInput)
     );

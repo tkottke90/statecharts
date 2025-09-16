@@ -347,23 +347,78 @@ Complete state machines with conditional logic, data manipulation, and dynamic e
 - Comprehensive unit tests for history tracking
 - Documentation and examples for debugging workflows
 
-## Phase 7: Advanced Features 🚀
+## Phase 7: Extensible Parser Architecture 🔧
+
+**Priority: HIGH** - Enable custom node registration for extensibility
+
+**Why This Matters:** Transform the parser from a hardcoded node factory into a flexible registration system. This allows implementers to create custom nodes and extend the library beyond the base SCXML specification, enabling domain-specific workflows and custom executable content.
+
+### 7.1 Parser Registration System
+- [ ] NodeRegistry class for managing node types
+- [ ] Registration API for custom node classes
+- [ ] Dynamic node type resolution
+- [ ] Node factory pattern with registration lookup
+- [ ] Validation of registered node schemas
+
+### 7.2 Node Interface Standardization
+- [ ] Standardized BaseNode interface for custom nodes
+- [ ] Required static properties (label, schema, allowChildren)
+- [ ] Consistent createFromJSON signature
+- [ ] Documentation for custom node development
+- [ ] TypeScript interfaces for node registration
+
+### 7.3 Parser Refactoring
+- [ ] Remove hardcoded parseType switch statement
+- [ ] Implement registry-based node resolution
+- [ ] Maintain backward compatibility with existing nodes
+- [ ] Error handling for unregistered node types
+- [ ] Default node registration for all SCXML elements
+
+### 7.4 Custom Node Examples
+- [ ] Example custom executable node implementation
+- [ ] Example custom state node implementation
+- [ ] Documentation with step-by-step custom node guide
+- [ ] Unit tests for custom node registration
+- [ ] Integration tests with mixed standard/custom nodes
+
+### 7.5 Advanced Registration Features
+- [ ] Node inheritance and composition patterns
+- [ ] Conditional node registration (environment-specific)
+- [ ] Node versioning and compatibility checking
+- [ ] Plugin system for node packages
+- [ ] Runtime node registration and deregistration
+
+**Deliverables:**
+- NodeRegistry class with full registration API
+- Refactored parser using registry-based resolution
+- Comprehensive documentation for custom node development
+- Example custom nodes with complete test coverage
+- Migration guide for existing implementations
+
+**Benefits:**
+- ✅ **Extensibility** - Custom nodes for domain-specific requirements
+- ✅ **Modularity** - Plugin-based architecture for specialized features
+- ✅ **Future-Proof** - Easy addition of new SCXML features
+- ✅ **Community Growth** - Enable third-party node development
+- ✅ **Enterprise Ready** - Support for proprietary workflow extensions
+
+## Phase 8: Advanced Features 🚀
 
 **Priority: MEDIUM** - Important features for complete SCXML support
 
-### 7.1 History States
+### 8.1 History States
 - [ ] HistoryNode class (shallow and deep)
 - [ ] State configuration recording
 - [ ] History state restoration
 - [ ] Default history transitions
 
-### 7.2 Additional Executable Content
+### 8.2 Additional Executable Content
 - [ ] `<if>`, `<elseif>`, `<else>` conditional execution
 - [ ] `<foreach>` iteration
 - [ ] `<script>` arbitrary code execution
 - [ ] `<log>` debugging output
 
-### 7.3 External Communication
+### 8.3 External Communication
 - [ ] `<send>` element for external events
 - [ ] `<invoke>` element for external services
 - [ ] Event I/O processors
@@ -383,38 +438,38 @@ Complete state machines with conditional logic, data manipulation, and dynamic e
 - ✅ **External Integration** - Communication with external systems
 - ✅ **Production-Ready** - Enterprise-grade state machine features
 
-## Phase 8: Multi-Environment Support 🌐
+## Phase 9: Multi-Environment Support 🌐
 
 **Priority: LOW** - Enable browser and universal JavaScript runtime support
 
 **Why This Matters:** Currently limited to Node.js environments. Expanding to browsers and other JavaScript runtimes would significantly increase adoption and use cases.
 
-### 8.1 Environment Detection & Abstraction
+### 9.1 Environment Detection & Abstraction
 - [ ] Runtime environment detection (Node.js, Browser, Web Workers, Deno, Bun)
 - [ ] Parser abstraction layer (XMLParser interface)
 - [ ] Environment-specific parser implementations
 - [ ] Conditional module loading system
 
-### 8.2 Browser-Specific Implementation
+### 9.2 Browser-Specific Implementation
 - [ ] Browser-compatible XML parser (DOMParser-based)
 - [ ] CSP-compliant expression evaluation (no eval/Function)
 - [ ] Browser-optimized bundle (tree-shakeable)
 - [ ] Web Worker compatibility
 - [ ] TypeScript browser type definitions
 
-### 8.3 Node.js-Specific Optimizations
+### 9.3 Node.js-Specific Optimizations
 - [ ] Fast XML parser integration (`fast-xml-parser`)
 - [ ] VM-based secure expression evaluation
 - [ ] File system integration for SCXML loading
 - [ ] Stream-based processing for large documents
 
-### 8.4 Universal Build System
+### 9.4 Universal Build System
 - [ ] Webpack/Rollup configuration for multi-target builds
 - [ ] Package.json export maps for environment-specific entry points
 - [ ] Build-time parser substitution
 - [ ] Environment-specific feature flags
 
-### 8.5 Expression Evaluation Strategy
+### 9.5 Expression Evaluation Strategy
 - [ ] **Node.js**: VM-based sandboxing (maximum security)
 - [ ] **Browser**: Function constructor with CSP compliance
 - [ ] **Fallback**: Simple property access only
@@ -487,8 +542,9 @@ Complete state machines with conditional logic, data manipulation, and dynamic e
 4. **Phase 3 Complete**: ✅ Expression evaluator with conditional logic and data manipulation
 5. **Phase 4 Complete**: ✅ Entry/exit actions (`<onentry>` and `<onexit>` elements)
 6. **Start with Phase 5**: Parallel states (`<parallel>` elements)
-7. **Continue with Phase 7**: Advanced features (history states, conditional execution, external communication)
-8. **Optional Phase 8**: Multi-environment support (browser compatibility)
+7. **Continue with Phase 7**: Extensible parser architecture (custom node registration)
+8. **Then Phase 8**: Advanced features (history states, conditional execution, external communication)
+9. **Optional Phase 9**: Multi-environment support (browser compatibility)
 9. **Incremental Development**: Each phase builds on the previous
 10. **Test-Driven**: Write tests for each new feature
 11. **SCXML Compliance**: Reference W3C spec for exact semantics

@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" initial="gameRunning">
+
+  <!-- Data model for tracking game state -->
+  <datamodel>
+    <data id="playerHealth" expr="100"/>
+    <data id="playerScore" expr="0"/>
+    <data id="gameTime" expr="0"/>
+    <data id="powerUpActive" expr="false"/>
+  </datamodel>
+
+  <!-- Main game running state with parallel subsystems -->
+  <state id="gameRunning">
+    <onentry>
+      <assign location="gameTime" expr="0"/>
+    </onentry>
+
+    <!-- Parallel state managing multiple game systems simultaneously -->
+    <parallel id="gameSystems">
+
+      <!-- Health Management System -->
+      <state id="healthSystem" initial="healthy">
+        <onentry>
+          <assign location="playerHealth" expr="100"/>
+        </onentry>
+
+        <state id="healthy">
+          <transition event="damage" target="injured" cond="playerHealth > 50">
+            <assign location="playerHealth" expr="playerHealth - 25"/>
+          </transition>
+          <transition event="damage" target="critical" cond="playerHealth <= 50">
+            <assign location="playerHealth" expr="playerHealth - 25"/>
+          </transition>
+        </state>
+
+        <state id="injured">
+          <transition event="heal" target="healthy">
+            <assign location="playerHealth" expr="playerHealth + 30"/>
+          </transition>
+          <transition event="damage" target="critical">
+            <assign location="playerHealth" expr="playerHealth - 25"/>
+          </transition>
+        </state>
+
+        <state id="critical">
+          <transition event="heal" target="injured">
+            <assign location="playerHealth" expr="playerHealth + 30"/>
+          </transition>
+          <transition event="damage" target="dead" cond="playerHealth <= 25">
+            <assign location="playerHealth" expr="0"/>
+          </transition>
+        </state>
+
+        <final id="dead">
+          <onentry>
+            <raise event="gameOver"/>
+          </onentry>
+        </final>
+      </state>
+
+      <!-- Score Management System -->
+      <state id="scoreSystem" initial="scoring">
+        <state id="scoring">
+          <transition event="collectCoin" target="scoring">
+            <assign location="playerScore" expr="playerScore + 10"/>
+          </transition>
+          <transition event="collectGem" target="scoring">
+            <assign location="playerScore" expr="playerScore + 50"/>
+          </transition>
+          <transition event="killEnemy" target="scoring">
+            <assign location="playerScore" expr="playerScore + 100"/>
+          </transition>
+        </state>
+      </state>
+
+      <!-- Power-up Management System -->
+      <state id="powerUpSystem" initial="noPowerUp">
+        <state id="noPowerUp">
+          <transition event="collectPowerUp" target="powerUpActive">
+            <assign location="powerUpActive" expr="true"/>
+          </transition>
+        </state>
+
+        <state id="powerUpActive">
+          <onentry>
+            <assign location="powerUpActive" expr="true"/>
+          </onentry>
+          <onexit>
+            <assign location="powerUpActive" expr="false"/>
+          </onexit>
+
+          <transition event="powerUpExpired" target="noPowerUp"/>
+          <transition event="usePowerUp" target="noPowerUp"/>
+        </state>
+      </state>
+
+    </parallel>
+
+    <!-- Transition out of game when health system completes (player dies) -->
+    <transition event="gameOver" target="gameOver"/>
+
+    <!-- Manual quit transition -->
+    <transition event="quit" target="gameOver"/>
+  </state>
+
+  <!-- Game over state -->
+  <final id="gameOver">
+    <onentry>
+      <assign location="gameTime" expr="gameTime + 1"/>
+    </onentry>
+  </final>
+
+</scxml>

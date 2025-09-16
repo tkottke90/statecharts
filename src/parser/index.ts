@@ -1,8 +1,32 @@
 import z from "zod";
-import { BaseNode, CreateFromJsonResponse, Node } from "../models";
-import { DataNode, DataModelNode, FinalNode, StateNode, TransitionNode } from "../nodes";
+import { BaseNode, Node } from "../models/base";
+import { CreateFromJsonResponse} from "../models/methods";
+import { DataNode, DataModelNode, FinalNode, StateNode, TransitionNode, AssignNode } from "../nodes";
 import { InitialNode } from "../nodes/initial.node";
 import { SCXMLNode } from "../nodes/scxml.node";
+import { ParallelNode } from "../nodes/parallel.node";
+import { OnExitNode } from "../nodes/onexit.node";
+import { OnEntryNode } from "../nodes/onentry.node";
+import { RaiseNode } from "../nodes/raise.node";
+
+type NodeInitMethod<T extends BaseNode = BaseNode> = (input: Record<string, unknown>) => CreateFromJsonResponse<T>
+
+
+const nodeMap: Record<string, NodeInitMethod> = {
+  'assign': (input: Record<string, unknown>) => AssignNode.createFromJSON(input),
+  'data': (input: Record<string, unknown>) => DataNode.createFromJSON(input),
+  'datamodel': (input: Record<string, unknown>) => DataModelNode.createFromJSON(input),
+  'final': (input: Record<string, unknown>) => FinalNode.createFromJSON(input),
+  'initial': (input: Record<string, unknown>) => InitialNode.createFromJSON(input),
+  'onentry': (input: Record<string, unknown>) => OnEntryNode.createFromJSON(input),
+  'onexit': (input: Record<string, unknown>) => OnExitNode.createFromJSON(input),
+  'parallel': (input: Record<string, unknown>) => ParallelNode.createFromJSON(input),
+  'raise': (input: Record<string, unknown>) => RaiseNode.createFromJSON(input),
+  'scxml': (input: Record<string, unknown>) => SCXMLNode.createFromJSON(input),
+  'state': (input: Record<string, unknown>) => StateNode.createFromJSON(input),
+  'transition': (input: Record<string, unknown>) => TransitionNode.createFromJSON(input),
+}
+
 
 export function mergeMaps(sourceMap: Map<string, BaseNode>, targetMap: Map<string, BaseNode>) {
   for (const [ key, value ] of sourceMap) {
@@ -10,45 +34,38 @@ export function mergeMaps(sourceMap: Map<string, BaseNode>, targetMap: Map<strin
   }
 }
 
+export function appendToMapKey(suffix: string, sourceMap: Map<string, BaseNode>) {
+  return new Map(
+    Array.from(sourceMap.entries()).map(([key, value]) => [`${suffix}.${key}`, value])
+  )
+}
+
 export function parseType(input: Record<string, unknown>): CreateFromJsonResponse<BaseNode> {
-  const [ keys ] = Object.keys(input);
-  
-  switch(keys) {
-    case 'data': {
-      return DataNode.createFromJSON(input);
-    }
-    case 'datamodel': {
-      return DataModelNode.createFromJSON(input);
-    }
-    case 'final': {
-      return FinalNode.createFromJSON(input);
-    }
-    case 'initial': {
-      return InitialNode.createFromJSON(input);
-    }
-    case 'scxml': {
-      return SCXMLNode.createFromJSON(input);
-    }
-    case 'state': {
-      return StateNode.createFromJSON(input);
-    }
-    case 'transition': {
-      return TransitionNode.createFromJSON(input);
-    }
-    default: {
-      return { success: false, error: new Error(`Unknown Node: ${keys}`), node: undefined };
+  const [ key ] = Object.keys(input);
+
+  if (key && key in nodeMap) {
+    const nodeInitMethod = nodeMap[key];
+    if (nodeInitMethod) {
+      return nodeInitMethod(input);
     }
   }
+
+  // Return error if no valid node type found
+  return {
+    success: false,
+    node: undefined,
+    error: new Error(`Unknown node type: ${key || 'undefined'}`)
+  };
 }
 
 
-interface ParseResponse {
-  root?: BaseNode | undefined;
+interface ParseResponse<T extends BaseNode = BaseNode> {
+  root?: T | undefined;
   identifiableChildren: Map<string, BaseNode>;
   error: Array<z.ZodError | Error>;
 }
 
-export function parse(input: Node): ParseResponse {
+export function parse<T extends BaseNode = BaseNode>(input: Node): ParseResponse<T> {
   // Create a map to store children with ids
   const childrenWithIds = new Map<string, BaseNode>();
   
@@ -56,10 +73,10 @@ export function parse(input: Node): ParseResponse {
   const { success, node, error } = parseType(input);
 
   // Handle Error
-  if (!success || node === undefined) {
+  if (!success) {
     
     // If there was an error parsing the node, we should record it
-    if (error !== undefined) {
+    if (error) {
       return { 
         root: undefined,
         identifiableChildren: childrenWithIds,
@@ -137,7 +154,7 @@ export function parse(input: Node): ParseResponse {
 
   // Return the node
   return {
-      root: node,
+      root: node as T,
       identifiableChildren: childrenWithIds,
       error: childIssues
     };

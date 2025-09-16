@@ -18,8 +18,8 @@ describe('Node: <data>', () => {
       const { success, node, error } = DataNode.createFromJSON(json);
 
       // Assert
-      expect(success).toBe(true);
       expect(error).toBeUndefined();
+      expect(success).toBe(true);
       expect(node).toBeInstanceOf(DataNode);
     });
 
@@ -45,8 +45,8 @@ describe('Node: <data>', () => {
   });
 
 
-  describe('#mount', () => {
-    it('should add the data to the state', () => {
+  describe('#run', () => {
+    it('should add the data to the state', async () => {
       const { node } = DataNode.createFromJSON({
         data: {
           id: 'test',
@@ -56,7 +56,7 @@ describe('Node: <data>', () => {
         }
       });
 
-      const state = node!.mount({ data: {} });
+      const state = await node!.run({ data: {} });
 
       expect(state).toEqual({
         data: {

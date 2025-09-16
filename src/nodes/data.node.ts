@@ -1,14 +1,46 @@
 import z from 'zod';
-import { BaseNode, BaseStateAttr } from '../models/base';
+import { BaseExecutableNode } from '../models/base-executable';
 import { CreateFromJsonResponse } from '../models/methods';
-import { InternalState } from '../models/internalState';
+import { addPendingEvent, InternalState } from '../models/internalState';
 import { evaluateExpression } from '../parser/expressions.nodejs';
 
-const DataNodeAttr = BaseStateAttr.extend({
-  type: z.string().optional().default(''),
+const DataNodeAttr = BaseExecutableNode.schema.extend({
+  id: z.string(),
+  type: z.string().optional().default('text'),
   src: z.string().optional(),
   expr: z.string().optional()
-})
+}).check((ctx) => {
+  const { expr, content, src } = ctx.value;
+
+  const hasExpr = (expr?.length ?? 0) > 0;
+  const hasContent = (content?.length ?? 0) > 0;
+  const hasSrc = (src?.length ?? 0) > 0;
+
+  const fields = [
+    hasExpr,
+    hasContent,
+    hasSrc
+  ]
+
+  // If none of the attributes are populated, we throw an error
+  if (!fields.some(Boolean)) {
+    ctx.issues.push({
+      code: "custom",
+      message: `Must specify exactly one of 'expr', 'src', or child content`,
+      input: ctx.value,
+      continue: true // make this issue continuable (default: false)
+    });
+  }
+
+  if (fields.filter(Boolean).length > 1) {
+    ctx.issues.push({
+      code: "custom",
+      message: `Only one of 'expr', 'src', or child content may be specified`,
+      input: ctx.value,
+      continue: true // make this issue continuable (default: false)
+    });
+  }
+});
 
 export type DataNodeType = {
     data: z.infer<typeof DataNodeAttr>;
@@ -19,11 +51,12 @@ export type DataNodeType = {
  * 
  * @see https://www.w3.org/TR/scxml/#data
  */
-export class DataNode extends BaseNode implements z.infer<typeof DataNodeAttr> {
+export class DataNode extends BaseExecutableNode implements z.infer<typeof DataNodeAttr> {
   id: string;
   type: string;
   src: string | undefined;
   expr: string | undefined;
+  content: string;
 
   static label = 'data';
   static schema = DataNodeAttr;
@@ -34,7 +67,7 @@ export class DataNode extends BaseNode implements z.infer<typeof DataNodeAttr> {
     this.type = data.type ?? 'text';
     this.src = data.src ?? undefined;
     this.expr = data.expr ?? undefined;
-    this.isExecutable = true; // Make DataNode executable so it can be run by DataModelNode
+    this.content = data.content ?? '';
   }
 
   /**
@@ -44,41 +77,23 @@ export class DataNode extends BaseNode implements z.infer<typeof DataNodeAttr> {
   async run(state: InternalState): Promise<InternalState> {
     let value: unknown;
 
-    // According to SCXML spec: expr, src, and children are mutually exclusive
     if (this.expr) {
       // Evaluate the expression to get the value
       value = evaluateExpression(this.expr, state);
     } else if (this.src) {
-      // TODO: Implement loading from external source
-      throw new Error('Loading data from external sources (src attribute) is not yet implemented');
-    } else {
-      // Use child content as the value
-      value = this.content;
-    }
-
-    return {
-      ...state,
-      data: {
-        ...state.data,
-        [this.id]: value
-      }
-    };
-  }
-
-  /**
-   * Legacy mount method for backward compatibility.
-   * @deprecated Use run() method instead for data model initialization.
-   */
-  mount(state: InternalState): InternalState {
-    let value: unknown;
-
-    // According to SCXML spec: expr, src, and children are mutually exclusive
-    if (this.expr) {
-      // Evaluate the expression to get the value
-      value = evaluateExpression(this.expr, state);
-    } else if (this.src) {
-      // TODO: Implement loading from external source
-      throw new Error('Loading data from external sources (src attribute) is not yet implemented');
+      // Add a not implemented error event to the queue
+      return addPendingEvent(state, {
+        name: 'error.data.src-not-implemented',
+        type: 'platform',
+        sendid: '',
+        origin: '',
+        origintype: '',
+        invokeid: '',
+        data: {
+          error: 'The `src` attribute on the data node is not yet available',
+          source: 'data'
+        }
+      })
     } else {
       // Use child content as the value
       value = this.content;

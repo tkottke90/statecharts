@@ -11,8 +11,9 @@
     "./nodes": "./dist/nodes/index.js"
   },
   "scripts": {
+    "build": "tsc",
     "format": "eslint --fix . && prettier --write .",
-    "test": "jest --verbose",
+    "test": "jest --verbose --coverage",
     "test:watch": "jest --watchAll --verbose",
     "xml2json": "node scripts/xml-to-json/test.cjs"
   },

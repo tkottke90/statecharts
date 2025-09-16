@@ -11,6 +11,27 @@ export interface SCXMLEvent {
   data: Record<string, unknown>;
 }
 
+export function fromJsError(err: unknown): SCXMLEvent {
+  let message = 'Unknown Error';
+
+  if (err instanceof Error) {
+    message = err.message;
+  }
+
+  return ({
+    name: '',
+    type: 'platform',
+    sendid: '',
+    origin: '',
+    origintype: '',
+    invokeid: '',
+    data: {
+      error: message
+    }
+  })
+}
+
+
 /**
  * Unified internal state interface that replaces both EventlessState and EventState.
  * This interface contains all possible state information and uses optional properties

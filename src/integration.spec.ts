@@ -7,6 +7,10 @@ import { BaseStateNode } from "./models/base-state";
 
 describe('Integration Tests', () => {
   describe('Parallel State Integration', () => {
+    // These test are for the <parallel> node and it's integration with the larger
+    // state chart system.  We need to make sure that it fully processes when we
+    // initialize the state chart
+
     const xmlStr = readFileSync(
       path.join(__dirname, 'test_utils', 'examples', 'parallel.xml'),
       'utf8'

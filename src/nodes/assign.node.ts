@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import z from 'zod';
 import { BaseExecutableNode } from '../models/base-executable';
-import { InternalState } from '../models/internalState';
+import { addPendingEvent, fromJsError, InternalState } from '../models/internalState';
 import { CreateFromJsonResponse } from '../models/methods';
 import { evaluateExpression } from '../parser/expressions.nodejs';
 
@@ -52,11 +52,12 @@ export class AssignNode extends BaseExecutableNode {
         return this.assignToLocation(state, this.location, this.content);
       }
     } catch (err) {
-      const error = new Error('Assignment Failed: ' + (err as Error).message);
-      error.name = 'AssignNode.Error';
+      // Create a new error event and push it to the state queue
+      const errorEvent = fromJsError(err);
+      errorEvent.name = 'error.assign.src-not-implemented'
+      errorEvent.data.source = '<assign>'
 
-      // Per SCXML spec: place error.execution in internal event queue
-      throw error;
+      return addPendingEvent(state, errorEvent);
     }
   }
 

@@ -1,6 +1,6 @@
 import z from 'zod';
 import { BaseStateNode, MountResponse } from '../models/base-state';
-import { InternalState, SCXMLEvent, addPendingEvent } from '../models/internalState';
+import { InternalState, SCXMLEvent, addPendingEvent, fromJsError } from '../models/internalState';
 import { CreateFromJsonResponse } from '../models/methods';
 import { StateNodeAttr } from './state.node';
 
@@ -52,16 +52,9 @@ export class FinalNode extends BaseStateNode implements z.infer<typeof FinalNode
       return { state: nextState, node };
     } catch (err) {
       // Handle errors according to SCXML error naming convention
-      const errorMessage = (err as Error).message;
-      const errorEvent: SCXMLEvent = {
-        name: 'error.final.mount-failed',
-        type: 'platform',
-        sendid: '',
-        origin: '',
-        origintype: '',
-        invokeid: '',
-        data: { error: errorMessage, source: 'final' }
-      };
+      const errorEvent = fromJsError(err);
+      errorEvent.name = 'error.final.mount-failed';
+      errorEvent.data.source = 'final';
 
       const stateWithError = addPendingEvent(state, errorEvent);
       return { state: stateWithError, node: this };

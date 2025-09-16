@@ -3,8 +3,8 @@ import { BaseStateNode } from './base-state';
 import { TransitionNode } from '../nodes/transition.node';
 import { FinalNode } from '../nodes/final.node';
 import { InitialNode } from '../nodes/initial.node';
-import { OnEntryNode } from '../nodes/onentry.node.';
-import { OnExitNode } from '../nodes/onexit.node.';
+import { OnEntryNode } from '../nodes/onentry.node';
+import { OnExitNode } from '../nodes/onexit.node';
 import { InternalState } from './internalState';
 import { AssignNode } from '../nodes/assign.node';
 

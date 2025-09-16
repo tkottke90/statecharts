@@ -347,38 +347,74 @@ Complete state machines with conditional logic, data manipulation, and dynamic e
 - Comprehensive unit tests for history tracking
 - Documentation and examples for debugging workflows
 
-## Phase 7: Multi-Environment Support 🌐
+## Phase 7: Advanced Features 🚀
 
-**Priority: MEDIUM** - Enable browser and universal JavaScript runtime support
+**Priority: MEDIUM** - Important features for complete SCXML support
+
+### 7.1 History States
+- [ ] HistoryNode class (shallow and deep)
+- [ ] State configuration recording
+- [ ] History state restoration
+- [ ] Default history transitions
+
+### 7.2 Additional Executable Content
+- [ ] `<if>`, `<elseif>`, `<else>` conditional execution
+- [ ] `<foreach>` iteration
+- [ ] `<script>` arbitrary code execution
+- [ ] `<log>` debugging output
+
+### 7.3 External Communication
+- [ ] `<send>` element for external events
+- [ ] `<invoke>` element for external services
+- [ ] Event I/O processors
+- [ ] Communication error handling
+
+**Deliverables:**
+- HistoryNode class with shallow and deep history support
+- Conditional execution nodes (`<if>`, `<elseif>`, `<else>`)
+- Iteration support with `<foreach>` element
+- External communication with `<send>` and `<invoke>` elements
+- Comprehensive test coverage for all advanced features
+
+**Benefits:**
+- ✅ **Complete SCXML Compliance** - Full W3C specification support
+- ✅ **Advanced State Management** - History states for complex workflows
+- ✅ **Conditional Logic** - Rich branching and iteration capabilities
+- ✅ **External Integration** - Communication with external systems
+- ✅ **Production-Ready** - Enterprise-grade state machine features
+
+## Phase 8: Multi-Environment Support 🌐
+
+**Priority: LOW** - Enable browser and universal JavaScript runtime support
 
 **Why This Matters:** Currently limited to Node.js environments. Expanding to browsers and other JavaScript runtimes would significantly increase adoption and use cases.
 
-### 7.1 Environment Detection & Abstraction
+### 8.1 Environment Detection & Abstraction
 - [ ] Runtime environment detection (Node.js, Browser, Web Workers, Deno, Bun)
 - [ ] Parser abstraction layer (XMLParser interface)
 - [ ] Environment-specific parser implementations
 - [ ] Conditional module loading system
 
-### 7.2 Browser-Specific Implementation
+### 8.2 Browser-Specific Implementation
 - [ ] Browser-compatible XML parser (DOMParser-based)
 - [ ] CSP-compliant expression evaluation (no eval/Function)
 - [ ] Browser-optimized bundle (tree-shakeable)
 - [ ] Web Worker compatibility
 - [ ] TypeScript browser type definitions
 
-### 7.3 Node.js-Specific Optimizations
+### 8.3 Node.js-Specific Optimizations
 - [ ] Fast XML parser integration (`fast-xml-parser`)
 - [ ] VM-based secure expression evaluation
 - [ ] File system integration for SCXML loading
 - [ ] Stream-based processing for large documents
 
-### 7.4 Universal Build System
+### 8.4 Universal Build System
 - [ ] Webpack/Rollup configuration for multi-target builds
 - [ ] Package.json export maps for environment-specific entry points
 - [ ] Build-time parser substitution
 - [ ] Environment-specific feature flags
 
-### 7.5 Expression Evaluation Strategy
+### 8.5 Expression Evaluation Strategy
 - [ ] **Node.js**: VM-based sandboxing (maximum security)
 - [ ] **Browser**: Function constructor with CSP compliance
 - [ ] **Fallback**: Simple property access only
@@ -397,28 +433,6 @@ Complete state machines with conditional logic, data manipulation, and dynamic e
 - ✅ **Better Performance** - Optimal parsers for each environment
 - ✅ **Security** - CSP-compliant browser version
 - ✅ **Future-Proof** - Ready for new JavaScript runtimes
-
-## Phase 8: Advanced Features 🚀
-
-**Priority: LOW** - Nice-to-have features for complete SCXML support
-
-### 8.1 History States
-- [ ] HistoryNode class (shallow and deep)
-- [ ] State configuration recording
-- [ ] History state restoration
-- [ ] Default history transitions
-
-### 8.2 Additional Executable Content
-- [ ] `<if>`, `<elseif>`, `<else>` conditional execution
-- [ ] `<foreach>` iteration
-- [ ] `<script>` arbitrary code execution
-- [ ] `<log>` debugging output
-
-### 8.3 External Communication
-- [ ] `<send>` element for external events
-- [ ] `<invoke>` element for external services
-- [ ] Event I/O processors
-- [ ] Communication error handling
 
 ## Success Criteria
 
@@ -473,9 +487,11 @@ Complete state machines with conditional logic, data manipulation, and dynamic e
 4. **Phase 3 Complete**: ✅ Expression evaluator with conditional logic and data manipulation
 5. **Phase 4 Complete**: ✅ Entry/exit actions (`<onentry>` and `<onexit>` elements)
 6. **Start with Phase 5**: Parallel states (`<parallel>` elements)
-7. **Incremental Development**: Each phase builds on the previous
-8. **Test-Driven**: Write tests for each new feature
-9. **SCXML Compliance**: Reference W3C spec for exact semantics
+7. **Continue with Phase 7**: Advanced features (history states, conditional execution, external communication)
+8. **Optional Phase 8**: Multi-environment support (browser compatibility)
+9. **Incremental Development**: Each phase builds on the previous
+10. **Test-Driven**: Write tests for each new feature
+11. **SCXML Compliance**: Reference W3C spec for exact semantics
 
 ### **Current Status: Production-Ready State Machines with Complete Lifecycle Management!**
 - ✅ **Event-driven state machines work** - Send events, trigger transitions

@@ -1,4 +1,4 @@
-import { OnEntryNode } from './onentry.node.';
+import { OnEntryNode } from './onentry.node';
 import { AssignNode } from './assign.node';
 import { RaiseNode } from './raise.node';
 import { InternalState, SCXMLEvent } from '../models/internalState';

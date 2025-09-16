@@ -3,8 +3,8 @@ import { TransitionNode } from "../nodes/transition.node";
 import { BaseNode, BaseNodeAttr } from "./base";
 import { InitialNode } from "../nodes/initial.node";
 import { InternalState } from "./internalState";
-import { OnEntryNode } from "../nodes/onentry.node.";
-import { OnExitNode } from "../nodes/onexit.node.";
+import { OnEntryNode } from "../nodes/onentry.node";
+import { OnExitNode } from "../nodes/onexit.node";
 
 export const BaseStateNodeAttr = BaseNodeAttr.extend({
   id: z.string().min(1),

@@ -62,6 +62,8 @@ BaseExecutableNode (extends BaseNode)
 
 ## Common Patterns
 
+The below examples show the usage of _Nodes_ via an XML definition.  This outlines the structure of the state machine using the nodes above and is parsed by the StatChart classes `#fromXML` method.
+
 ### Basic State Machine Structure
 
 ```xml

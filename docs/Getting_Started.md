@@ -7,6 +7,7 @@ This guide will walk you through the essential steps to get up and running with 
 The statecharts library provides a complete implementation of the [W3C SCXML specification](https://www.w3.org/TR/scxml/) for TypeScript/JavaScript applications. It allows you to define complex state machines using XML and execute them with full SCXML compliance.
 
 **Key Features:**
+
 - 🎯 **SCXML Compliant** - Full implementation of W3C SCXML specification
 - 🔧 **TypeScript Support** - Complete type safety and IntelliSense
 - 🚀 **Easy Integration** - Simple 4-step setup process
@@ -24,6 +25,7 @@ npm install statecharts
 ```
 
 **Requirements:**
+
 - Node.js >= 20.0.0
 - TypeScript (recommended for type safety)
 
@@ -38,14 +40,14 @@ Define your state machine using SCXML XML format. Here's a simple example:
     <data id="counter" expr="0"/>
     <data id="message">Hello World</data>
   </datamodel>
-  
+
   <state id="idle">
     <onentry>
       <assign location="message" expr="'System is idle'"/>
     </onentry>
     <transition event="start" target="active"/>
   </state>
-  
+
   <state id="active">
     <onentry>
       <assign location="message" expr="'System is running'"/>
@@ -105,17 +107,17 @@ async function runStateMachine() {
   try {
     // Define initial state data
     const initialState = {
-      data: {},  // Will be populated by datamodel
-      _datamodel: 'ecmascript'
+      data: {}, // Will be populated by datamodel
+      _datamodel: 'ecmascript',
     };
 
     // Execute the state machine
     const result = await stateChart.execute(initialState);
-    
+
     // Check the results
     console.log('Final state data:', result.data);
     // Output: { counter: 0, message: 'System is idle' }
-    
+
     console.log('State machine executed successfully!');
   } catch (error) {
     console.error('State machine execution failed:', error);
@@ -169,28 +171,28 @@ const trafficLightXML = `
 async function trafficLightDemo() {
   // Step 3: Parse XML with StateChart.fromXML
   const stateChart = StateChart.fromXML(trafficLightXML);
-  
+
   // Step 4: Execute the state machine
   const initialState = {
     data: {},
-    _datamodel: 'ecmascript'
+    _datamodel: 'ecmascript',
   };
-  
+
   let currentState = await stateChart.execute(initialState);
   console.log('Initial:', currentState.data);
   // Output: { currentColor: 'red', duration: 5000 }
-  
+
   // Send events to trigger transitions
   stateChart.sendEventByName('timer');
   currentState = await stateChart.macrostep(currentState);
   console.log('After timer 1:', currentState.data);
   // Output: { currentColor: 'green', duration: 3000 }
-  
+
   stateChart.sendEventByName('timer');
   currentState = await stateChart.macrostep(currentState);
   console.log('After timer 2:', currentState.data);
   // Output: { currentColor: 'yellow', duration: 1000 }
-  
+
   stateChart.sendEventByName('timer');
   currentState = await stateChart.macrostep(currentState);
   console.log('After timer 3:', currentState.data);
@@ -211,9 +213,9 @@ After your state machine is running, you can send events to trigger transitions:
 stateChart.sendEventByName('start');
 
 // Event with data
-stateChart.sendEventByName('userInput', { 
-  username: 'john', 
-  action: 'login' 
+stateChart.sendEventByName('userInput', {
+  username: 'john',
+  action: 'login',
 });
 
 // Process the events
@@ -233,10 +235,10 @@ const customEvent: SCXMLEvent = {
   origin: '',
   origintype: '',
   invokeid: '',
-  data: { 
+  data: {
     timestamp: Date.now(),
-    source: 'user-interface'
-  }
+    source: 'user-interface',
+  },
 };
 
 // Add to event queue
@@ -302,7 +304,7 @@ const stateChart = StateChart.fromXML(timerXML);
 // Execute with timeout option
 const result = await stateChart.execute(
   { data: {}, _datamodel: 'ecmascript' },
-  { timeout: 5000 } // 5 second timeout
+  { timeout: 5000 }, // 5 second timeout
 );
 ```
 
@@ -334,8 +336,8 @@ const stateChart = StateChart.fromXML(parallelXML);
 const result = await stateChart.execute({ data: {}, _datamodel: 'ecmascript' });
 
 // Both audio and video systems run in parallel
-stateChart.sendEventByName('mute');   // Affects only audio
-stateChart.sendEventByName('pause');  // Affects only video
+stateChart.sendEventByName('mute'); // Affects only audio
+stateChart.sendEventByName('pause'); // Affects only video
 ```
 
 ## Best Practices
@@ -360,7 +362,7 @@ async function robustExecution(xmlString: string) {
     const stateChart = StateChart.fromXML(xmlString);
     const result = await stateChart.execute({
       data: {},
-      _datamodel: 'ecmascript'
+      _datamodel: 'ecmascript',
     });
 
     return { success: true, data: result.data };
@@ -393,7 +395,7 @@ describe('State Machine Tests', () => {
   it('should initialize correctly', async () => {
     const result = await stateChart.execute({
       data: {},
-      _datamodel: 'ecmascript'
+      _datamodel: 'ecmascript',
     });
 
     expect(result.data).toBeDefined();
@@ -403,7 +405,7 @@ describe('State Machine Tests', () => {
   it('should handle events correctly', async () => {
     let state = await stateChart.execute({
       data: {},
-      _datamodel: 'ecmascript'
+      _datamodel: 'ecmascript',
     });
 
     stateChart.sendEventByName('start');
@@ -419,22 +421,26 @@ describe('State Machine Tests', () => {
 Now that you have the basics working, explore these advanced topics:
 
 ### 📚 **Core Documentation**
+
 - **[SCXML Nodes](../src/nodes/README.md)** - Complete reference for all available SCXML elements
 - **[Model Classes](../src/models/README.md)** - Understanding the underlying architecture
 - **[Error Handling](../src/errors/Errors.md)** - Comprehensive error handling guide
 
 ### 🔧 **Advanced Features**
+
 - **[State Node](../src/nodes/state.md)** - Advanced state configuration and hierarchies
 - **[Transition Node](../src/nodes/transition.md)** - Complex transition logic and conditions
 - **[Parallel Node](../src/nodes/parallel.md)** - Concurrent state processing
 - **[Data Management](../src/nodes/datamodel.md)** - Working with data models and variables
 
 ### 🎯 **Specific Use Cases**
+
 - **[Assign Node](../src/nodes/assign.md)** - Variable assignment and data manipulation
 - **[Raise Node](../src/nodes/raise.md)** - Internal event generation
 - **[OnEntry/OnExit](../src/nodes/onentry.md)** - State lifecycle actions
 
 ### 📖 **Standards and Specifications**
+
 - **[W3C SCXML Specification](https://www.w3.org/TR/scxml/)** - Official SCXML standard
 - **[SCXML Tutorial](https://www.w3.org/TR/scxml/#tutorial)** - W3C's official tutorial
 

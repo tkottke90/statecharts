@@ -1,6 +1,5 @@
-import { DataNode } from "../nodes/data.node";
-import { BaseNode } from "./base";
-
+import { DataNode } from '../nodes/data.node';
+import { BaseNode } from './base';
 
 describe('BaseNode', () => {
   it('should create a BaseNode instance', () => {
@@ -14,9 +13,14 @@ describe('BaseNode', () => {
   describe('#executeAllChildren', () => {
     it('should return an async generator', () => {
       // Arrange
-      const node = new BaseNode({ content: 'test', children: [
-        DataNode.createFromJSON({ data: { content: 'test', children: [], id: 'test' } }).node
-      ] });
+      const node = new BaseNode({
+        content: 'test',
+        children: [
+          DataNode.createFromJSON({
+            data: { content: 'test', children: [], id: 'test' },
+          }).node,
+        ],
+      });
 
       // Act
       const generator = node.executeAllChildren({ data: {} });
@@ -35,23 +39,29 @@ describe('BaseNode', () => {
       // Assert
       expect(state).toEqual({ data: {} });
     });
-
-
   });
-
 
   describe('#getChildrenOfType', () => {
     it('should return an array of children of the specified type', () => {
       // Arrange
-      const baseNode = new BaseNode({ content: 'test', children: [
-        DataNode.createFromJSON({ data: { content: 'test', children: [], id: 'test' } }).node
-      ] });
+      const baseNode = new BaseNode({
+        content: 'test',
+        children: [
+          DataNode.createFromJSON({
+            data: { content: 'test', children: [], id: 'test' },
+          }).node,
+        ],
+      });
 
       // Act
       const children = baseNode.getChildrenOfType(DataNode);
 
       // Assert
-      expect(children).toEqual([DataNode.createFromJSON({ data: { content: 'test', children: [], id: 'test' } }).node]);
+      expect(children).toEqual([
+        DataNode.createFromJSON({
+          data: { content: 'test', children: [], id: 'test' },
+        }).node,
+      ]);
     });
   });
 });

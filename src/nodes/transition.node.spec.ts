@@ -6,7 +6,9 @@ import { BaseExecutableNode } from '../models/base-executable';
 import { InternalState, SCXMLEvent } from '../models/internalState';
 
 // Helper function to create test InternalState
-function createTestEventState(data: Record<string, unknown> = {}): InternalState {
+function createTestEventState(
+  data: Record<string, unknown> = {},
+): InternalState {
   const mockEvent: SCXMLEvent = {
     name: 'test.event',
     type: 'internal',
@@ -14,13 +16,13 @@ function createTestEventState(data: Record<string, unknown> = {}): InternalState
     origin: 'test-origin',
     origintype: '',
     invokeid: '',
-    data: {}
+    data: {},
   };
 
   return {
     _event: mockEvent,
     _datamodel: 'ecmascript',
-    data: { ...data }
+    data: { ...data },
   };
 }
 
@@ -33,8 +35,8 @@ describe('Node: <transition>', () => {
           target: 'nextState',
           event: 'user.click',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       // Assert
@@ -52,8 +54,8 @@ describe('Node: <transition>', () => {
           event: 'check.condition',
           cond: 'data.count > 5',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       // Assert
@@ -69,8 +71,8 @@ describe('Node: <transition>', () => {
           target: 'autoState',
           event: '',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       // Assert
@@ -94,8 +96,8 @@ describe('Node: <transition>', () => {
           target: 'nextState',
           event: '',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const eventTransition = new TransitionNode({
@@ -103,8 +105,8 @@ describe('Node: <transition>', () => {
           target: 'nextState',
           event: 'user.action',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       // Assert
@@ -119,8 +121,8 @@ describe('Node: <transition>', () => {
           target: '',
           event: 'user.action',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const targetTransition = new TransitionNode({
@@ -128,8 +130,8 @@ describe('Node: <transition>', () => {
           target: 'nextState',
           event: 'user.action',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       // Assert
@@ -146,8 +148,8 @@ describe('Node: <transition>', () => {
           target: 'destinationState',
           event: 'trigger.event',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const state = createTestEventState();
@@ -166,8 +168,8 @@ describe('Node: <transition>', () => {
           target: 'parent.child.grandchild',
           event: 'navigate',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const state = createTestEventState();
@@ -188,8 +190,8 @@ describe('Node: <transition>', () => {
           target: 'nextState',
           event: 'trigger',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const state = createTestEventState();
@@ -209,8 +211,8 @@ describe('Node: <transition>', () => {
           event: 'trigger',
           cond: 'data.count > 5 ? "true" : "false"',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const state = createTestEventState({ count: 10 });
@@ -230,8 +232,8 @@ describe('Node: <transition>', () => {
           event: 'trigger',
           cond: 'data.count > 10 ? "true" : "false"',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const state = createTestEventState({ count: 5 });
@@ -251,8 +253,8 @@ describe('Node: <transition>', () => {
           event: 'trigger',
           cond: 'data.count > 5 ? "true" : "false"',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const stateWithHighCount = createTestEventState({ count: 10 });
@@ -271,8 +273,8 @@ describe('Node: <transition>', () => {
           event: 'trigger',
           cond: 'data.nonexistent.property.access',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const state = createTestEventState();
@@ -294,8 +296,8 @@ describe('Node: <transition>', () => {
           event: 'trigger',
           cond: '"true"',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const state = createTestEventState();
@@ -315,8 +317,8 @@ describe('Node: <transition>', () => {
           event: 'trigger',
           cond: '"false"',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const state = createTestEventState();
@@ -337,8 +339,8 @@ describe('Node: <transition>', () => {
           target: 'nextState',
           event: 'trigger',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const initialState = createTestEventState({ count: 5 });
@@ -357,8 +359,8 @@ describe('Node: <transition>', () => {
           location: 'transitionVar',
           expr: '"executed"',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const transitionNode = new TransitionNode({
@@ -366,8 +368,8 @@ describe('Node: <transition>', () => {
           target: 'nextState',
           event: 'trigger',
           content: '',
-          children: [assignNode]
-        }
+          children: [assignNode],
+        },
       });
 
       const initialState = createTestEventState();
@@ -386,8 +388,8 @@ describe('Node: <transition>', () => {
           location: 'step1',
           expr: '"first"',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const assignNode2 = new AssignNode({
@@ -395,8 +397,8 @@ describe('Node: <transition>', () => {
           location: 'step2',
           expr: '"second"',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const transitionNode = new TransitionNode({
@@ -404,8 +406,8 @@ describe('Node: <transition>', () => {
           target: 'nextState',
           event: 'trigger',
           content: '',
-          children: [assignNode1, assignNode2]
-        }
+          children: [assignNode1, assignNode2],
+        },
       });
 
       const initialState = createTestEventState();
@@ -425,16 +427,16 @@ describe('Node: <transition>', () => {
           location: 'status',
           expr: '"transitioning"',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const raiseNode = new RaiseNode({
         raise: {
           event: 'transition.executed',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const transitionNode = new TransitionNode({
@@ -442,8 +444,8 @@ describe('Node: <transition>', () => {
           target: 'nextState',
           event: 'trigger',
           content: '',
-          children: [assignNode, raiseNode]
-        }
+          children: [assignNode, raiseNode],
+        },
       });
 
       const initialState = createTestEventState();
@@ -454,7 +456,9 @@ describe('Node: <transition>', () => {
       // Assert
       expect(result.data.status).toBe('transitioning');
       expect(result._pendingInternalEvents).toHaveLength(1);
-      expect(result._pendingInternalEvents![0].name).toBe('transition.executed');
+      expect(result._pendingInternalEvents![0].name).toBe(
+        'transition.executed',
+      );
     });
 
     it('should handle execution errors gracefully', async () => {
@@ -476,8 +480,8 @@ describe('Node: <transition>', () => {
           location: 'success',
           expr: '"completed"',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const transitionNode = new TransitionNode({
@@ -485,8 +489,8 @@ describe('Node: <transition>', () => {
           target: 'nextState',
           event: 'trigger',
           content: '',
-          children: [failingNode, successNode]
-        }
+          children: [failingNode, successNode],
+        },
       });
 
       const initialState = createTestEventState();
@@ -497,7 +501,9 @@ describe('Node: <transition>', () => {
       // Assert
       expect(result._pendingInternalEvents).toBeDefined();
       expect(result._pendingInternalEvents!.length).toBeGreaterThan(0);
-      expect(result._pendingInternalEvents![0].name).toBe('error.transaction.execution-failed');
+      expect(result._pendingInternalEvents![0].name).toBe(
+        'error.transaction.execution-failed',
+      );
       expect(result.data.success).toBe('completed'); // Should continue executing after error
     });
 
@@ -517,8 +523,8 @@ describe('Node: <transition>', () => {
           location: 'executed',
           expr: '"yes"',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const transitionNode = new TransitionNode({
@@ -526,8 +532,8 @@ describe('Node: <transition>', () => {
           target: 'nextState',
           event: 'trigger',
           content: '',
-          children: [nonExecutableNode, assignNode]
-        }
+          children: [nonExecutableNode, assignNode],
+        },
       });
 
       const initialState = createTestEventState();
@@ -547,7 +553,7 @@ describe('Node: <transition>', () => {
         target: 'nextState',
         event: 'user.click',
         content: '',
-        children: []
+        children: [],
       };
 
       // Act
@@ -566,7 +572,7 @@ describe('Node: <transition>', () => {
       const validData = {
         target: 'state1',
         content: '',
-        children: []
+        children: [],
       };
 
       // Act
@@ -587,7 +593,7 @@ describe('Node: <transition>', () => {
         event: 'check',
         cond: 'data.ready === true',
         content: '',
-        children: []
+        children: [],
       };
 
       // Act
@@ -605,7 +611,7 @@ describe('Node: <transition>', () => {
       const invalidData = {
         event: 'user.click',
         content: '',
-        children: []
+        children: [],
       };
 
       // Act
@@ -621,7 +627,7 @@ describe('Node: <transition>', () => {
         target: '',
         event: 'user.click',
         content: '',
-        children: []
+        children: [],
       };
 
       // Act
@@ -641,8 +647,8 @@ describe('Node: <transition>', () => {
           event: 'user.action',
           cond: 'data.valid',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       };
 
       // Act
@@ -663,8 +669,8 @@ describe('Node: <transition>', () => {
         transition: {
           target: 'autoState',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       };
 
       // Act
@@ -685,8 +691,8 @@ describe('Node: <transition>', () => {
           // Missing required target
           event: 'user.action',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       };
 
       // Act
@@ -705,8 +711,8 @@ describe('Node: <transition>', () => {
           target: 'parent.child.grandchild',
           event: 'navigate.deep',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       };
 
       // Act
@@ -726,8 +732,8 @@ describe('Node: <transition>', () => {
           target: 'autoTarget',
           event: '',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       // Assert
@@ -743,8 +749,8 @@ describe('Node: <transition>', () => {
           event: 'check',
           cond: 'data.count >= 10 ? "true" : "false"',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const stateTrue = createTestEventState({ count: 15 });
@@ -761,7 +767,9 @@ describe('Node: <transition>', () => {
 
       const action1 = new (class extends BaseExecutableNode {
         static label = 'action1';
-        constructor() { super({ content: '', children: [] }); }
+        constructor() {
+          super({ content: '', children: [] });
+        }
         async run(state: InternalState): Promise<InternalState> {
           actions.push('action1');
           return state;
@@ -770,7 +778,9 @@ describe('Node: <transition>', () => {
 
       const action2 = new (class extends BaseExecutableNode {
         static label = 'action2';
-        constructor() { super({ content: '', children: [] }); }
+        constructor() {
+          super({ content: '', children: [] });
+        }
         async run(state: InternalState): Promise<InternalState> {
           actions.push('action2');
           return state;
@@ -782,8 +792,8 @@ describe('Node: <transition>', () => {
           target: 'nextState',
           event: 'trigger',
           content: '',
-          children: [action1, action2]
-        }
+          children: [action1, action2],
+        },
       });
 
       const initialState = createTestEventState();
@@ -804,8 +814,8 @@ describe('Node: <transition>', () => {
           target: 'app.workflow.step1.substep.final',
           event: 'complex.navigation',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const state = createTestEventState();
@@ -824,8 +834,8 @@ describe('Node: <transition>', () => {
           location: 'newProp',
           expr: '"added"',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const transitionNode = new TransitionNode({
@@ -833,13 +843,13 @@ describe('Node: <transition>', () => {
           target: 'nextState',
           event: 'trigger',
           content: '',
-          children: [assignNode]
-        }
+          children: [assignNode],
+        },
       });
 
       const initialState = createTestEventState({
         existingProp: 'preserved',
-        nested: { value: 42 }
+        nested: { value: 42 },
       });
 
       // Act
@@ -860,8 +870,8 @@ describe('Node: <transition>', () => {
           target: 'emptyTarget',
           event: 'empty',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const initialState = createTestEventState({ test: 'value' });

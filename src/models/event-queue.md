@@ -17,17 +17,17 @@ The `QueueMode` enum defines the ordering behavior for queue operations:
 
 ```typescript
 export enum QueueMode {
-  FirstInFirstOut,  // FIFO - Default mode
-  LastInFirstOut    // LIFO - Stack-like behavior
+  FirstInFirstOut, // FIFO - Default mode
+  LastInFirstOut, // LIFO - Stack-like behavior
 }
 ```
 
 ### Values
 
-| Value | Description | Behavior |
-|-------|-------------|----------|
-| `FirstInFirstOut` | FIFO mode (default) | First item added is first item removed |
-| `LastInFirstOut` | LIFO mode | Last item added is first item removed (stack) |
+| Value             | Description         | Behavior                                      |
+| ----------------- | ------------------- | --------------------------------------------- |
+| `FirstInFirstOut` | FIFO mode (default) | First item added is first item removed        |
+| `LastInFirstOut`  | LIFO mode           | Last item added is first item removed (stack) |
 
 ## Queue Class
 
@@ -44,13 +44,14 @@ constructor(mode: QueueMode = QueueMode.FirstInFirstOut)
 ```
 
 **Parameters:**
+
 - `mode` - Queue ordering mode (defaults to FIFO)
 
 ### Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `size` | `number` | Number of items currently in the queue (read-only) |
+| Property | Type     | Description                                        |
+| -------- | -------- | -------------------------------------------------- |
+| `size`   | `number` | Number of items currently in the queue (read-only) |
 
 ### Methods
 
@@ -61,9 +62,11 @@ constructor(mode: QueueMode = QueueMode.FirstInFirstOut)
 Adds an item to the queue.
 
 **Parameters:**
+
 - `event` - Item to add to the queue
 
 **Behavior:**
+
 - **FIFO Mode**: Adds item to the end of the queue
 - **LIFO Mode**: Adds item to the end of the queue (same as FIFO for enqueue)
 
@@ -72,9 +75,11 @@ Adds an item to the queue.
 Removes and returns the next item from the queue.
 
 **Returns:**
+
 - Next item according to queue mode, or `undefined` if queue is empty
 
 **Behavior:**
+
 - **FIFO Mode**: Returns the first item added (oldest)
 - **LIFO Mode**: Returns the last item added (newest)
 
@@ -83,9 +88,11 @@ Removes and returns the next item from the queue.
 Returns the next item without removing it from the queue.
 
 **Returns:**
+
 - Next item that would be returned by `dequeue()`, or `undefined` if queue is empty
 
 **Behavior:**
+
 - **FIFO Mode**: Returns the first item in the queue
 - **LIFO Mode**: Returns the last item in the queue
 
@@ -100,6 +107,7 @@ Removes all items from the queue, making it empty.
 Checks if the queue contains any items.
 
 **Returns:**
+
 - `true` if queue is empty, `false` otherwise
 
 ## Usage Examples
@@ -163,12 +171,12 @@ queue.enqueue(30);
 
 // Peek without removing
 console.log(queue.peek()); // 10 (FIFO mode)
-console.log(queue.size);   // 3 (unchanged)
+console.log(queue.size); // 3 (unchanged)
 
 // Dequeue and compare
 console.log(queue.dequeue()); // 10 (same as peek)
-console.log(queue.peek());    // 20 (next item)
-console.log(queue.size);      // 2
+console.log(queue.peek()); // 20 (next item)
+console.log(queue.size); // 2
 ```
 
 ### Queue Management
@@ -208,7 +216,7 @@ const event1: SCXMLEvent = {
   origin: '',
   origintype: '',
   invokeid: '',
-  data: { userId: 123 }
+  data: { userId: 123 },
 };
 
 const event2: SCXMLEvent = {
@@ -218,7 +226,7 @@ const event2: SCXMLEvent = {
   origin: '',
   origintype: '',
   invokeid: '',
-  data: {}
+  data: {},
 };
 
 // Enqueue events
@@ -244,13 +252,13 @@ while (!eventQueue.isEmpty()) {
 
 ### Time Complexity
 
-| Operation | FIFO Mode | LIFO Mode | Notes |
-|-----------|-----------|-----------|-------|
-| `enqueue()` | O(1) | O(1) | Always appends to end |
-| `dequeue()` | O(n) | O(1) | FIFO uses `shift()` which is O(n) |
-| `peek()` | O(1) | O(1) | No array modification |
-| `clear()` | O(1) | O(1) | Creates new empty array |
-| `isEmpty()` | O(1) | O(1) | Checks array length |
+| Operation   | FIFO Mode | LIFO Mode | Notes                             |
+| ----------- | --------- | --------- | --------------------------------- |
+| `enqueue()` | O(1)      | O(1)      | Always appends to end             |
+| `dequeue()` | O(n)      | O(1)      | FIFO uses `shift()` which is O(n) |
+| `peek()`    | O(1)      | O(1)      | No array modification             |
+| `clear()`   | O(1)      | O(1)      | Creates new empty array           |
+| `isEmpty()` | O(1)      | O(1)      | Checks array length               |
 
 ### Performance Optimization Tips
 

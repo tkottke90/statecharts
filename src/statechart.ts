@@ -1,14 +1,23 @@
-import { BaseNode } from "./models";
+import { BaseNode } from './models';
 import SimpleXML from 'simple-xml-to-json';
-import { parse } from "./parser";
-import { BaseStateNode } from "./models/base-state";
-import { InitialNode, SCXMLNode, TransitionNode } from "./nodes";
-import { DataModelNode } from "./nodes/datamodel.node";
-import { ParallelNode } from "./nodes/parallel.node";
-import { findLCCA, computeExitSet, buildEntryPath, type ActiveStateEntry } from './utils/transition-utils';
-import { InternalState, processPendingEvents, SCXMLEvent } from './models/internalState';
+import { parse } from './parser';
+import { BaseStateNode } from './models/base-state';
+import { InitialNode, SCXMLNode, TransitionNode } from './nodes';
+import { DataModelNode } from './nodes/datamodel.node';
+import { ParallelNode } from './nodes/parallel.node';
+import {
+  findLCCA,
+  computeExitSet,
+  buildEntryPath,
+  type ActiveStateEntry,
+} from './utils/transition-utils';
+import {
+  InternalState,
+  processPendingEvents,
+  SCXMLEvent,
+} from './models/internalState';
 import { Queue } from './models/event-queue';
-import z from "zod";
+import z from 'zod';
 
 type Tuple<T> = Array<[string, T]>;
 
@@ -24,13 +33,12 @@ export class StateChart {
   // SCXML-compliant dual event queue system
   private internalEventQueue = new Queue<SCXMLEvent>();
   private externalEventQueue = new Queue<SCXMLEvent>();
-  
+
   constructor(
     private initial: string,
     private readonly root: SCXMLNode,
-    stateMap: Map<string, BaseNode>
+    stateMap: Map<string, BaseNode>,
   ) {
-
     // Collect all state notes so we can access them later
     stateMap.forEach((node, id) => {
       if (node instanceof BaseStateNode) {
@@ -51,7 +59,7 @@ export class StateChart {
   private initializeActiveStateChain(): void {
     if (!this.initial) {
       // Check for <initial> node
-      const [ initialNode ] = this.root.getChildrenOfType(InitialNode)
+      const [initialNode] = this.root.getChildrenOfType(InitialNode);
 
       if (initialNode) {
         this.initial = initialNode.content;
@@ -61,7 +69,7 @@ export class StateChart {
     // We do not have an initial attribute OR an <initial> node
     // then grab the first state element
     if (!this.initial) {
-      const [ firstStateNode ] = this.root.getChildrenOfType(BaseStateNode);
+      const [firstStateNode] = this.root.getChildrenOfType(BaseStateNode);
 
       if (firstStateNode) {
         this.initial = firstStateNode.id;
@@ -69,8 +77,10 @@ export class StateChart {
     }
 
     if (!this.initial) {
-      const err = new Error('Could not identify an initial state from the provided configuration')
-      err.name = 'StateChart.InitializationError'
+      const err = new Error(
+        'Could not identify an initial state from the provided configuration',
+      );
+      err.name = 'StateChart.InitializationError';
 
       throw err;
     }
@@ -138,7 +148,7 @@ export class StateChart {
   private async addStateToActiveChain(
     statePath: string,
     executeMountHandlers: boolean,
-    currentState?: InternalState
+    currentState?: InternalState,
   ): Promise<InternalState | void> {
     const stateNode = this.states.get(statePath);
     let updatedState = currentState;
@@ -155,11 +165,17 @@ export class StateChart {
 
         // Handle parallel state entry using mount response
         if (stateNode instanceof ParallelNode && mountResponse.childPath) {
-          const childStateIds = mountResponse.childPath.split(',').filter(id => id.trim());
+          const childStateIds = mountResponse.childPath
+            .split(',')
+            .filter(id => id.trim());
 
           for (const childId of childStateIds) {
             const childPath = `${statePath}.${childId.trim()}`;
-            const childResult = await this.addStateToActiveChain(childPath, true, updatedState);
+            const childResult = await this.addStateToActiveChain(
+              childPath,
+              true,
+              updatedState,
+            );
             if (childResult) {
               updatedState = childResult;
             }
@@ -167,12 +183,20 @@ export class StateChart {
             // Handle compound states within parallel regions
             const childStateNode = this.states.get(childPath);
             if (childStateNode && childResult) {
-              const grandChildMountResponse = await childStateNode.mount(childResult);
-              updatedState = { ...updatedState, ...grandChildMountResponse.state };
+              const grandChildMountResponse =
+                await childStateNode.mount(childResult);
+              updatedState = {
+                ...updatedState,
+                ...grandChildMountResponse.state,
+              };
 
               if (grandChildMountResponse.childPath) {
                 const grandChildPath = `${childPath}.${grandChildMountResponse.childPath}`;
-                const grandChildResult = await this.addStateToActiveChain(grandChildPath, true, updatedState);
+                const grandChildResult = await this.addStateToActiveChain(
+                  grandChildPath,
+                  true,
+                  updatedState,
+                );
                 if (grandChildResult) {
                   updatedState = grandChildResult;
                 }
@@ -214,7 +238,10 @@ export class StateChart {
     this.externalEventQueue.enqueue(event);
   }
 
-  public sendEventByName(eventName: string, data?: Record<string, unknown>): void {
+  public sendEventByName(
+    eventName: string,
+    data?: Record<string, unknown>,
+  ): void {
     const event: SCXMLEvent = {
       name: eventName,
       type: 'external',
@@ -222,7 +249,7 @@ export class StateChart {
       origin: '',
       origintype: '',
       invokeid: '',
-      data: data || {}
+      data: data || {},
     };
     this.addEvent(event);
   }
@@ -235,14 +262,20 @@ export class StateChart {
   }
 
   // Helper method to select transitions that match an event
-  private selectTransitions(event: SCXMLEvent, state: InternalState): TransitionNode[] {
+  private selectTransitions(
+    event: SCXMLEvent,
+    state: InternalState,
+  ): TransitionNode[] {
     const enabledTransitions: TransitionNode[] = [];
 
     for (const [, stateNode] of this.activeStateChain) {
       const transitions = stateNode.getTransitions();
 
       for (const transition of transitions) {
-        if (this.eventMatches(event, transition.event) && transition.checkCondition(state)) {
+        if (
+          this.eventMatches(event, transition.event) &&
+          transition.checkCondition(state)
+        ) {
           enabledTransitions.push(transition);
         }
       }
@@ -266,7 +299,9 @@ export class StateChart {
   }
 
   // Helper method to remove conflicting transitions (placeholder for now)
-  private removeConflictingTransitions(transitions: TransitionNode[]): TransitionNode[] {
+  private removeConflictingTransitions(
+    transitions: TransitionNode[],
+  ): TransitionNode[] {
     // TODO: Implement SCXML conflict resolution algorithm
     // For now, just return all transitions
     return transitions;
@@ -278,7 +313,6 @@ export class StateChart {
 
     let macrostepDone = false;
     while (!macrostepDone) {
-
       // 1. Process eventless transitions first (highest priority)
       const eventlessTransitions = this.selectEventlessTransitions();
       if (eventlessTransitions.length > 0) {
@@ -325,14 +359,20 @@ export class StateChart {
     return state;
   }
 
-  async microstep(state: InternalState, transitions: TransitionNode[]): Promise<InternalState> {
+  async microstep(
+    state: InternalState,
+    transitions: TransitionNode[],
+  ): Promise<InternalState> {
     let currentState = { ...state };
 
     // Exit states
     currentState = await this.exitStates(transitions, currentState);
 
     // Execute transition content
-    currentState = await this.executeTransitionContent(transitions, currentState);
+    currentState = await this.executeTransitionContent(
+      transitions,
+      currentState,
+    );
 
     // Enter states
     currentState = await this.enterStates(transitions, currentState);
@@ -361,7 +401,9 @@ export class StateChart {
    * @param transitions - Array of transitions to process
    * @returns Array of state paths to exit, sorted deepest-first
    */
-  private computeExitSetFromTransitions(transitions: TransitionNode[]): string[] {
+  private computeExitSetFromTransitions(
+    transitions: TransitionNode[],
+  ): string[] {
     const allExitStates = new Set<string>();
 
     // For each transition, compute its exit set and add to the union
@@ -370,10 +412,15 @@ export class StateChart {
       const sourceState = this.findSourceStateForTransition(transition);
       if (sourceState && transition.target) {
         // Convert activeStateChain to the format expected by the utility function
-        const activeStateEntries: ActiveStateEntry[] = this.activeStateChain.map(([path, node]) => [path, node]);
-        
+        const activeStateEntries: ActiveStateEntry[] =
+          this.activeStateChain.map(([path, node]) => [path, node]);
+
         // Compute exit set for this transition
-        const exitStates = computeExitSet(sourceState, transition.target, activeStateEntries);
+        const exitStates = computeExitSet(
+          sourceState,
+          transition.target,
+          activeStateEntries,
+        );
         exitStates.forEach(state => allExitStates.add(state));
       }
     }
@@ -390,19 +437,26 @@ export class StateChart {
    * @param transition - The transition to find the source for
    * @returns The path of the source state, or null if not found
    */
-  private findSourceStateForTransition(transition: TransitionNode): string | null {
+  private findSourceStateForTransition(
+    transition: TransitionNode,
+  ): string | null {
     // Look through active state chain to find which state contains this transition
     for (const [statePath, stateNode] of this.activeStateChain) {
       // Check if this state node contains the transition
-      if (stateNode.getEventlessTransitions &&
-          stateNode.getEventlessTransitions().includes(transition)) {
+      if (
+        stateNode.getEventlessTransitions &&
+        stateNode.getEventlessTransitions().includes(transition)
+      ) {
         return statePath;
       }
     }
     return null;
   }
 
-  private async exitStates(transitions: TransitionNode[], state: InternalState): Promise<InternalState> {
+  private async exitStates(
+    transitions: TransitionNode[],
+    state: InternalState,
+  ): Promise<InternalState> {
     // Compute the complete exit set for all transitions
     const statesToExit = this.computeExitSetFromTransitions(transitions);
 
@@ -412,18 +466,25 @@ export class StateChart {
     // Execute onexit handlers and remove from active configuration
     for (const statePath of statesToExit) {
       // Find the state node in our active state chain
-      const stateEntry = this.activeStateChain.find(([path]) => path === statePath);
+      const stateEntry = this.activeStateChain.find(
+        ([path]) => path === statePath,
+      );
 
       if (stateEntry) {
         const [, stateNode] = stateEntry;
 
         // Execute onexit handler by calling unmount method
         if (typeof stateNode.unmount === 'function') {
-          currentState = { ...currentState, ...await stateNode.unmount(currentState) };
+          currentState = {
+            ...currentState,
+            ...(await stateNode.unmount(currentState)),
+          };
         }
 
         // Remove state from active configuration
-        this.activeStateChain = this.activeStateChain.filter(([path]) => path !== statePath);
+        this.activeStateChain = this.activeStateChain.filter(
+          ([path]) => path !== statePath,
+        );
       }
     }
 
@@ -438,7 +499,10 @@ export class StateChart {
    * @param state - Current state of the state machine
    * @returns Promise resolving to the updated state after executing all transition content
    */
-  private async executeTransitionContent(transitions: TransitionNode[], state: InternalState): Promise<InternalState> {
+  private async executeTransitionContent(
+    transitions: TransitionNode[],
+    state: InternalState,
+  ): Promise<InternalState> {
     let currentState = { ...state };
 
     // Execute transitions in document order
@@ -459,7 +523,9 @@ export class StateChart {
    * @param transitions - Array of transitions to process
    * @returns Array of state paths to enter, sorted shallowest-first
    */
-  private computeEntrySetFromTransitions(transitions: TransitionNode[]): string[] {
+  private computeEntrySetFromTransitions(
+    transitions: TransitionNode[],
+  ): string[] {
     const allEntryStates = new Set<string>();
 
     // For each transition, compute its entry set and add to the union
@@ -484,7 +550,10 @@ export class StateChart {
     return entryArray.sort((a, b) => a.split('.').length - b.split('.').length);
   }
 
-  private async enterStates(transitions: TransitionNode[], state: InternalState): Promise<InternalState> {
+  private async enterStates(
+    transitions: TransitionNode[],
+    state: InternalState,
+  ): Promise<InternalState> {
     // Compute the complete entry set for all transitions
     const statesToEnter = this.computeEntrySetFromTransitions(transitions);
 
@@ -492,7 +561,11 @@ export class StateChart {
 
     // Enter each state with mount handlers (execute onentry actions)
     for (const statePath of statesToEnter) {
-      const result = await this.addStateToActiveChain(statePath, true, currentState);
+      const result = await this.addStateToActiveChain(
+        statePath,
+        true,
+        currentState,
+      );
       if (result) {
         currentState = result;
       }
@@ -508,7 +581,9 @@ export class StateChart {
    * @param state - The initial state to populate with data model values
    * @returns Updated state with initialized data model
    */
-  private async initializeDataModel(state: InternalState): Promise<InternalState> {
+  private async initializeDataModel(
+    state: InternalState,
+  ): Promise<InternalState> {
     // Find all datamodel nodes in the root SCXML node
     const dataModelNodes = this.root.getChildrenOfType(DataModelNode);
 
@@ -522,7 +597,10 @@ export class StateChart {
     return currentState;
   }
 
-  async execute(input: InternalState, options?: StateChartOptions): Promise<InternalState> {
+  async execute(
+    input: InternalState,
+    options?: StateChartOptions,
+  ): Promise<InternalState> {
     // Allow the caller to provide an abort controller
     // but default to a new one otherwise so that we can
     // consistently use the signal logic for managing events
@@ -547,7 +625,7 @@ export class StateChart {
 
   static fromXML(xmlStr: string) {
     const parsedXML = SimpleXML.convertXML(xmlStr) as {
-      scxml: z.infer<typeof SCXMLNode.schema>
+      scxml: z.infer<typeof SCXMLNode.schema>;
     };
 
     // If the root node is not an scxml node, then we should not even try parsing
@@ -559,7 +637,9 @@ export class StateChart {
 
     // We should fail if we do not get a root node back
     if (!root) {
-      throw new Error('Could not parse the provided XML into a valid StateChart');
+      throw new Error(
+        'Could not parse the provided XML into a valid StateChart',
+      );
     }
 
     // We should fail if there were any node errors

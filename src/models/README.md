@@ -24,14 +24,17 @@ export class BaseNode {
   allowChildren = false;
   children: BaseNode[] = [];
   content: string;
-  
-  async *executeAllChildren(state: InternalState): AsyncGenerator<ExecutionResult>;
+
+  async *executeAllChildren(
+    state: InternalState,
+  ): AsyncGenerator<ExecutionResult>;
   getChildrenOfType<T>(typeCtor: new (...args: any[]) => T): T[];
   async run(state: InternalState): Promise<InternalState>;
 }
 ```
 
 **Key Features:**
+
 - Schema validation with Zod
 - Child node management and execution
 - Type-safe node creation patterns
@@ -48,10 +51,10 @@ export class BaseStateNode extends BaseNode {
   readonly id: string;
   readonly initial: string | undefined;
   allowChildren = true;
-  
+
   get isAtomic(): boolean;
   get initialState(): string | undefined;
-  
+
   async mount(state: InternalState): Promise<InternalState>;
   async unmount(state: InternalState): Promise<InternalState>;
   getTransitions(): TransitionNode[];
@@ -59,6 +62,7 @@ export class BaseStateNode extends BaseNode {
 ```
 
 **Key Features:**
+
 - State hierarchy management
 - Mount/unmount lifecycle
 - Initial state resolution
@@ -74,13 +78,14 @@ Base class for all executable content nodes that perform actions.
 ```typescript
 export class BaseExecutableNode extends BaseNode {
   isExecutable = true;
-  
+
   async run(state: InternalState): Promise<InternalState>;
   get hasExecutableChildren(): boolean;
 }
 ```
 
 **Key Features:**
+
 - Executable content identification
 - State modification contract
 - Child execution detection
@@ -95,12 +100,12 @@ Generic queue implementation for managing event processing with FIFO/LIFO modes.
 ```typescript
 export enum QueueMode {
   FirstInFirstOut,
-  LastInFirstOut
+  LastInFirstOut,
 }
 
 export class Queue<EventType> {
   constructor(mode: QueueMode = QueueMode.FirstInFirstOut);
-  
+
   enqueue(event: EventType): void;
   dequeue(): EventType | undefined;
   peek(): EventType | undefined;
@@ -111,6 +116,7 @@ export class Queue<EventType> {
 ```
 
 **Key Features:**
+
 - Type-safe event queuing
 - FIFO/LIFO ordering modes
 - SCXML-compliant event prioritization
@@ -131,16 +137,17 @@ export interface InternalState {
   _sessionId?: string;
   _datamodel?: string;
   data: Record<string, unknown>;
-  
+
   // Event context (during event processing)
   _event?: SCXMLEvent;
-  
+
   // Pending events (for executable content)
   _pendingInternalEvents?: SCXMLEvent[];
 }
 ```
 
 **Key Features:**
+
 - Immutable state representation
 - Event context management
 - Pending event handling
@@ -163,6 +170,7 @@ export interface SCXMLEvent {
 ```
 
 **Key Features:**
+
 - SCXML-compliant event structure
 - Type-safe event properties
 - Support for all event types
@@ -174,10 +182,16 @@ export interface SCXMLEvent {
 
 ```typescript
 // Transfer pending events to queue
-export function processPendingEvents(state: InternalState, queue: Queue<SCXMLEvent>): void;
+export function processPendingEvents(
+  state: InternalState,
+  queue: Queue<SCXMLEvent>,
+): void;
 
 // Add event to pending list
-export function addPendingEvent(state: InternalState, event: SCXMLEvent): InternalState;
+export function addPendingEvent(
+  state: InternalState,
+  event: SCXMLEvent,
+): InternalState;
 
 // Convert JavaScript errors to SCXML events
 export function fromJsError(err: unknown): SCXMLEvent;
@@ -249,7 +263,7 @@ class CustomActionNode extends BaseExecutableNode {
   static label = 'customAction';
   static schema = BaseExecutableNodeAttr.extend({
     action: z.string(),
-    parameters: z.record(z.unknown()).optional()
+    parameters: z.record(z.unknown()).optional(),
   });
 
   constructor(data: any) {
@@ -262,8 +276,8 @@ class CustomActionNode extends BaseExecutableNode {
       ...state,
       data: {
         ...state.data,
-        customActionExecuted: true
-      }
+        customActionExecuted: true,
+      },
     };
   }
 }
@@ -314,11 +328,10 @@ When adding new model classes:
 3. **Document Thoroughly**: Create comprehensive markdown documentation
 4. **Test Completely**: Include unit tests, integration tests, and edge cases
 5. **Update Exports**: Add new classes to `index.ts` for public API access
-   
+
 ## See Also
 
 - [Nodes Documentation](../nodes/README.md) - SCXML node implementations
 - [StateChart](../statechart.md) - Main state machine class
 - [Parser](../parser/README.md) - XML parsing and node creation
 - [W3C SCXML Specification](https://www.w3.org/TR/scxml/) - Official specification
-

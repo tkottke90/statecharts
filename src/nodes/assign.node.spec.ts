@@ -5,9 +5,10 @@ import { parse } from '../parser';
 import SimpleXML from 'simple-xml-to-json';
 import { TransitionNode } from './transition.node';
 
-
 // Helper function to create test InternalState
-function createTestEventState(data: Record<string, unknown> = {}): InternalState {
+function createTestEventState(
+  data: Record<string, unknown> = {},
+): InternalState {
   const mockEvent: SCXMLEvent = {
     name: 'test.event',
     type: 'internal',
@@ -15,14 +16,14 @@ function createTestEventState(data: Record<string, unknown> = {}): InternalState
     origin: 'test-origin',
     origintype: '',
     invokeid: '',
-    data: {}
+    data: {},
   };
 
   return {
     _event: mockEvent,
     _datamodel: 'ecmascript', // Add datamodel for expression evaluation
     data: { ...data },
-    ...data // Also spread data at root level for backward compatibility with tests
+    ...data, // Also spread data at root level for backward compatibility with tests
   };
 }
 
@@ -35,8 +36,8 @@ describe('AssignNode', () => {
           location: 'user.isAdmin',
           expr: 'user?.permission?.admin === true', // Proper JavaScript string literal
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       // Assert
@@ -48,14 +49,14 @@ describe('AssignNode', () => {
     it('should create AssignNode with location and content (no expr)', () => {
       // Arrange
       const childNode = new BaseNode({ content: 'Jane Smith', children: [] });
-      
+
       // Act
       const assignNode = new AssignNode({
         assign: {
           location: 'user.name',
           content: '',
-          children: [childNode]
-        }
+          children: [childNode],
+        },
       });
 
       // Assert
@@ -79,8 +80,8 @@ describe('AssignNode', () => {
           location: 'user.name',
           expr: '"John Doe"', // Proper JavaScript string literal
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const initialState = createTestEventState({ user: { id: 1 } });
@@ -91,7 +92,7 @@ describe('AssignNode', () => {
       // Assert
       expect(result.data.user).toEqual({
         id: 1,
-        name: 'John Doe'
+        name: 'John Doe',
       });
       expect(result._event).toBeDefined();
       expect(result.data).toBeDefined();
@@ -103,8 +104,8 @@ describe('AssignNode', () => {
         assign: {
           location: 'user.name',
           content: 'Jane Smith',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const initialState = createTestEventState({ user: { id: 2 } });
@@ -116,8 +117,8 @@ describe('AssignNode', () => {
       expect(result.data).toEqual({
         user: {
           id: 2,
-          name: 'Jane Smith'
-        }
+          name: 'Jane Smith',
+        },
       });
     });
 
@@ -128,8 +129,8 @@ describe('AssignNode', () => {
           location: 'config.settings.theme',
           expr: '"dark"', // Proper JavaScript string literal
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const initialState = createTestEventState();
@@ -141,9 +142,9 @@ describe('AssignNode', () => {
       expect(result.data).toEqual({
         config: {
           settings: {
-            theme: 'dark'
-          }
-        }
+            theme: 'dark',
+          },
+        },
       });
     });
 
@@ -154,11 +155,13 @@ describe('AssignNode', () => {
           location: 'user.name',
           expr: '"Updated Name"', // Proper JavaScript string literal
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
-      const initialState = createTestEventState({ user: { name: 'Old Name', id: 1 } });
+      const initialState = createTestEventState({
+        user: { name: 'Old Name', id: 1 },
+      });
 
       // Act
       const result = await assignNode.run(initialState);
@@ -167,8 +170,8 @@ describe('AssignNode', () => {
       expect(result.data).toEqual({
         user: {
           name: 'Updated Name',
-          id: 1
-        }
+          id: 1,
+        },
       });
     });
 
@@ -179,8 +182,8 @@ describe('AssignNode', () => {
           location: 'items[0].name',
           expr: '"First Item"', // Proper JavaScript string literal
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const initialState = createTestEventState({ items: [{ id: 1 }] });
@@ -190,7 +193,7 @@ describe('AssignNode', () => {
 
       // Assert
       expect(result.data).toEqual({
-        items: [{ id: 1, name: 'First Item' }]
+        items: [{ id: 1, name: 'First Item' }],
       });
     });
 
@@ -198,13 +201,13 @@ describe('AssignNode', () => {
       // Arrange
       const child1 = new BaseNode({ content: 'Hello ', children: [] });
       const child2 = new BaseNode({ content: 'World', children: [] });
-      
+
       const assignNode = new AssignNode({
         assign: {
           location: 'message',
           content: '',
-          children: [child1, child2]
-        }
+          children: [child1, child2],
+        },
       });
 
       const initialState = createTestEventState();
@@ -214,7 +217,7 @@ describe('AssignNode', () => {
 
       // Assert
       expect(result.data).toEqual({
-        message: 'Hello World'
+        message: 'Hello World',
       });
     });
   });
@@ -226,7 +229,7 @@ describe('AssignNode', () => {
         location: 'user.name',
         expr: '"John Doe"', // Proper JavaScript string literal
         content: '',
-        children: []
+        children: [],
       });
 
       // Assert
@@ -238,7 +241,7 @@ describe('AssignNode', () => {
       const result = AssignNode.schema.safeParse({
         location: 'user.name',
         content: '',
-        children: [{ content: 'Jane', children: [] }]
+        children: [{ content: 'Jane', children: [] }],
       });
 
       // Assert
@@ -250,7 +253,7 @@ describe('AssignNode', () => {
       const result = AssignNode.schema.safeParse({
         expr: '"John Doe"', // Proper JavaScript string literal
         content: '',
-        children: []
+        children: [],
       });
 
       // Assert
@@ -264,7 +267,7 @@ describe('AssignNode', () => {
         location: '',
         expr: '"John Doe"', // Proper JavaScript string literal
         content: '',
-        children: []
+        children: [],
       });
 
       // Assert
@@ -278,7 +281,7 @@ describe('AssignNode', () => {
         location: 'user.name',
         expr: '"John Doe"', // Proper JavaScript string literal
         content: '',
-        children: [{ content: 'Jane', children: [] }]
+        children: [{ content: 'Jane', children: [] }],
       });
 
       // Assert
@@ -291,7 +294,7 @@ describe('AssignNode', () => {
       const result = AssignNode.schema.safeParse({
         location: 'user.name',
         content: '',
-        children: []
+        children: [],
       });
 
       // Assert
@@ -307,8 +310,8 @@ describe('AssignNode', () => {
       const jsonInput = {
         assign: {
           location: 'user.name',
-          expr: 'John Doe'
-        }
+          expr: 'John Doe',
+        },
       };
 
       // Act
@@ -327,8 +330,8 @@ describe('AssignNode', () => {
       const jsonInput = {
         assign: {
           // Missing required location
-          expr: 'John Doe'
-        }
+          expr: 'John Doe',
+        },
       };
 
       // Act
@@ -345,8 +348,8 @@ describe('AssignNode', () => {
       const jsonInput = {
         assign: {
           location: 'user.name',
-          children: [{ content: 'Jane Smith', children: [] }]
-        }
+          children: [{ content: 'Jane Smith', children: [] }],
+        },
       };
 
       // Act
@@ -367,7 +370,7 @@ describe('AssignNode', () => {
         { location: 'varname', expr: '"value1"' }, // Proper JavaScript string literal
         { location: 'obj.property', expr: '"value2"' }, // Proper JavaScript string literal
         { location: 'array[0]', expr: '"value3"' }, // Proper JavaScript string literal
-        { location: 'nested.obj.deep.prop', expr: '"value4"' } // Proper JavaScript string literal
+        { location: 'nested.obj.deep.prop', expr: '"value4"' }, // Proper JavaScript string literal
       ];
 
       for (const testCase of testCases) {
@@ -376,8 +379,8 @@ describe('AssignNode', () => {
             location: testCase.location,
             expr: testCase.expr, // Proper JavaScript string literal
             content: '',
-            children: []
-          }
+            children: [],
+          },
         });
 
         const initialState = createTestEventState();
@@ -399,9 +402,7 @@ describe('AssignNode', () => {
         </transition>
       `;
 
-      const { root } = parse<TransitionNode>(
-        SimpleXML.convertXML(xmlExample)
-      );
+      const { root } = parse<TransitionNode>(SimpleXML.convertXML(xmlExample));
 
       const initialState = createTestEventState({ user: { id: 1 } });
 
@@ -413,8 +414,8 @@ describe('AssignNode', () => {
         user: {
           id: 1,
           status: 'active',
-          lastLogin: expect.any(Number)
-        }
+          lastLogin: expect.any(Number),
+        },
       });
 
       // Verify XML example is included for documentation
@@ -430,8 +431,8 @@ describe('AssignNode', () => {
           location: 'user.name',
           expr: '""', // Proper JavaScript string literal
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const initialState = createTestEventState();
@@ -450,8 +451,8 @@ describe('AssignNode', () => {
           location: 'user.age',
           expr: 'Number.parseInt("25")', // Proper JavaScript string literal
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const initialState = createTestEventState();
@@ -470,8 +471,8 @@ describe('AssignNode', () => {
           location: 'user.active',
           expr: 'true', // Proper JavaScript string literal
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const initialState = createTestEventState();
@@ -490,8 +491,8 @@ describe('AssignNode', () => {
           location: 'app.config.database.connection.host',
           expr: '"localhost"', // Proper JavaScript string literal
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const initialState = createTestEventState();
@@ -505,11 +506,11 @@ describe('AssignNode', () => {
           config: {
             database: {
               connection: {
-                host: 'localhost'
-              }
-            }
-          }
-        }
+                host: 'localhost',
+              },
+            },
+          },
+        },
       });
     });
 
@@ -520,13 +521,13 @@ describe('AssignNode', () => {
           location: 'user.email',
           expr: '"john@example.com"', // Proper JavaScript string literal
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const initialState = createTestEventState({
         user: { name: 'John', age: 30 },
-        app: { version: '1.0' }
+        app: { version: '1.0' },
       });
 
       // Act
@@ -535,7 +536,7 @@ describe('AssignNode', () => {
       // Assert
       expect(result.data).toEqual({
         user: { name: 'John', age: 30, email: 'john@example.com' },
-        app: { version: '1.0' }
+        app: { version: '1.0' },
       });
     });
 
@@ -546,8 +547,8 @@ describe('AssignNode', () => {
           location: 'status',
           expr: '"ready"', // Proper JavaScript string literal
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const initialState = createTestEventState({ count: 0 });

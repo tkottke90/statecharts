@@ -1,9 +1,8 @@
-import { StateChart } from "./statechart";
+import { StateChart } from './statechart';
 import { readFileSync } from 'fs';
 import path from 'path';
 import { InternalState } from './models/internalState';
-import { BaseStateNode } from "./models/base-state";
-
+import { BaseStateNode } from './models/base-state';
 
 describe('Integration Tests', () => {
   describe('Parallel State Integration', () => {
@@ -13,7 +12,7 @@ describe('Integration Tests', () => {
 
     const xmlStr = readFileSync(
       path.join(__dirname, 'test_utils', 'examples', 'parallel.xml'),
-      'utf8'
+      'utf8',
     );
 
     let stateChart: StateChart;
@@ -33,11 +32,15 @@ describe('Integration Tests', () => {
         expect(initial).toBe('gameRunning');
 
         // Check if states map is populated
-        const states = (stateChart as unknown as { states: Map<string, unknown> }).states;
+        const states = (
+          stateChart as unknown as { states: Map<string, unknown> }
+        ).states;
         expect(states.size).toBe(13);
 
         // Check if the initial state is loaded into the chain
-        const chain = (stateChart as unknown as { activeStateChain: Array<[string, BaseStateNode]> })
+        const chain = stateChart as unknown as {
+          activeStateChain: Array<[string, BaseStateNode]>;
+        };
         expect(chain.activeStateChain.length).toBe(8);
       });
 
@@ -45,7 +48,7 @@ describe('Integration Tests', () => {
         // Arrange - Initial state for execution
         const initialState: InternalState = {
           _datamodel: 'ecmascript',
-          data: {}
+          data: {},
         };
 
         // Act - Execute the state chart (this will enter initial states)
@@ -53,7 +56,11 @@ describe('Integration Tests', () => {
 
         // Assert - Check that the activeStateChain contains all parallel regions
         // We need to access private properties for testing
-        const activeStateChain = (stateChart as unknown as { activeStateChain: Array<[string, unknown]> }).activeStateChain;
+        const activeStateChain = (
+          stateChart as unknown as {
+            activeStateChain: Array<[string, unknown]>;
+          }
+        ).activeStateChain;
         const activePaths = activeStateChain.map(([path]) => path);
 
         // All parallel regions should be active simultaneously
@@ -62,22 +69,28 @@ describe('Integration Tests', () => {
 
         // Health System should be active in initial state
         expect(activePaths).toContain('gameRunning.gameSystems.healthSystem');
-        expect(activePaths).toContain('gameRunning.gameSystems.healthSystem.healthy');
+        expect(activePaths).toContain(
+          'gameRunning.gameSystems.healthSystem.healthy',
+        );
 
         // Score System should be active in initial state
         expect(activePaths).toContain('gameRunning.gameSystems.scoreSystem');
-        expect(activePaths).toContain('gameRunning.gameSystems.scoreSystem.scoring');
+        expect(activePaths).toContain(
+          'gameRunning.gameSystems.scoreSystem.scoring',
+        );
 
         // Power-up System should be active in initial state
         expect(activePaths).toContain('gameRunning.gameSystems.powerUpSystem');
-        expect(activePaths).toContain('gameRunning.gameSystems.powerUpSystem.noPowerUp');
+        expect(activePaths).toContain(
+          'gameRunning.gameSystems.powerUpSystem.noPowerUp',
+        );
       });
 
       it('should initialize data model correctly across all parallel systems', async () => {
         // Arrange
         const initialState: InternalState = {
           _datamodel: 'ecmascript',
-          data: {}
+          data: {},
         };
 
         // Act
@@ -94,7 +107,7 @@ describe('Integration Tests', () => {
         // Arrange
         const initialState: InternalState = {
           _datamodel: 'ecmascript',
-          data: {}
+          data: {},
         };
 
         // Act
@@ -102,14 +115,18 @@ describe('Integration Tests', () => {
 
         // Assert - activeStateChain should contain paths for all parallel regions
         // This tests our flattened multi-path approach
-        const activeStateChain = (stateChart as unknown as { activeStateChain: Array<[string, unknown]> }).activeStateChain;
+        const activeStateChain = (
+          stateChart as unknown as {
+            activeStateChain: Array<[string, unknown]>;
+          }
+        ).activeStateChain;
         const activePaths = activeStateChain.map(([path]) => path);
 
         // Verify that all three systems are truly concurrent (not sequential)
         const expectedParallelPaths = [
           'gameRunning.gameSystems.healthSystem.healthy',
           'gameRunning.gameSystems.scoreSystem.scoring',
-          'gameRunning.gameSystems.powerUpSystem.noPowerUp'
+          'gameRunning.gameSystems.powerUpSystem.noPowerUp',
         ];
 
         // All parallel regions should be active at the same time
@@ -122,6 +139,5 @@ describe('Integration Tests', () => {
         expect(activePaths.length).toBe(8);
       });
     });
-
-  })
-})
+  });
+});

@@ -11,22 +11,24 @@ class RaiseNodeBadAttrError extends BaseSCXMLError {
   }
 }
 
-const RaiseNodeAttr = BaseExecutableNode.schema.extend({
-  event: z.string().optional(),     // Event name to raise (mutually exclusive with eventexpr)
-  eventexpr: z.string().optional()  // Expression that evaluates to event name (mutually exclusive with event)
-}).refine(
-  (data) => {
-    // Must have exactly one of 'event' or 'eventexpr', but not both
-    const hasEvent = data.event && data.event.length > 0;
-    const hasEventExpr = data.eventexpr && data.eventexpr.length > 0;
-    return hasEvent !== hasEventExpr; // XOR - exactly one must be true
-  },
-  { message: "Must specify exactly one of 'event' or 'eventexpr' attribute" }
-);
+const RaiseNodeAttr = BaseExecutableNode.schema
+  .extend({
+    event: z.string().optional(), // Event name to raise (mutually exclusive with eventexpr)
+    eventexpr: z.string().optional(), // Expression that evaluates to event name (mutually exclusive with event)
+  })
+  .refine(
+    data => {
+      // Must have exactly one of 'event' or 'eventexpr', but not both
+      const hasEvent = data.event && data.event.length > 0;
+      const hasEventExpr = data.eventexpr && data.eventexpr.length > 0;
+      return hasEvent !== hasEventExpr; // XOR - exactly one must be true
+    },
+    { message: "Must specify exactly one of 'event' or 'eventexpr' attribute" },
+  );
 
 export type RaiseNodeType = {
   raise: z.infer<typeof RaiseNodeAttr>;
-}
+};
 
 export class RaiseNode extends BaseExecutableNode {
   readonly event: string | undefined;
@@ -55,7 +57,9 @@ export class RaiseNode extends BaseExecutableNode {
       } else {
         // We should never get here because the RaiseNodeAttr schema would prevent it.  But we need
         // to appease the type checker.
-        throw new RaiseNodeBadAttrError('RaiseNode must have either event or eventexpr attribute');
+        throw new RaiseNodeBadAttrError(
+          'RaiseNode must have either event or eventexpr attribute',
+        );
       }
 
       // Create the internal event according to SCXML spec
@@ -66,7 +70,7 @@ export class RaiseNode extends BaseExecutableNode {
         origin: '',
         origintype: '',
         invokeid: '',
-        data: {}
+        data: {},
       };
 
       // Add the event to the pending internal events list
@@ -74,7 +78,7 @@ export class RaiseNode extends BaseExecutableNode {
 
       return {
         ...state,
-        _pendingInternalEvents: [...pendingEvents, eventToRaise]
+        _pendingInternalEvents: [...pendingEvents, eventToRaise],
       };
     } catch (err) {
       // Determine specific error type based on the error message
@@ -89,32 +93,34 @@ export class RaiseNode extends BaseExecutableNode {
         invokeid: '',
         data: {
           error: error.message,
-          source: 'raise'
-        }
+          source: 'raise',
+        },
       };
 
       const pendingEvents = state._pendingInternalEvents || [];
 
       return {
         ...state,
-        _pendingInternalEvents: [...pendingEvents, errorEvent]
+        _pendingInternalEvents: [...pendingEvents, errorEvent],
       };
     }
   }
 
-  static createFromJSON(jsonInput: Record<string, unknown>): CreateFromJsonResponse<RaiseNode> {
+  static createFromJSON(
+    jsonInput: Record<string, unknown>,
+  ): CreateFromJsonResponse<RaiseNode> {
     const { success, data, error } = this.schema.safeParse(
-      this.getAttributes(this.label, jsonInput)
+      this.getAttributes(this.label, jsonInput),
     );
 
     if (!success) {
       return { success: false, error, node: undefined };
     }
-    
+
     return {
       success: true,
       node: new RaiseNode({ raise: data }),
-      error: undefined
-    }
+      error: undefined,
+    };
   }
 }

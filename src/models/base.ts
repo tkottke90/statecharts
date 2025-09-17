@@ -3,21 +3,21 @@ import { InternalState } from './internalState';
 
 export const BaseNodeAttr = z.object({
   content: z.string().optional().default(''),
-  children: z.array(z.any()).default([])
-})
+  children: z.array(z.any()).default([]),
+});
 
 export type Node = {
-  [key: string]: z.infer<typeof BaseNodeAttr>
-}
+  [key: string]: z.infer<typeof BaseNodeAttr>;
+};
 
 export const BaseStateAttr = BaseNodeAttr.extend({
-  id: z.string().min(1)
-})
+  id: z.string().min(1),
+});
 
 export const BaseTransitionAttr = BaseNodeAttr.extend({
   event: z.string().optional().default(''),
-  target: z.string().min(1)
-})
+  target: z.string().min(1),
+});
 
 export class BaseNode implements z.infer<typeof BaseNodeAttr> {
   isExecutable = false;
@@ -44,7 +44,7 @@ export class BaseNode implements z.infer<typeof BaseNodeAttr> {
    * @param state
    * @returns
    */
-  async * executeAllChildren(state: InternalState) {
+  async *executeAllChildren(state: InternalState) {
     if (!this.allowChildren) {
       return state;
     }
@@ -57,7 +57,7 @@ export class BaseNode implements z.infer<typeof BaseNodeAttr> {
 
       yield {
         node: Object.getPrototypeOf(child).constructor.name ?? 'Node',
-        state: internalState
+        state: internalState,
       };
     }
 
@@ -65,10 +65,12 @@ export class BaseNode implements z.infer<typeof BaseNodeAttr> {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  getChildrenOfType<T extends BaseNode>(typeCtor: new (...args: any[]) => T): T[] {
+  getChildrenOfType<T extends BaseNode>(
+    typeCtor: new (...args: any[]) => T,
+  ): T[] {
     return this.children.filter(child => child instanceof typeCtor) as T[];
   }
-  
+
   /**
    * Trigger the node's behavior and return the new state
    * @param state The current state

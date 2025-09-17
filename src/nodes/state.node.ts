@@ -4,7 +4,7 @@ import { BaseStateNode } from '../models/base-state';
 
 export const StateNodeAttr = BaseNodeAttr.extend({
   id: z.string().min(1),
-  initial: z.string().optional()
+  initial: z.string().optional(),
 });
 
 export type StateNodeType = {
@@ -13,8 +13,8 @@ export type StateNodeType = {
 
 /**
  * Class implementation of the SCXML <state> node.
- * 
- * These notes encapsulate a specific state of the machine. 
+ *
+ * These notes encapsulate a specific state of the machine.
  *
  * @see https://www.w3.org/TR/scxml/#state
  */
@@ -28,9 +28,7 @@ export class StateNode
   static readonly label = 'state';
   static readonly schema = StateNodeAttr;
 
-  constructor(
-    { state }: StateNodeType
-  ) {
+  constructor({ state }: StateNodeType) {
     super(state);
     this.id = state.id;
     this.initial = state.initial ?? '';

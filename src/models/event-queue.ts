@@ -1,6 +1,6 @@
 export enum QueueMode {
   FirstInFirstOut,
-  LastInFirstOut
+  LastInFirstOut,
 }
 
 export class Queue<EventType> {

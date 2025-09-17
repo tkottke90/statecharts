@@ -1,7 +1,11 @@
-import { findLCCA, computeExitSet, buildEntryPath, type ActiveStateEntry } from './transition-utils';
+import {
+  findLCCA,
+  computeExitSet,
+  buildEntryPath,
+  type ActiveStateEntry,
+} from './transition-utils';
 
 describe('Transition Utils', () => {
-
   describe('findLCCA', () => {
     it('should find LCCA for states within same parent', () => {
       // Arrange
@@ -79,7 +83,7 @@ describe('Transition Utils', () => {
         ['playing.healthSystem', {}],
         ['playing.healthSystem.healthy', {}],
         ['playing.scoreSystem', {}],
-        ['playing.scoreSystem.scoring', {}]
+        ['playing.scoreSystem.scoring', {}],
       ];
 
       // Act
@@ -98,7 +102,7 @@ describe('Transition Utils', () => {
         ['playing.healthSystem', {}],
         ['playing.healthSystem.healthy', {}],
         ['playing.scoreSystem', {}],
-        ['playing.scoreSystem.scoring', {}]
+        ['playing.scoreSystem.scoring', {}],
       ];
 
       // Act
@@ -108,7 +112,7 @@ describe('Transition Utils', () => {
       expect(result).toEqual([
         'playing.healthSystem.healthy',
         'playing.scoreSystem.scoring',
-        'playing.healthSystem'
+        'playing.healthSystem',
       ]);
     });
 
@@ -119,7 +123,7 @@ describe('Transition Utils', () => {
       const activeStateChain: ActiveStateEntry[] = [
         ['playing', {}],
         ['playing.healthSystem', {}],
-        ['playing.healthSystem.healthy', {}]
+        ['playing.healthSystem.healthy', {}],
       ];
 
       // Act
@@ -143,7 +147,7 @@ describe('Transition Utils', () => {
       expect(result).toEqual([
         'playing',
         'playing.healthSystem',
-        'playing.healthSystem.healthy'
+        'playing.healthSystem.healthy',
       ]);
     });
 
@@ -159,7 +163,7 @@ describe('Transition Utils', () => {
       expect(result).toEqual([
         'playing',
         'playing.healthSystem',
-        'playing.healthSystem.healthy'
+        'playing.healthSystem.healthy',
       ]);
     });
 

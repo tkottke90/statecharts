@@ -9,7 +9,6 @@ import { InternalState } from './internalState';
 import { AssignNode } from '../nodes/assign.node';
 
 describe('BaseStateNode', () => {
-
   describe('constructor', () => {
     it.skip('should create a BaseStateNode instance with default values', () => {
       // Test basic construction
@@ -66,7 +65,9 @@ describe('BaseStateNode', () => {
         })();
 
         // Mock getChildrenOfType to return the child state
-        jest.spyOn(compoundState, 'getChildrenOfType').mockReturnValue([childState]);
+        jest
+          .spyOn(compoundState, 'getChildrenOfType')
+          .mockReturnValue([childState]);
 
         // Act
         const result = compoundState.isAtomic;
@@ -78,10 +79,15 @@ describe('BaseStateNode', () => {
       it('should only consider BaseStateNode children for atomic determination', () => {
         // Arrange
         const transitionNode = new TransitionNode({
-          transition: { event: 'test', target: 'target', content: '', children: [] }
+          transition: {
+            event: 'test',
+            target: 'target',
+            content: '',
+            children: [],
+          },
         });
         const finalNode = new FinalNode({
-          final: { id: 'final', content: '', children: [] }
+          final: { id: 'final', content: '', children: [] },
         });
 
         const stateWithNonStateChildren = new (class extends BaseStateNode {
@@ -93,14 +99,18 @@ describe('BaseStateNode', () => {
         })();
 
         // Mock getChildrenOfType to return empty array for BaseStateNode children
-        jest.spyOn(stateWithNonStateChildren, 'getChildrenOfType').mockReturnValue([]);
+        jest
+          .spyOn(stateWithNonStateChildren, 'getChildrenOfType')
+          .mockReturnValue([]);
 
         // Act
         const result = stateWithNonStateChildren.isAtomic;
 
         // Assert
         expect(result).toBe(true);
-        expect(stateWithNonStateChildren.getChildrenOfType).toHaveBeenCalledWith(BaseStateNode);
+        expect(
+          stateWithNonStateChildren.getChildrenOfType,
+        ).toHaveBeenCalledWith(BaseStateNode);
       });
     });
 
@@ -127,7 +137,7 @@ describe('BaseStateNode', () => {
       it('should return content from initial child element when no initial attribute', () => {
         // Arrange
         const initialNode = new InitialNode({
-          initial: { content: 'initialFromElement', children: [] }
+          initial: { content: 'initialFromElement', children: [] },
         });
 
         const stateWithInitialElement = new (class extends BaseStateNode {
@@ -165,7 +175,10 @@ describe('BaseStateNode', () => {
 
         const stateWithChildren = new (class extends BaseStateNode {
           constructor() {
-            super({ content: '', children: [firstChildState, secondChildState] });
+            super({
+              content: '',
+              children: [firstChildState, secondChildState],
+            });
             // @ts-expect-error - Setting readonly property for testing
             this.id = 'stateWithChildren';
           }
@@ -219,7 +232,10 @@ describe('BaseStateNode', () => {
 
         const stateWithBoth = new (class extends BaseStateNode {
           constructor() {
-            super({ content: '', children: [firstChildState, secondChildState] });
+            super({
+              content: '',
+              children: [firstChildState, secondChildState],
+            });
             // @ts-expect-error - Setting readonly property for testing
             this.id = 'stateWithBoth';
             // @ts-expect-error - Setting readonly property for testing
@@ -241,22 +257,37 @@ describe('BaseStateNode', () => {
       it('should return eventless transitions for atomic states', () => {
         // Arrange
         const eventlessTransition = new TransitionNode({
-          transition: { event: '', target: 'target', content: '', children: [] }
+          transition: {
+            event: '',
+            target: 'target',
+            content: '',
+            children: [],
+          },
         });
         const eventTransition = new TransitionNode({
-          transition: { event: 'click', target: 'target', content: '', children: [] }
+          transition: {
+            event: 'click',
+            target: 'target',
+            content: '',
+            children: [],
+          },
         });
 
         const atomicState = new (class extends BaseStateNode {
           constructor() {
-            super({ content: '', children: [eventlessTransition, eventTransition] });
+            super({
+              content: '',
+              children: [eventlessTransition, eventTransition],
+            });
             // @ts-expect-error - Setting readonly property for testing
             this.id = 'atomicState';
           }
         })();
 
         // Mock getChildrenOfType to return both transitions
-        jest.spyOn(atomicState, 'getChildrenOfType').mockReturnValue([eventlessTransition, eventTransition]);
+        jest
+          .spyOn(atomicState, 'getChildrenOfType')
+          .mockReturnValue([eventlessTransition, eventTransition]);
 
         // Act
         const result = atomicState.getEventlessTransitions();
@@ -270,10 +301,20 @@ describe('BaseStateNode', () => {
       it('should return eventless transitions for compound states', () => {
         // Arrange
         const eventlessTransition = new TransitionNode({
-          transition: { event: '', target: 'target', content: '', children: [] }
+          transition: {
+            event: '',
+            target: 'target',
+            content: '',
+            children: [],
+          },
         });
         const eventTransition = new TransitionNode({
-          transition: { event: 'click', target: 'target', content: '', children: [] }
+          transition: {
+            event: 'click',
+            target: 'target',
+            content: '',
+            children: [],
+          },
         });
         const childState = new (class extends BaseStateNode {
           constructor() {
@@ -285,19 +326,24 @@ describe('BaseStateNode', () => {
 
         const compoundState = new (class extends BaseStateNode {
           constructor() {
-            super({ content: '', children: [eventlessTransition, eventTransition, childState] });
+            super({
+              content: '',
+              children: [eventlessTransition, eventTransition, childState],
+            });
             // @ts-expect-error - Setting readonly property for testing
             this.id = 'compoundState';
           }
         })();
 
         // Mock getChildrenOfType to return transitions when called with TransitionNode
-        jest.spyOn(compoundState, 'getChildrenOfType').mockImplementation((type) => {
-          if (type === TransitionNode) {
-            return [eventlessTransition, eventTransition];
-          }
-          return [childState]; // For BaseStateNode type
-        });
+        jest
+          .spyOn(compoundState, 'getChildrenOfType')
+          .mockImplementation(type => {
+            if (type === TransitionNode) {
+              return [eventlessTransition, eventTransition];
+            }
+            return [childState]; // For BaseStateNode type
+          });
 
         // Act
         const result = compoundState.getEventlessTransitions();
@@ -311,7 +357,12 @@ describe('BaseStateNode', () => {
       it('should return empty array when no eventless transitions exist', () => {
         // Arrange
         const eventTransition = new TransitionNode({
-          transition: { event: 'click', target: 'target', content: '', children: [] }
+          transition: {
+            event: 'click',
+            target: 'target',
+            content: '',
+            children: [],
+          },
         });
 
         const atomicState = new (class extends BaseStateNode {
@@ -323,7 +374,9 @@ describe('BaseStateNode', () => {
         })();
 
         // Mock getChildrenOfType to return only event-based transition
-        jest.spyOn(atomicState, 'getChildrenOfType').mockReturnValue([eventTransition]);
+        jest
+          .spyOn(atomicState, 'getChildrenOfType')
+          .mockReturnValue([eventTransition]);
 
         // Act
         const result = atomicState.getEventlessTransitions();
@@ -336,10 +389,15 @@ describe('BaseStateNode', () => {
       it('should filter out non-TransitionNode children', () => {
         // Arrange
         const eventlessTransition = new TransitionNode({
-          transition: { event: '', target: 'target', content: '', children: [] }
+          transition: {
+            event: '',
+            target: 'target',
+            content: '',
+            children: [],
+          },
         });
         const finalNode = new FinalNode({
-          final: { id: 'final', content: '', children: [] }
+          final: { id: 'final', content: '', children: [] },
         });
 
         const stateWithMixedChildren = new (class extends BaseStateNode {
@@ -351,14 +409,18 @@ describe('BaseStateNode', () => {
         })();
 
         // Mock getChildrenOfType to return only TransitionNode children
-        jest.spyOn(stateWithMixedChildren, 'getChildrenOfType').mockReturnValue([eventlessTransition]);
+        jest
+          .spyOn(stateWithMixedChildren, 'getChildrenOfType')
+          .mockReturnValue([eventlessTransition]);
 
         // Act
         const result = stateWithMixedChildren.getEventlessTransitions();
 
         // Assert
         expect(result).toEqual([eventlessTransition]);
-        expect(stateWithMixedChildren.getChildrenOfType).toHaveBeenCalledWith(TransitionNode);
+        expect(stateWithMixedChildren.getChildrenOfType).toHaveBeenCalledWith(
+          TransitionNode,
+        );
       });
     });
 
@@ -447,11 +509,18 @@ describe('BaseStateNode', () => {
     it('should execute OnEntryNode instances for atomic states', async () => {
       // Arrange
       const onEntryNode = new OnEntryNode({
-        onentry: { content: '', children: [
-          new AssignNode({
-            assign: { location: 'entryExecuted', content: 'yes', children: [] }
-          })
-        ] }
+        onentry: {
+          content: '',
+          children: [
+            new AssignNode({
+              assign: {
+                location: 'entryExecuted',
+                content: 'yes',
+                children: [],
+              },
+            }),
+          ],
+        },
       });
 
       // Mock the run method to track execution
@@ -508,11 +577,18 @@ describe('BaseStateNode', () => {
     it('should execute OnExitNode instances', async () => {
       // Arrange
       const onExitNode = new OnExitNode({
-        onexit: { content: '', children: [
-          new AssignNode({
-            assign: { location: 'exitExecuted', content: 'yes', children: [] }
-          })
-        ] }
+        onexit: {
+          content: '',
+          children: [
+            new AssignNode({
+              assign: {
+                location: 'exitExecuted',
+                content: 'yes',
+                children: [],
+              },
+            }),
+          ],
+        },
       });
 
       // Mock the run method to track execution
@@ -539,19 +615,25 @@ describe('BaseStateNode', () => {
     it('should execute multiple OnExitNode instances', async () => {
       // Arrange
       const onExitNode1 = new OnExitNode({
-        onexit: { content: '', children: [
-          new AssignNode({
-            assign: { location: 'step1', content: 'true', children: [] }
-          })
-        ] }
+        onexit: {
+          content: '',
+          children: [
+            new AssignNode({
+              assign: { location: 'step1', content: 'true', children: [] },
+            }),
+          ],
+        },
       });
 
       const onExitNode2 = new OnExitNode({
-        onexit: { content: '', children: [
-          new AssignNode({
-            assign: { location: 'step2', content: 'true', children: [] }
-          })
-        ] }
+        onexit: {
+          content: '',
+          children: [
+            new AssignNode({
+              assign: { location: 'step2', content: 'true', children: [] },
+            }),
+          ],
+        },
       });
 
       const stateNode = new (class extends BaseStateNode {

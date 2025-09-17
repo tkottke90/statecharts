@@ -7,6 +7,7 @@ The `BaseNode` class is the foundational base class for all SCXML node types in 
 BaseNode serves as the abstract foundation for the entire SCXML node hierarchy. Every SCXML element (states, transitions, executable content, etc.) extends either BaseNode directly or one of its specialized subclasses (BaseStateNode, BaseExecutableNode).
 
 The class implements the fundamental node contract including:
+
 - Content and children management
 - Schema validation with Zod
 - Child execution patterns
@@ -40,25 +41,25 @@ BaseNode (foundation class)
 
 ### Instance Properties
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `isExecutable` | `boolean` | `false` | Whether the node can be executed |
-| `allowChildren` | `boolean` | `false` | Whether the node can contain child nodes |
-| `children` | `BaseNode[]` | `[]` | Array of child nodes |
-| `content` | `string` | `''` | Text content of the node |
+| Property        | Type         | Default | Description                              |
+| --------------- | ------------ | ------- | ---------------------------------------- |
+| `isExecutable`  | `boolean`    | `false` | Whether the node can be executed         |
+| `allowChildren` | `boolean`    | `false` | Whether the node can contain child nodes |
+| `children`      | `BaseNode[]` | `[]`    | Array of child nodes                     |
+| `content`       | `string`     | `''`    | Text content of the node                 |
 
 ### Static Properties
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `label` | `string` | `'base'` | Node type identifier |
+| Property | Type        | Default        | Description               |
+| -------- | ----------- | -------------- | ------------------------- |
+| `label`  | `string`    | `'base'`       | Node type identifier      |
 | `schema` | `ZodSchema` | `BaseNodeAttr` | Zod schema for validation |
 
 ### Computed Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `label` | `string` | Instance label from constructor |
+| Property | Type     | Description                     |
+| -------- | -------- | ------------------------------- |
+| `label`  | `string` | Instance label from constructor |
 
 ## Methods
 
@@ -71,6 +72,7 @@ constructor({ content, children }: z.infer<typeof BaseNodeAttr>)
 Creates a new BaseNode instance with the provided content and children.
 
 **Parameters:**
+
 - `content` - Optional string content (defaults to empty string)
 - `children` - Optional array of child nodes (defaults to empty array)
 
@@ -81,12 +83,15 @@ Creates a new BaseNode instance with the provided content and children.
 Executes all executable children sequentially and yields intermediate states.
 
 **Parameters:**
+
 - `state` - Current internal state
 
 **Returns:**
+
 - `AsyncGenerator` yielding `{ node: string, state: InternalState }`
 
 **Behavior:**
+
 - Returns immediately if `allowChildren` is false
 - Filters children to only executable nodes (`isExecutable = true`)
 - Executes children in document order
@@ -98,9 +103,11 @@ Executes all executable children sequentially and yields intermediate states.
 Returns all child nodes of a specific type.
 
 **Parameters:**
+
 - `typeCtor` - Constructor function for the desired node type
 
 **Returns:**
+
 - Array of child nodes matching the specified type
 
 #### `run(state: InternalState): Promise<InternalState>`
@@ -108,9 +115,11 @@ Returns all child nodes of a specific type.
 Base implementation of node execution. Returns state unchanged.
 
 **Parameters:**
+
 - `state` - Current internal state
 
 **Returns:**
+
 - Promise resolving to the same state (base implementation)
 
 ### Static Methods
@@ -120,10 +129,12 @@ Base implementation of node execution. Returns state unchanged.
 Utility method for extracting node attributes from JSON input.
 
 **Parameters:**
+
 - `key` - Attribute key to look for
 - `jsonInput` - JSON object to search
 
 **Returns:**
+
 - Attribute value if key exists, otherwise the entire jsonInput object
 
 ## Schema Validation
@@ -135,7 +146,7 @@ BaseNode uses Zod schemas for runtime type validation:
 ```typescript
 const BaseNodeAttr = z.object({
   content: z.string().optional().default(''),
-  children: z.array(z.any()).default([])
+  children: z.array(z.any()).default([]),
 });
 ```
 
@@ -146,13 +157,13 @@ BaseNode provides foundation schemas that other nodes extend:
 ```typescript
 // For state-like nodes
 const BaseStateAttr = BaseNodeAttr.extend({
-  id: z.string().min(1)
+  id: z.string().min(1),
 });
 
-// For transition-like nodes  
+// For transition-like nodes
 const BaseTransitionAttr = BaseNodeAttr.extend({
   event: z.string().optional().default(''),
-  target: z.string().min(1)
+  target: z.string().min(1),
 });
 ```
 
@@ -166,7 +177,7 @@ import { BaseNode } from '@your-library/statecharts';
 // Create a basic node
 const node = new BaseNode({
   content: 'Hello World',
-  children: []
+  children: [],
 });
 
 console.log(node.content); // 'Hello World'
@@ -195,14 +206,14 @@ const dataNode = new DataNode({
     id: 'counter',
     expr: '0',
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 
 // Create parent with children
 const parentNode = new CustomNode({
   content: '',
-  children: [dataNode]
+  children: [dataNode],
 });
 
 // Get children of specific type
@@ -225,7 +236,9 @@ class ExecutableParent extends BaseNode {
     let currentState = { ...state };
 
     // Execute all children and collect results
-    for await (const { node, state: newState } of this.executeAllChildren(currentState)) {
+    for await (const { node, state: newState } of this.executeAllChildren(
+      currentState,
+    )) {
       console.log(`Executed ${node}, new state:`, newState);
       currentState = newState;
     }
@@ -243,7 +256,7 @@ import z from 'zod';
 
 // Define custom schema
 const CustomNodeAttr = BaseNodeAttr.extend({
-  customProperty: z.string()
+  customProperty: z.string(),
 });
 
 // Create custom node class
@@ -275,19 +288,21 @@ import { BaseNode } from '@your-library/statecharts';
 import { CreateFromJsonResponse } from '@your-library/statecharts';
 
 class MyNode extends BaseNode {
-  static createFromJSON(jsonInput: Record<string, unknown>): CreateFromJsonResponse<MyNode> {
+  static createFromJSON(
+    jsonInput: Record<string, unknown>,
+  ): CreateFromJsonResponse<MyNode> {
     const { success, data, error } = this.schema.safeParse(
-      this.getAttributes(this.label, jsonInput)
+      this.getAttributes(this.label, jsonInput),
     );
 
     if (!success) {
       return { success: false, error, node: undefined };
     }
-    
+
     return {
       success: true,
       node: new MyNode({ mynode: data }),
-      error: undefined
+      error: undefined,
     };
   }
 }
@@ -326,7 +341,7 @@ import { BaseNode } from '@your-library/statecharts';
 import z from 'zod';
 
 const StrictNodeAttr = BaseNodeAttr.extend({
-  requiredField: z.string().min(1, "Required field cannot be empty")
+  requiredField: z.string().min(1, 'Required field cannot be empty'),
 });
 
 class StrictNode extends BaseNode {
@@ -334,7 +349,7 @@ class StrictNode extends BaseNode {
 
   static createFromJSON(jsonInput: Record<string, unknown>) {
     const result = this.schema.safeParse(jsonInput);
-    
+
     if (!result.success) {
       console.error('Validation errors:', result.error.errors);
       return { success: false, error: result.error, node: undefined };
@@ -343,7 +358,7 @@ class StrictNode extends BaseNode {
     return {
       success: true,
       node: new StrictNode(result.data),
-      error: undefined
+      error: undefined,
     };
   }
 }
@@ -359,7 +374,7 @@ import { BaseNode } from '@your-library/statecharts';
 // All SCXML nodes follow this pattern
 class SCXMLElementNode extends BaseNode {
   static label = 'element-name'; // Matches XML element name
-  static schema = ElementSchema;  // Zod schema for validation
+  static schema = ElementSchema; // Zod schema for validation
 
   constructor(data: ElementType) {
     super(data.element);
@@ -450,7 +465,7 @@ class SafeNode extends BaseNode {
       return addPendingEvent(state, {
         name: 'error.execution',
         type: 'platform',
-        data: { error: error.message }
+        data: { error: error.message },
       });
     }
   }
@@ -475,12 +490,12 @@ describe('BaseNode', () => {
 
   it('should execute children sequentially', async () => {
     const executableChild = new DataNode({
-      data: { id: 'test', content: 'value', children: [] }
+      data: { id: 'test', content: 'value', children: [] },
     });
 
     const parent = new BaseNode({
       content: '',
-      children: [executableChild]
+      children: [executableChild],
     });
     parent.allowChildren = true;
 
@@ -495,12 +510,12 @@ describe('BaseNode', () => {
 
   it('should filter children by type', () => {
     const dataNode = new DataNode({
-      data: { id: 'test', content: 'value', children: [] }
+      data: { id: 'test', content: 'value', children: [] },
     });
 
     const parent = new BaseNode({
       content: '',
-      children: [dataNode]
+      children: [dataNode],
     });
 
     const dataChildren = parent.getChildrenOfType(DataNode);
@@ -538,7 +553,7 @@ describe('BaseNode Integration', () => {
 
     const afterIncrement = await stateChart.handleEvent({
       name: 'increment',
-      type: 'external'
+      type: 'external',
     });
     expect(afterIncrement.data.counter).toBe(1);
   });

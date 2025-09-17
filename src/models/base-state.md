@@ -7,6 +7,7 @@ The `BaseStateNode` class is the specialized base class for all state-like SCXML
 BaseStateNode serves as the foundation for all SCXML elements that represent states in a state machine. It provides the core state management functionality that is shared across different types of states (atomic states, compound states, parallel states, and final states).
 
 Key responsibilities include:
+
 - State hierarchy management (atomic vs compound states)
 - Initial state resolution for compound states
 - State lifecycle management (mount/unmount)
@@ -30,18 +31,18 @@ BaseNode
 
 ### Instance Properties
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `allowChildren` | `boolean` | `true` | Inherited from BaseNode, always true for states |
-| `id` | `string` | `''` | Unique identifier for the state |
-| `initial` | `string \| undefined` | `undefined` | Initial child state identifier |
+| Property        | Type                  | Default     | Description                                     |
+| --------------- | --------------------- | ----------- | ----------------------------------------------- |
+| `allowChildren` | `boolean`             | `true`      | Inherited from BaseNode, always true for states |
+| `id`            | `string`              | `''`        | Unique identifier for the state                 |
+| `initial`       | `string \| undefined` | `undefined` | Initial child state identifier                  |
 
 ### Computed Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `isAtomic` | `boolean` | True if state has no child states |
-| `initialState` | `string` | Resolved initial child state identifier |
+| Property       | Type      | Description                             |
+| -------------- | --------- | --------------------------------------- |
+| `isAtomic`     | `boolean` | True if state has no child states       |
+| `initialState` | `string`  | Resolved initial child state identifier |
 
 ## Schema Validation
 
@@ -49,8 +50,8 @@ BaseStateNode extends the base schema with state-specific attributes:
 
 ```typescript
 const BaseStateNodeAttr = BaseNodeAttr.extend({
-  id: z.string().min(1),        // Required state identifier
-  initial: z.string().optional() // Optional initial child state
+  id: z.string().min(1), // Required state identifier
+  initial: z.string().optional(), // Optional initial child state
 });
 ```
 
@@ -63,10 +64,12 @@ const BaseStateNodeAttr = BaseNodeAttr.extend({
 Determines if the state is atomic (leaf state) or compound (has child states).
 
 **Returns:**
+
 - `true` if the state has no child states
 - `false` if the state has one or more child states
 
 **Usage:**
+
 ```typescript
 if (state.isAtomic) {
   console.log('This is a leaf state');
@@ -80,12 +83,14 @@ if (state.isAtomic) {
 Resolves the initial child state for compound states using SCXML precedence rules.
 
 **Resolution Order:**
+
 1. Explicit `initial` attribute value
 2. Content of `<initial>` child element
 3. ID of first child state
 4. Empty string if no children
 
 **Returns:**
+
 - String identifier of the initial child state
 - Empty string if state is atomic or has no valid initial state
 
@@ -96,6 +101,7 @@ Resolves the initial child state for compound states using SCXML precedence rule
 Returns all outgoing transitions from this state.
 
 **Returns:**
+
 - Array of `TransitionNode` instances that are children of this state
 
 #### `getEventlessTransitions(): TransitionNode[]`
@@ -103,6 +109,7 @@ Returns all outgoing transitions from this state.
 Returns all eventless (automatic) transitions from this state.
 
 **Returns:**
+
 - Array of `TransitionNode` instances with no event trigger
 
 ### Child State Management
@@ -112,9 +119,11 @@ Returns all eventless (automatic) transitions from this state.
 Retrieves child states by ID or returns all child states.
 
 **Parameters:**
+
 - `id` (optional) - Specific child state ID to find
 
 **Returns:**
+
 - If `id` provided: Single `BaseStateNode` or `undefined`
 - If no `id`: Array of all child `BaseStateNode` instances
 - Empty array if state is atomic
@@ -126,6 +135,7 @@ Retrieves child states by ID or returns all child states.
 Returns all OnEntry action nodes that have executable content.
 
 **Returns:**
+
 - Array of `OnEntryNode` instances with executable children
 
 #### `getOnExitNodes(): BaseNode[]`
@@ -133,6 +143,7 @@ Returns all OnEntry action nodes that have executable content.
 Returns all OnExit action nodes that have executable content.
 
 **Returns:**
+
 - Array of `OnExitNode` instances with executable children
 
 ### Lifecycle Methods
@@ -142,14 +153,17 @@ Returns all OnExit action nodes that have executable content.
 Executes state entry behavior and determines next steps for state machine execution.
 
 **Process:**
+
 1. Execute all OnEntry actions in document order
 2. If atomic state: Return current state as final destination
 3. If compound state: Return with `childPath` indicating initial child
 
 **Parameters:**
+
 - `state` - Current internal state of the state machine
 
 **Returns:**
+
 - `MountResponse` object containing:
   - `state`: Updated internal state after entry actions
   - `node`: Reference to this state node
@@ -160,13 +174,16 @@ Executes state entry behavior and determines next steps for state machine execut
 Executes state exit behavior when leaving the state.
 
 **Process:**
+
 1. Execute all OnExit actions in document order
 2. Return updated state
 
 **Parameters:**
+
 - `state` - Current internal state of the state machine
 
 **Returns:**
+
 - Updated `InternalState` after exit actions
 
 ## Types and Interfaces
@@ -175,9 +192,9 @@ Executes state exit behavior when leaving the state.
 
 ```typescript
 interface MountResponse {
-  state: InternalState;    // Updated state after entry actions
-  node: BaseStateNode;     // Reference to the mounted state
-  childPath?: string;      // Optional initial child state ID
+  state: InternalState; // Updated state after entry actions
+  node: BaseStateNode; // Reference to the mounted state
+  childPath?: string; // Optional initial child state ID
 }
 ```
 
@@ -210,7 +227,7 @@ class CustomState extends BaseStateNode {
 const atomicState = new CustomState({
   id: 'idle',
   content: '',
-  children: []
+  children: [],
 });
 
 console.log(atomicState.isAtomic); // true
@@ -224,11 +241,11 @@ import { BaseStateNode, StateNode } from '@your-library/statecharts';
 
 // Create child states
 const childState1 = new StateNode({
-  state: { id: 'child1', content: '', children: [] }
+  state: { id: 'child1', content: '', children: [] },
 });
 
 const childState2 = new StateNode({
-  state: { id: 'child2', content: '', children: [] }
+  state: { id: 'child2', content: '', children: [] },
 });
 
 // Create compound state
@@ -237,8 +254,8 @@ const compoundState = new StateNode({
     id: 'parent',
     initial: 'child1',
     content: '',
-    children: [childState1, childState2]
-  }
+    children: [childState1, childState2],
+  },
 });
 
 console.log(compoundState.isAtomic); // false
@@ -257,8 +274,8 @@ const transition1 = new TransitionNode({
     event: 'go',
     target: 'nextState',
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 
 const eventlessTransition = new TransitionNode({
@@ -266,8 +283,8 @@ const eventlessTransition = new TransitionNode({
     event: '',
     target: 'autoState',
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 
 // Create state with transitions
@@ -275,8 +292,8 @@ const stateWithTransitions = new StateNode({
   state: {
     id: 'active',
     content: '',
-    children: [transition1, eventlessTransition]
-  }
+    children: [transition1, eventlessTransition],
+  },
 });
 
 const allTransitions = stateWithTransitions.getTransitions();
@@ -289,7 +306,12 @@ console.log(eventlessOnly.length); // 1
 ### State Lifecycle Example
 
 ```typescript
-import { BaseStateNode, OnEntryNode, OnExitNode, AssignNode } from '@your-library/statecharts';
+import {
+  BaseStateNode,
+  OnEntryNode,
+  OnExitNode,
+  AssignNode,
+} from '@your-library/statecharts';
 
 // Create entry actions
 const entryAction = new OnEntryNode({
@@ -301,11 +323,11 @@ const entryAction = new OnEntryNode({
           location: 'entryTime',
           expr: 'Date.now()',
           content: '',
-          children: []
-        }
-      })
-    ]
-  }
+          children: [],
+        },
+      }),
+    ],
+  },
 });
 
 // Create exit actions
@@ -318,11 +340,11 @@ const exitAction = new OnExitNode({
           location: 'exitTime',
           expr: 'Date.now()',
           content: '',
-          children: []
-        }
-      })
-    ]
-  }
+          children: [],
+        },
+      }),
+    ],
+  },
 });
 
 // Create state with lifecycle actions
@@ -330,8 +352,8 @@ const lifecycleState = new StateNode({
   state: {
     id: 'tracked',
     content: '',
-    children: [entryAction, exitAction]
-  }
+    children: [entryAction, exitAction],
+  },
 });
 
 // Execute lifecycle
@@ -351,7 +373,11 @@ console.log('Exit time set:', finalState.data.exitTime);
 ### Initial State Resolution
 
 ```typescript
-import { BaseStateNode, InitialNode, StateNode } from '@your-library/statecharts';
+import {
+  BaseStateNode,
+  InitialNode,
+  StateNode,
+} from '@your-library/statecharts';
 
 // Method 1: Using initial attribute
 const stateWithInitialAttr = new StateNode({
@@ -359,21 +385,23 @@ const stateWithInitialAttr = new StateNode({
     id: 'parent',
     initial: 'specificChild', // Explicit initial state
     content: '',
-    children: [/* child states */]
-  }
+    children: [
+      /* child states */
+    ],
+  },
 });
 
 // Method 2: Using <initial> element
 const initialElement = new InitialNode({
-  initial: { content: 'defaultChild', children: [] }
+  initial: { content: 'defaultChild', children: [] },
 });
 
 const stateWithInitialElement = new StateNode({
   state: {
     id: 'parent',
     content: '',
-    children: [initialElement, /* child states */]
-  }
+    children: [initialElement /* child states */],
+  },
 });
 
 // Method 3: First child becomes initial (fallback)
@@ -381,8 +409,10 @@ const stateWithImplicitInitial = new StateNode({
   state: {
     id: 'parent',
     content: '',
-    children: [/* first child becomes initial */]
-  }
+    children: [
+      /* first child becomes initial */
+    ],
+  },
 });
 ```
 
@@ -527,7 +557,10 @@ if (errors.length > 0) {
 import { BaseStateNode } from '@your-library/statecharts';
 
 class StateNavigator {
-  static findStateById(root: BaseStateNode, targetId: string): BaseStateNode | null {
+  static findStateById(
+    root: BaseStateNode,
+    targetId: string,
+  ): BaseStateNode | null {
     // Check if this is the target state
     if (root.id === targetId) {
       return root;
@@ -558,7 +591,10 @@ class StateNavigator {
     return path;
   }
 
-  static findCommonAncestor(state1: BaseStateNode, state2: BaseStateNode): BaseStateNode | null {
+  static findCommonAncestor(
+    state1: BaseStateNode,
+    state2: BaseStateNode,
+  ): BaseStateNode | null {
     const path1 = this.getStatePath(state1);
     const path2 = this.getStatePath(state2);
 
@@ -597,8 +633,8 @@ const regularState = new StateNode({
     id: 'processing',
     initial: 'idle',
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 
 // Inherits all BaseStateNode functionality
@@ -616,8 +652,8 @@ const parallelState = new ParallelNode({
   parallel: {
     id: 'concurrent',
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 
 // Overrides some BaseStateNode behavior
@@ -635,8 +671,8 @@ const finalState = new FinalNode({
   final: {
     id: 'completed',
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 
 // Uses BaseStateNode mount/unmount with done event generation
@@ -649,7 +685,12 @@ const mountResult = await finalState.mount(initialState);
 ### Unit Testing BaseStateNode
 
 ```typescript
-import { BaseStateNode, OnEntryNode, OnExitNode, AssignNode } from '@your-library/statecharts';
+import {
+  BaseStateNode,
+  OnEntryNode,
+  OnExitNode,
+  AssignNode,
+} from '@your-library/statecharts';
 
 describe('BaseStateNode', () => {
   describe('State Classification', () => {
@@ -691,11 +732,16 @@ describe('BaseStateNode', () => {
   describe('Lifecycle Methods', () => {
     it('should execute onentry actions during mount', async () => {
       const assignNode = new AssignNode({
-        assign: { location: 'mounted', expr: 'true', content: '', children: [] }
+        assign: {
+          location: 'mounted',
+          expr: 'true',
+          content: '',
+          children: [],
+        },
       });
 
       const onEntryNode = new OnEntryNode({
-        onentry: { content: '', children: [assignNode] }
+        onentry: { content: '', children: [assignNode] },
       });
 
       const state = new (class extends BaseStateNode {
@@ -715,11 +761,16 @@ describe('BaseStateNode', () => {
 
     it('should execute onexit actions during unmount', async () => {
       const assignNode = new AssignNode({
-        assign: { location: 'unmounted', expr: 'true', content: '', children: [] }
+        assign: {
+          location: 'unmounted',
+          expr: 'true',
+          content: '',
+          children: [],
+        },
       });
 
       const onExitNode = new OnExitNode({
-        onexit: { content: '', children: [assignNode] }
+        onexit: { content: '', children: [assignNode] },
       });
 
       const state = new (class extends BaseStateNode {
@@ -827,7 +878,11 @@ describe('BaseStateNode', () => {
 ### Lifecycle Error Handling
 
 ```typescript
-import { BaseStateNode, addPendingEvent, fromJsError } from '@your-library/statecharts';
+import {
+  BaseStateNode,
+  addPendingEvent,
+  fromJsError,
+} from '@your-library/statecharts';
 
 class SafeStateNode extends BaseStateNode {
   async mount(state: InternalState): Promise<MountResponse> {
@@ -874,14 +929,18 @@ class ValidatedStateNode extends BaseStateNode {
     }
 
     if (!this.isAtomic && !this.initialState) {
-      throw new Error(`Compound state ${this.id} must have an initial child state`);
+      throw new Error(
+        `Compound state ${this.id} must have an initial child state`,
+      );
     }
 
     // Validate that initial state exists in children
     if (this.initialState) {
       const initialChild = this.getChildState(this.initialState);
       if (!initialChild) {
-        throw new Error(`Initial state "${this.initialState}" not found in children of ${this.id}`);
+        throw new Error(
+          `Initial state "${this.initialState}" not found in children of ${this.id}`,
+        );
       }
     }
   }

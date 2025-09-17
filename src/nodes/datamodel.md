@@ -13,6 +13,7 @@ Unlike executable content nodes, the DataModel node is primarily a structural co
 ### Children
 
 The `children` array typically contains `<data>` elements that define individual data variables. Each data element specifies:
+
 - Variable identifier (`id`)
 - Initial value (`expr` or content)
 - Data type (`type`)
@@ -29,7 +30,7 @@ The `children` array typically contains `<data>` elements that define individual
     <data id="message">Hello World</data>
     <data id="isActive" expr="false"/>
   </datamodel>
-  
+
   <state id="main">
     <transition event="increment" target="main">
       <assign location="counter" expr="counter + 1"/>
@@ -48,7 +49,7 @@ The `children` array typically contains `<data>` elements that define individual
     <data id="session" expr="{ startTime: Date.now(), timeout: 3600000 }"/>
     <data id="cache" expr="new Map()"/>
   </datamodel>
-  
+
   <state id="application">
     <!-- Application logic -->
   </state>
@@ -67,7 +68,7 @@ The `children` array typically contains `<data>` elements that define individual
     <data id="level" expr="1"/>
     <data id="inventory" expr="[]"/>
   </datamodel>
-  
+
   <state id="gameRunning">
     <parallel id="gameSystems">
       <!-- Game systems that use the data model -->
@@ -87,14 +88,14 @@ The `children` array typically contains `<data>` elements that define individual
     <data id="timeout" expr="5000"/>
     <data id="features" expr="{ darkMode: true, analytics: false }"/>
   </datamodel>
-  
+
   <state id="startup">
     <onentry>
       <assign location="startupTime" expr="Date.now()"/>
     </onentry>
     <transition event="initialized" target="running"/>
   </state>
-  
+
   <state id="running">
     <!-- Application logic -->
   </state>
@@ -110,14 +111,14 @@ The `children` array typically contains `<data>` elements that define individual
     <data id="globalCounter" expr="0"/>
     <data id="systemStatus">initializing</data>
   </datamodel>
-  
+
   <state id="main">
     <!-- Local data model for this state -->
     <datamodel>
       <data id="localVariable">local value</data>
       <data id="stateStartTime" expr="Date.now()"/>
     </datamodel>
-    
+
     <onentry>
       <assign location="systemStatus">running</assign>
     </onentry>
@@ -134,14 +135,14 @@ The `children` array typically contains `<data>` elements that define individual
     <data id="userPreferences" src="user-prefs.json"/>
     <data id="localData" expr="{ initialized: false }"/>
   </datamodel>
-  
+
   <state id="loading">
     <onentry>
       <!-- Data loading logic -->
     </onentry>
     <transition event="dataLoaded" target="ready"/>
   </state>
-  
+
   <state id="ready">
     <!-- Application ready state -->
   </state>
@@ -159,8 +160,8 @@ import { DataModelNode, DataNode } from '@your-library/statecharts';
 const dataModelNode = new DataModelNode({
   datamodel: {
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 
 console.log(dataModelNode.allowChildren); // true
@@ -175,24 +176,24 @@ const counterData = new DataNode({
     id: 'counter',
     expr: '0',
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 
 const messageData = new DataNode({
   data: {
     id: 'message',
     content: 'Hello World',
-    children: []
-  }
+    children: [],
+  },
 });
 
 // Create data model with children
 const dataModelNode = new DataModelNode({
   datamodel: {
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 
 dataModelNode.children.push(counterData, messageData);
@@ -207,8 +208,8 @@ console.log(`Data model has ${dataModelNode.children.length} data elements`);
 const result = DataModelNode.createFromJSON({
   datamodel: {
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 
 if (result.success) {
@@ -221,7 +222,7 @@ if (result.success) {
 // Direct JSON format (without 'datamodel' wrapper)
 const directResult = DataModelNode.createFromJSON({
   content: '',
-  children: []
+  children: [],
 });
 ```
 
@@ -233,8 +234,8 @@ import { InternalState } from '@your-library/statecharts';
 const dataModelNode = new DataModelNode({
   datamodel: {
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 
 // Add data nodes as children
@@ -242,7 +243,7 @@ const dataModelNode = new DataModelNode({
 
 const initialState: InternalState = {
   data: {},
-  _datamodel: 'ecmascript'
+  _datamodel: 'ecmascript',
 };
 
 // Execute data model initialization
@@ -288,6 +289,7 @@ async run(state: InternalState): Promise<InternalState> {
 ```
 
 This ensures that:
+
 - All executable children (typically `<data>` nodes) are processed
 - Children are executed in document order
 - State changes are accumulated sequentially
@@ -399,6 +401,7 @@ The DataModel node uses the BaseNodeAttr schema for validation:
 This implementation follows the [W3C SCXML specification](https://www.w3.org/TR/scxml/). The `<datamodel>` element is defined in [Section 5.2](https://www.w3.org/TR/scxml/#datamodel) of the specification.
 
 Key specification compliance:
+
 - Container for data declarations
 - Supports both global and local scope
 - Processes child elements in document order

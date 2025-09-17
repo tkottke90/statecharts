@@ -7,6 +7,7 @@ This roadmap outlines the path to a complete W3C SCXML-compliant state machine i
 ## 🎉 **MAJOR MILESTONE: Production-Ready State Machines with Parallel States and Data Model!**
 
 ### **What Works Right Now:**
+
 - ✅ **Complete Event System** - Internal/external event queues with SCXML-compliant processing
 - ✅ **Event Generation** - `<raise>` elements and `<final>` state completion events
 - ✅ **Event Matching** - Exact match + wildcard patterns (`error.*`)
@@ -23,6 +24,7 @@ This roadmap outlines the path to a complete W3C SCXML-compliant state machine i
 - ✅ **248+ Passing Tests** - Comprehensive test coverage with parallel states and data model
 
 ### **Ready for Production Usage:**
+
 Complete state machines with parallel states, data model initialization, conditional logic, data manipulation, and dynamic event generation can be built and deployed today. The core SCXML specification is implemented with secure expression evaluation and concurrent state functionality.
 
 ## 🎉 **Major Architectural Improvement Completed**
@@ -30,12 +32,14 @@ Complete state machines with parallel states, data model initialization, conditi
 ### **Unified State Model Implementation** ✨
 
 **What was the problem?**
+
 - Complex dual-interface system (`EventlessState` vs `EventState`)
 - Constant state conversions throughout the codebase
 - Difficult to maintain and extend
 - Missing event generation in `FinalNode`
 
 **What we accomplished:**
+
 - ✅ **Replaced** EventlessState/EventState with single `InternalState` interface
 - ✅ **Simplified** all StateChart methods (no more conversions)
 - ✅ **Enhanced** FinalNode with `done.state.{parent_id}` event generation
@@ -44,6 +48,7 @@ Complete state machines with parallel states, data model initialization, conditi
 - ✅ **Maintained** 100% test coverage (139 passed, 41 skipped, 17 todo)
 
 **Impact:**
+
 - 🚀 **Cleaner Architecture** - Eliminated complex state conversions
 - 🎯 **SCXML Compliance** - Proper event generation now working
 - 🧪 **Better Testing** - Comprehensive test coverage for new functionality
@@ -55,12 +60,14 @@ Complete state machines with parallel states, data model initialization, conditi
 ### ✅ Completed Components
 
 **Core Architecture**
+
 - [x] ~~EventlessState/EventState interface pattern~~ → **Unified InternalState interface** ✨
 - [x] Node-based parsing system with comprehensive error handling
 - [x] BaseNode, BaseStateNode, BaseExecutableNode class hierarchy (updated for unified state)
 - [x] Comprehensive unit test coverage (248 passed, 28 skipped, 17 todo)
 
 **SCXML Elements**
+
 - [x] `<scxml>` - **Root element with full W3C compliance** (version, initial, name, datamodel) ✨
 - [x] `<state>` - Basic state nodes with ID and initial attributes (unified state interface)
 - [x] `<final>` - Final states with **done.state.{parent_id} event generation** ✨
@@ -72,6 +79,7 @@ Complete state machines with parallel states, data model initialization, conditi
 - [x] `<raise>` - Event raising with **complete pending event queue integration** ✨
 
 **StateChart Infrastructure**
+
 - [x] XML parsing and node creation (unified state interface)
 - [x] State hierarchy and identification
 - [x] **Simplified macrostep/microstep structure** (no more state conversions) ✨
@@ -84,6 +92,7 @@ Complete state machines with parallel states, data model initialization, conditi
 ### 🔧 Partially Implemented
 
 **StateChart Execution**
+
 - [x] **Simplified macrostep/microstep framework** (unified state interface) ✨
 - [x] **Event queue processing** (dual internal/external queues) ✨
 - [x] **SCXML-compliant event processing loop** (eventless → internal → external) ✨
@@ -91,12 +100,14 @@ Complete state machines with parallel states, data model initialization, conditi
 - [ ] Proper iteration until stable configuration
 
 **Transition Processing**
+
 - [x] Basic transition structure
 - [x] **Basic event matching logic** (exact match, needs wildcards) ✨
 - [ ] Condition evaluation (`cond` attribute) - placeholder implemented
 - [ ] Transition selection algorithm per SCXML spec
 
 **Expression System**
+
 - [x] Basic structure in AssignNode/RaiseNode
 - [ ] Expression evaluator implementation
 - [ ] Data model access in expressions
@@ -107,6 +118,7 @@ Complete state machines with parallel states, data model initialization, conditi
 **Status: COMPLETE** - Basic event-driven state machines fully operational
 
 ### 1.1 Event Queue Implementation ✅ **COMPLETED**
+
 - [x] Event structure (`SCXMLEvent` interface) - **COMPLETED** ✅
 - [x] **Complete pending internal events system** - **COMPLETED** ✅
 - [x] **Event generation in FinalNode** (done.state.{parent_id}) - **COMPLETED** ✅
@@ -117,24 +129,28 @@ Complete state machines with parallel states, data model initialization, conditi
 - [x] **Public API for external event injection** - **COMPLETED** ✅
 
 ### 1.2 Event Matching System ✅ **COMPLETED**
+
 - [x] **Basic event-to-transition matching logic** - **COMPLETED** ✅
 - [x] **Event descriptor parsing (dot notation)** - **COMPLETED** ✅
 - [x] **Prefix matching algorithm** - **COMPLETED** ✅
 - [x] **Wildcard support** (`*`, `event.*`) - **COMPLETED** ✅
 
 ### 1.3 System Variables ✅ **COMPLETED**
+
 - [x] **`_event` variable with current event data** - **COMPLETED** ✅
 - [x] **`_name` variable with state machine name** - **COMPLETED** ✅
 - [x] **`_sessionId` variable for session identification** - **COMPLETED** ✅
 - [x] **Integration with unified InternalState interface** - **COMPLETED** ✅
 
 ### 1.4 Transition Selection Algorithm ✅ **FUNCTIONALLY COMPLETE**
+
 - [x] **Basic transition selection structure** - **COMPLETED** ✅
 - [x] **Eventless transition processing** - **COMPLETED** ✅
 - [x] **Multiple transition handling** - **COMPLETED** ✅
 - [x] **Event-driven transition execution** - **COMPLETED** ✅
 
 **✅ PHASE 1 ACHIEVEMENTS - FULLY FUNCTIONAL EVENT SYSTEM:**
+
 - ✅ Enhanced `SCXMLEvent` interface with all required SCXML fields
 - ✅ **Complete `_pendingInternalEvents` system** for executable content
 - ✅ **RaiseNode implementation** with structured error handling
@@ -153,6 +169,7 @@ Complete state machines with parallel states, data model initialization, conditi
 **🎯 RESULT: Basic event-driven state machines are fully operational!**
 
 **Future Enhancements (Non-Critical):**
+
 - Condition evaluation (`cond` attribute) - placeholder exists, basic machines work without
 - Transition conflict resolution algorithm - current approach works, optimization opportunity
 - Document order priority handling - SCXML compliance enhancement
@@ -164,6 +181,7 @@ Complete state machines with parallel states, data model initialization, conditi
 **Achievement:** Full W3C SCXML specification compliance for the `<scxml>` root element with comprehensive data model support.
 
 ### 2.1 `<scxml>` Root Element ✅ **COMPLETED**
+
 - [x] **SCXMLNode class implementation** - **COMPLETED** ✅
 - [x] **`initial` attribute handling** - **COMPLETED** ✅
 - [x] **`name` attribute support** - **COMPLETED** ✅
@@ -175,18 +193,21 @@ Complete state machines with parallel states, data model initialization, conditi
   - ✅ **Platform-defined values** - Extensible for custom implementations
 
 ### 2.2 Parser Integration ✅ **COMPLETED**
+
 - [x] **Parser recognition of `<scxml>` elements** - **COMPLETED** ✅
 - [x] **SCXMLNode.createFromJSON() implementation** - **COMPLETED** ✅
 - [x] **Comprehensive validation with Zod schemas** - **COMPLETED** ✅
 - [x] **Export from nodes index** - **COMPLETED** ✅
 
 ### 2.3 W3C SCXML Specification Compliance ✅ **COMPLETED**
+
 - [x] **Section 3.2.1 attribute compliance** - **COMPLETED** ✅
 - [x] **Proper datamodel attribute semantics** - **COMPLETED** ✅
 - [x] **Version validation (1.0, 1.1)** - **COMPLETED** ✅
 - [x] **Optional attribute handling** - **COMPLETED** ✅
 
 **✅ PHASE 2 ACHIEVEMENTS - COMPLETE SCXML ROOT ELEMENT:**
+
 - ✅ **Full W3C SCXML Section 3.2.1 compliance** for `<scxml>` root element
 - ✅ **Comprehensive datamodel attribute support** with proper validation
 - ✅ **TypeScript types with Zod validation** for all attributes
@@ -197,6 +218,7 @@ Complete state machines with parallel states, data model initialization, conditi
 **🎯 RESULT: Complete SCXML documents can now be parsed with proper root elements!**
 
 **Future Enhancements (Non-Critical):**
+
 - StateChart.fromXML() integration for end-to-end parsing
 - Initial state configuration computation from `initial` attribute
 - Session lifecycle management using `name` attribute
@@ -208,6 +230,7 @@ Complete state machines with parallel states, data model initialization, conditi
 **Achievement:** Complete expression evaluation system with Node.js VM-based security, ECMAScript data model support, and integration with AssignNode and TransitionNode for conditional logic and data manipulation.
 
 ### 3.1 Basic Expression Engine ✅ **COMPLETED**
+
 - [x] **Node.js VM-based expression evaluator** - **COMPLETED** ✅
 - [x] **Data model access** (`data.variableName`) - **COMPLETED** ✅
 - [x] **System variable access** (`_event.name`) - **COMPLETED** ✅
@@ -215,12 +238,14 @@ Complete state machines with parallel states, data model initialization, conditi
 - [x] **Secure sandboxed execution** with readonly data protection - **COMPLETED** ✅
 
 ### 3.2 Condition Evaluation ✅ **COMPLETED**
+
 - [x] **`cond` attribute evaluation in transitions** - **COMPLETED** ✅
 - [x] **Boolean expression support** - **COMPLETED** ✅
 - [x] **Error handling for invalid expressions** - **COMPLETED** ✅
 - [x] **Integration with transition selection** - **COMPLETED** ✅
 
 ### 3.3 Assignment Expressions ✅ **COMPLETED**
+
 - [x] **Complete AssignNode.run() implementation** - **COMPLETED** ✅
 - [x] **Location expression evaluation** - **COMPLETED** ✅
 - [x] **Value expression evaluation** - **COMPLETED** ✅
@@ -228,12 +253,14 @@ Complete state machines with parallel states, data model initialization, conditi
 - [x] **Proper data model assignment** (assigns to `state.data`) - **COMPLETED** ✅
 
 ### 3.4 Event Expressions ✅ **COMPLETED**
+
 - [x] **Complete RaiseNode.run() implementation** - **COMPLETED** ✅
 - [x] **Static event name support** - **COMPLETED** ✅
 - [x] **`eventexpr` attribute evaluation** - **COMPLETED** ✅
 - [x] **Dynamic event name generation** - **COMPLETED** ✅
 
 **✅ PHASE 3 ACHIEVEMENTS - COMPLETE EXPRESSION EVALUATION SYSTEM:**
+
 - ✅ **Node.js VM-based expression evaluator** with secure sandboxing ✨
 - ✅ **ECMAScript data model support** (defaulting to 'ecmascript' when undefined) ✨
 - ✅ **Complete AssignNode implementation** with proper data model assignment ✨
@@ -252,24 +279,28 @@ Complete state machines with parallel states, data model initialization, conditi
 **Achievement:** Complete implementation of `<onentry>` and `<onexit>` elements with full executable content support, proper state lifecycle integration, and comprehensive test coverage.
 
 ### 4.1 `<onentry>` Element ✅ **COMPLETED**
+
 - [x] **OnEntryNode class implementation** - **COMPLETED** ✅
 - [x] **Executable content support** - **COMPLETED** ✅
 - [x] **Integration with state mounting** - **COMPLETED** ✅
 - [x] **Multiple onentry handlers per state** - **COMPLETED** ✅
 
 ### 4.2 `<onexit>` Element ✅ **COMPLETED**
+
 - [x] **OnExitNode class implementation** - **COMPLETED** ✅
 - [x] **Executable content support** - **COMPLETED** ✅
 - [x] **Integration with state unmounting** - **COMPLETED** ✅
 - [x] **Multiple onexit handlers per state** - **COMPLETED** ✅
 
 ### 4.3 StateChart Integration ✅ **COMPLETED**
+
 - [x] **Update mount/unmount to execute onentry/onexit** - **COMPLETED** ✅
 - [x] **Proper execution order (exit → transition → entry)** - **COMPLETED** ✅
 - [x] **Error handling in entry/exit actions** - **COMPLETED** ✅
 - [x] **State lifecycle event generation** - **COMPLETED** ✅
 
 **✅ PHASE 4 ACHIEVEMENTS - COMPLETE ENTRY/EXIT ACTIONS:**
+
 - ✅ **OnEntryNode and OnExitNode classes** extending BaseExecutableNode ✨
 - ✅ **Full executable content support** (assign, raise, etc.) ✨
 - ✅ **Document order execution** of multiple handlers per state ✨
@@ -289,30 +320,35 @@ Complete state machines with parallel states, data model initialization, conditi
 **Achievement:** Complete implementation of `<parallel>` elements with simultaneous child state entry, proper state hierarchy management, and comprehensive integration testing.
 
 ### 5.1 `<parallel>` Element ✅ **COMPLETED**
+
 - [x] **ParallelNode class implementation** - **COMPLETED** ✅
 - [x] **Multiple active child states** - **COMPLETED** ✅
 - [x] **Parallel state entry/exit semantics** - **COMPLETED** ✅
 - [x] **Done event generation when all children final** - **COMPLETED** ✅
 
 ### 5.2 Parallel Execution Logic ✅ **COMPLETED**
+
 - [x] **Concurrent event processing across children** - **COMPLETED** ✅
 - [x] **Parallel transition selection** - **COMPLETED** ✅
 - [x] **Exit set computation for parallel states** - **COMPLETED** ✅
 - [x] **Entry set computation for parallel states** - **COMPLETED** ✅
 
 ### 5.3 StateChart Integration ✅ **COMPLETED**
+
 - [x] **Update active state tracking for parallel states** - **COMPLETED** ✅
 - [x] **Parallel-aware transition processing** - **COMPLETED** ✅
 - [x] **Done event handling (`done.state.id`)** - **COMPLETED** ✅
 - [x] **Parallel state configuration validation** - **COMPLETED** ✅
 
 ### 5.4 Data Model Integration ✅ **COMPLETED**
+
 - [x] **Data model initialization before state entry** - **COMPLETED** ✅
 - [x] **Expression evaluation in data elements** - **COMPLETED** ✅
 - [x] **DataNode executable implementation** - **COMPLETED** ✅
 - [x] **DataModelNode execution during startup** - **COMPLETED** ✅
 
 **✅ PHASE 5 ACHIEVEMENTS - COMPLETE PARALLEL STATES WITH DATA MODEL:**
+
 - ✅ **ParallelNode class** with full parallel semantics and unified state interface ✨
 - ✅ **StateChart parallel integration** with simultaneous child state entry ✨
 - ✅ **Comprehensive integration tests** (4 passing tests for parallel functionality) ✨
@@ -329,6 +365,7 @@ Complete state machines with parallel states, data model initialization, conditi
 **Priority: MEDIUM** - Critical for debugging and visualization
 
 ### 6.1 State Execution History Tracking
+
 - [ ] Internal history tracking system (separate from SCXML `<history>` element)
 - [ ] StateTransition interface for capturing state changes
 - [ ] History event emission for external consumption
@@ -336,6 +373,7 @@ Complete state machines with parallel states, data model initialization, conditi
 - [ ] History serialization/deserialization for persistence
 
 ### 6.2 History Event Structure
+
 - [ ] Comprehensive transition metadata capture
 - [ ] Timestamp tracking for performance analysis
 - [ ] Event causality tracking (which event triggered which transition)
@@ -343,6 +381,7 @@ Complete state machines with parallel states, data model initialization, conditi
 - [ ] Error and exception tracking in history
 
 ### 6.3 Debugging & Visualization Support
+
 - [ ] History query API for debugging tools
 - [ ] State machine execution replay capability
 - [ ] Integration hooks for external visualization tools
@@ -350,6 +389,7 @@ Complete state machines with parallel states, data model initialization, conditi
 - [ ] History export formats (JSON, CSV, etc.)
 
 **Use Cases:**
+
 - **XML Configuration Debugging** - Track every step of state machine execution
 - **Performance Analysis** - Identify slow transitions and bottlenecks
 - **UI Visualization** - Real-time state machine visualization
@@ -357,6 +397,7 @@ Complete state machines with parallel states, data model initialization, conditi
 - **Production Monitoring** - Track state machine behavior in production
 
 **Deliverables:**
+
 - StateExecutionHistory class with comprehensive tracking
 - History event emission system with configurable listeners
 - Integration with existing StateChart execution flow
@@ -370,6 +411,7 @@ Complete state machines with parallel states, data model initialization, conditi
 **Why This Matters:** Transform the parser from a hardcoded node factory into a flexible registration system. This allows implementers to create custom nodes and extend the library beyond the base SCXML specification, enabling domain-specific workflows and custom executable content.
 
 ### 7.1 Parser Registration System
+
 - [ ] NodeRegistry class for managing node types
 - [ ] Registration API for custom node classes
 - [ ] Dynamic node type resolution
@@ -377,6 +419,7 @@ Complete state machines with parallel states, data model initialization, conditi
 - [ ] Validation of registered node schemas
 
 ### 7.2 Node Interface Standardization
+
 - [ ] Standardized BaseNode interface for custom nodes
 - [ ] Required static properties (label, schema, allowChildren)
 - [ ] Consistent createFromJSON signature
@@ -384,6 +427,7 @@ Complete state machines with parallel states, data model initialization, conditi
 - [ ] TypeScript interfaces for node registration
 
 ### 7.3 Parser Refactoring
+
 - [ ] Remove hardcoded parseType switch statement
 - [ ] Implement registry-based node resolution
 - [ ] Maintain backward compatibility with existing nodes
@@ -391,6 +435,7 @@ Complete state machines with parallel states, data model initialization, conditi
 - [ ] Default node registration for all SCXML elements
 
 ### 7.4 Custom Node Examples
+
 - [ ] Example custom executable node implementation
 - [ ] Example custom state node implementation
 - [ ] Documentation with step-by-step custom node guide
@@ -398,6 +443,7 @@ Complete state machines with parallel states, data model initialization, conditi
 - [ ] Integration tests with mixed standard/custom nodes
 
 ### 7.5 Advanced Registration Features
+
 - [ ] Node inheritance and composition patterns
 - [ ] Conditional node registration (environment-specific)
 - [ ] Node versioning and compatibility checking
@@ -405,6 +451,7 @@ Complete state machines with parallel states, data model initialization, conditi
 - [ ] Runtime node registration and deregistration
 
 **Deliverables:**
+
 - NodeRegistry class with full registration API
 - Refactored parser using registry-based resolution
 - Comprehensive documentation for custom node development
@@ -412,6 +459,7 @@ Complete state machines with parallel states, data model initialization, conditi
 - Migration guide for existing implementations
 
 **Benefits:**
+
 - ✅ **Extensibility** - Custom nodes for domain-specific requirements
 - ✅ **Modularity** - Plugin-based architecture for specialized features
 - ✅ **Future-Proof** - Easy addition of new SCXML features
@@ -423,24 +471,28 @@ Complete state machines with parallel states, data model initialization, conditi
 **Priority: MEDIUM** - Important features for complete SCXML support
 
 ### 8.1 History States
+
 - [ ] HistoryNode class (shallow and deep)
 - [ ] State configuration recording
 - [ ] History state restoration
 - [ ] Default history transitions
 
 ### 8.2 Additional Executable Content
+
 - [ ] `<if>`, `<elseif>`, `<else>` conditional execution
 - [ ] `<foreach>` iteration
 - [ ] `<script>` arbitrary code execution
 - [ ] `<log>` debugging output
 
 ### 8.3 External Communication
+
 - [ ] `<send>` element for external events
 - [ ] `<invoke>` element for external services
 - [ ] Event I/O processors
 - [ ] Communication error handling
 
 **Deliverables:**
+
 - HistoryNode class with shallow and deep history support
 - Conditional execution nodes (`<if>`, `<elseif>`, `<else>`)
 - Iteration support with `<foreach>` element
@@ -448,6 +500,7 @@ Complete state machines with parallel states, data model initialization, conditi
 - Comprehensive test coverage for all advanced features
 
 **Benefits:**
+
 - ✅ **Complete SCXML Compliance** - Full W3C specification support
 - ✅ **Advanced State Management** - History states for complex workflows
 - ✅ **Conditional Logic** - Rich branching and iteration capabilities
@@ -461,12 +514,14 @@ Complete state machines with parallel states, data model initialization, conditi
 **Why This Matters:** Currently limited to Node.js environments. Expanding to browsers and other JavaScript runtimes would significantly increase adoption and use cases.
 
 ### 9.1 Environment Detection & Abstraction
+
 - [ ] Runtime environment detection (Node.js, Browser, Web Workers, Deno, Bun)
 - [ ] Parser abstraction layer (XMLParser interface)
 - [ ] Environment-specific parser implementations
 - [ ] Conditional module loading system
 
 ### 9.2 Browser-Specific Implementation
+
 - [ ] Browser-compatible XML parser (DOMParser-based)
 - [ ] CSP-compliant expression evaluation (no eval/Function)
 - [ ] Browser-optimized bundle (tree-shakeable)
@@ -474,24 +529,28 @@ Complete state machines with parallel states, data model initialization, conditi
 - [ ] TypeScript browser type definitions
 
 ### 9.3 Node.js-Specific Optimizations
+
 - [ ] Fast XML parser integration (`fast-xml-parser`)
 - [ ] VM-based secure expression evaluation
 - [ ] File system integration for SCXML loading
 - [ ] Stream-based processing for large documents
 
 ### 9.4 Universal Build System
+
 - [ ] Webpack/Rollup configuration for multi-target builds
 - [ ] Package.json export maps for environment-specific entry points
 - [ ] Build-time parser substitution
 - [ ] Environment-specific feature flags
 
 ### 9.5 Expression Evaluation Strategy
+
 - [ ] **Node.js**: VM-based sandboxing (maximum security)
 - [ ] **Browser**: Function constructor with CSP compliance
 - [ ] **Fallback**: Simple property access only
 - [ ] Universal expression evaluator with environment detection
 
 **Deliverables:**
+
 - Universal expression evaluator with environment-specific implementations
 - Browser and Node.js build targets with optimized parsers
 - Comprehensive cross-environment test suite
@@ -499,6 +558,7 @@ Complete state machines with parallel states, data model initialization, conditi
 - Migration guide for Node.js-only users
 
 **Benefits:**
+
 - ✅ **Broader Adoption** - Works in browsers, Node.js, Deno, Bun
 - ✅ **Smaller Bundles** - Environment-specific optimizations
 - ✅ **Better Performance** - Optimal parsers for each environment
@@ -508,6 +568,7 @@ Complete state machines with parallel states, data model initialization, conditi
 ## Success Criteria
 
 ### Phase 1 Complete ✅ **MAJOR MILESTONE ACHIEVED - FUNCTIONAL EVENT SYSTEM**
+
 - [x] **Unified state model implemented** (InternalState interface) ✨
 - [x] **Event generation working** (RaiseNode, FinalNode) ✨
 - [x] **Pending internal events system complete** ✨
@@ -523,6 +584,7 @@ Complete state machines with parallel states, data model initialization, conditi
 **🎯 RESULT: Basic event-driven state machines work completely!**
 
 ### Phase 2 Complete ✅ **MAJOR MILESTONE ACHIEVED - COMPLETE SCXML ROOT ELEMENT**
+
 - [x] **Complete SCXML documents parse successfully** ✅
 - [x] **Root element attributes processed correctly** (version, initial, name, datamodel) ✅
 - [x] **W3C SCXML specification compliance** for Section 3.2.1 ✅
@@ -530,6 +592,7 @@ Complete state machines with parallel states, data model initialization, conditi
 - [x] **Parser integration complete** with full validation ✅
 
 ### Phase 3 Complete ✅ **MAJOR MILESTONE ACHIEVED - EXPRESSION EVALUATION SYSTEM**
+
 - [x] **Conditional transitions work** (`cond` attribute with ECMAScript expressions) ✅
 - [x] **`<assign>` elements modify data model** (complete implementation with lodash) ✅
 - [x] **`<raise>` elements generate internal events** (static and dynamic with `eventexpr`) ✅
@@ -538,6 +601,7 @@ Complete state machines with parallel states, data model initialization, conditi
 - [x] **ECMAScript data model support** (full JavaScript expression support) ✅
 
 ### Phase 4 Complete ✅ **MAJOR MILESTONE ACHIEVED - COMPLETE ENTRY/EXIT ACTIONS**
+
 - [x] **`<onentry>` and `<onexit>` actions execute** (OnEntryNode and OnExitNode classes) ✅
 - [x] **State lifecycle events fire correctly** (async mount/unmount integration) ✅
 - [x] **Multiple entry/exit handlers supported** (document order execution) ✅
@@ -546,6 +610,7 @@ Complete state machines with parallel states, data model initialization, conditi
 - [x] **Comprehensive test coverage** (48 tests passing) ✅
 
 ### Phase 5 Complete ✅ **MAJOR MILESTONE ACHIEVED - COMPLETE PARALLEL STATES**
+
 - [x] **Parallel states work with multiple active children** - **COMPLETED** ✅
 - [x] **Concurrent event processing functions** - **COMPLETED** ✅
 - [x] **Done events generated correctly** - **COMPLETED** ✅
@@ -568,6 +633,7 @@ Complete state machines with parallel states, data model initialization, conditi
 12. **SCXML Compliance**: Reference W3C spec for exact semantics
 
 ### **Current Status: Production-Ready State Machines with Parallel States and Data Model!**
+
 - ✅ **Event-driven state machines work** - Send events, trigger transitions
 - ✅ **Internal event generation** - `<raise>` and `<final>` elements operational
 - ✅ **External event API** - `sendEvent()` and `sendEventByName()` ready

@@ -8,8 +8,8 @@ describe('Node: <scxml>', () => {
           content: '',
           children: [],
           version: '1.0',
-          datamodel: 'ecmascript'
-        }
+          datamodel: 'ecmascript',
+        },
       });
 
       expect(node.version).toBe('1.0');
@@ -26,8 +26,8 @@ describe('Node: <scxml>', () => {
           version: '1.1',
           initial: 'start',
           name: 'MyStateMachine',
-          datamodel: 'ecmascript'
-        }
+          datamodel: 'ecmascript',
+        },
       });
 
       expect(node.version).toBe('1.1');
@@ -42,8 +42,8 @@ describe('Node: <scxml>', () => {
           content: '',
           children: [],
           version: '1.0', // Constructor requires explicit version
-          datamodel: 'ecmascript'
-        }
+          datamodel: 'ecmascript',
+        },
       });
 
       expect(node.version).toBe('1.0');
@@ -54,8 +54,8 @@ describe('Node: <scxml>', () => {
     it('should create SCXMLNode from valid JSON with minimal attributes', () => {
       const result = SCXMLNode.createFromJSON({
         scxml: {
-          version: '1.0'
-        }
+          version: '1.0',
+        },
       });
 
       expect(result.success).toBe(true);
@@ -70,8 +70,8 @@ describe('Node: <scxml>', () => {
           version: '1.1',
           initial: 'idle',
           name: 'TestMachine',
-          datamodel: 'xpath'
-        }
+          datamodel: 'xpath',
+        },
       });
 
       expect(result.success).toBe(true);
@@ -85,7 +85,7 @@ describe('Node: <scxml>', () => {
 
     it('should use default version when not specified', () => {
       const result = SCXMLNode.createFromJSON({
-        scxml: {}
+        scxml: {},
       });
 
       expect(result.success).toBe(true);
@@ -95,8 +95,8 @@ describe('Node: <scxml>', () => {
     it('should fail validation with invalid version', () => {
       const result = SCXMLNode.createFromJSON({
         scxml: {
-          version: '2.0'
-        }
+          version: '2.0',
+        },
       });
 
       expect(result.success).toBe(false);
@@ -108,8 +108,8 @@ describe('Node: <scxml>', () => {
       const result = SCXMLNode.createFromJSON({
         scxml: {
           version: '1.0',
-          datamodel: 'invalid'
-        }
+          datamodel: 'invalid',
+        },
       });
 
       expect(result.success).toBe(false);
@@ -123,8 +123,8 @@ describe('Node: <scxml>', () => {
       const result = SCXMLNode.createFromJSON({
         scxml: {
           version: '1.0',
-          datamodel: 'null'
-        }
+          datamodel: 'null',
+        },
       });
 
       expect(result.success).toBe(true);
@@ -135,8 +135,8 @@ describe('Node: <scxml>', () => {
       const result = SCXMLNode.createFromJSON({
         scxml: {
           version: '1.0',
-          datamodel: 'ecmascript'
-        }
+          datamodel: 'ecmascript',
+        },
       });
 
       expect(result.success).toBe(true);
@@ -147,8 +147,8 @@ describe('Node: <scxml>', () => {
       const result = SCXMLNode.createFromJSON({
         scxml: {
           version: '1.0',
-          datamodel: 'xpath'
-        }
+          datamodel: 'xpath',
+        },
       });
 
       expect(result.success).toBe(true);
@@ -159,8 +159,8 @@ describe('Node: <scxml>', () => {
       const result = SCXMLNode.createFromJSON({
         scxml: {
           version: '1.0',
-          datamodel: 'python'
-        }
+          datamodel: 'python',
+        },
       });
 
       expect(result.success).toBe(false);

@@ -1,13 +1,16 @@
-import z from "zod";
-import { BaseExecutableNode, BaseExecutableNodeAttr } from "../models/base-executable";
-import { InternalState } from "../models/internalState";
-import { CreateFromJsonResponse } from "../models/methods";
+import z from 'zod';
+import {
+  BaseExecutableNode,
+  BaseExecutableNodeAttr,
+} from '../models/base-executable';
+import { InternalState } from '../models/internalState';
+import { CreateFromJsonResponse } from '../models/methods';
 
 const OnEntryNodeAttr = BaseExecutableNodeAttr;
 
 export type OnEntryNodeType = {
   onentry: z.infer<typeof OnEntryNodeAttr>;
-}
+};
 
 export class OnEntryNode extends BaseExecutableNode {
   static label = 'onentry';
@@ -28,19 +31,21 @@ export class OnEntryNode extends BaseExecutableNode {
     return nextState;
   }
 
-  static createFromJSON(jsonInput: Record<string, unknown>): CreateFromJsonResponse<OnEntryNode> {
+  static createFromJSON(
+    jsonInput: Record<string, unknown>,
+  ): CreateFromJsonResponse<OnEntryNode> {
     const { success, data, error } = this.schema.safeParse(
-      this.getAttributes(this.label, jsonInput)
+      this.getAttributes(this.label, jsonInput),
     );
 
     if (!success) {
       return { success: false, error, node: undefined };
     }
-    
+
     return {
       success: true,
       node: new OnEntryNode({ onentry: data }),
-      error: undefined
-    }
+      error: undefined,
+    };
   }
 }

@@ -12,14 +12,15 @@ The Parallel node extends BaseStateNode and overrides key behaviors to support s
 
 ## Attributes
 
-| Attribute | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `id` | `string` | Yes | - | Unique identifier for the parallel state |
-| `initial` | `string` | No | - | Not typically used in parallel states |
+| Attribute | Type     | Required | Default | Description                              |
+| --------- | -------- | -------- | ------- | ---------------------------------------- |
+| `id`      | `string` | Yes      | -       | Unique identifier for the parallel state |
+| `initial` | `string` | No       | -       | Not typically used in parallel states    |
 
 ### ID
 
 The `id` attribute is required and must be unique within the state machine. It identifies the parallel state and is used for:
+
 - Targeting in transitions
 - Generating done events (`done.state.{id}`)
 - State machine navigation and debugging
@@ -31,16 +32,19 @@ While the `initial` attribute is inherited from BaseStateNode, it's not typicall
 ## Key Behaviors
 
 ### Simultaneous Entry
+
 - **All child states entered**: When the parallel state is entered, ALL child states become active simultaneously
 - **Concurrent execution**: Events are processed by all active child states
 - **Independent regions**: Each child state operates independently
 
 ### Event Processing
+
 - **Broadcast to all**: Events are sent to all active child states
 - **Independent responses**: Each child state can respond independently
 - **No interference**: Child states don't interfere with each other's event processing
 
 ### Completion
+
 - **Done when all complete**: The parallel state is "done" when ALL child states reach final states
 - **Done event generation**: Generates `done.state.{parallel_id}` event when complete
 - **Partial completion**: Individual child completions don't affect the parallel state
@@ -238,8 +242,8 @@ const parallelNode = new ParallelNode({
   parallel: {
     id: 'gameSystems',
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 
 console.log(parallelNode.id); // 'gameSystems'
@@ -255,8 +259,8 @@ const result = ParallelNode.createFromJSON({
   parallel: {
     id: 'applicationSystems',
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 
 if (result.success) {
@@ -269,7 +273,7 @@ if (result.success) {
 
 // Direct JSON format (without 'parallel' wrapper)
 const directResult = ParallelNode.createFromJSON({
-  id: 'myParallelState'
+  id: 'myParallelState',
 });
 ```
 
@@ -282,8 +286,8 @@ const parallelNode = new ParallelNode({
   parallel: {
     id: 'systems',
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 
 // Add child states
@@ -291,16 +295,16 @@ const healthSystem = new StateNode({
   state: {
     id: 'healthSystem',
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 
 const scoreSystem = new StateNode({
   state: {
     id: 'scoreSystem',
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 
 parallelNode.children.push(healthSystem, scoreSystem);
@@ -322,13 +326,13 @@ const parallelNode = new ParallelNode({
   parallel: {
     id: 'gameSystems',
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 
 const state: InternalState = {
   data: { gameTime: 0 },
-  _datamodel: 'ecmascript'
+  _datamodel: 'ecmascript',
 };
 
 // Mount the parallel state
@@ -375,6 +379,7 @@ The ParallelNode class exposes the following properties:
 ### Completion Detection
 
 The parallel state is considered complete when:
+
 - All child states have reached final states
 - OR the parallel state has no child states (empty parallel state)
 
@@ -397,6 +402,7 @@ gameRunning.gameSystems.powerUpSystem.noPowerUp
 ### Child Path Format
 
 Parallel states return a special child path format:
+
 - **Regular states**: Single child ID (`"childState"`)
 - **Parallel states**: Comma-separated child IDs (`"child1,child2,child3"`)
 
@@ -500,6 +506,7 @@ Use final states to coordinate parallel system shutdown:
 This implementation follows the [W3C SCXML specification](https://www.w3.org/TR/scxml/). The `<parallel>` element is defined in [Section 3.4](https://www.w3.org/TR/scxml/#parallel) of the specification.
 
 Key specification compliance:
+
 - All child states are entered simultaneously when parallel state is entered
 - Events are processed by all active child states
 - Parallel state is "done" when all child states reach final states
@@ -516,4 +523,3 @@ Key specification compliance:
 - [Transition Node](./transition.md) - Transitions between parallel states
 
 When a parallel state is entered, all of its child states are entered simultaneously. The parallel state is considered to be active as long as at least one of its child states is active. When all of the child states have completed, the parallel state completes.
-

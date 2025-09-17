@@ -10,10 +10,10 @@ The OnEntry node extends BaseExecutableNode and enables child execution, allowin
 
 Unlike simple executable nodes, the OnEntry node is specifically designed as a container that coordinates the execution of multiple entry actions within a single state entry operation.
 
-
 ## Children
 
 The `children` array contains executable elements that define the entry actions:
+
 - `<assign>` - Variable assignments
 - `<raise>` - Event generation
 - `<log>` - Logging actions
@@ -29,7 +29,7 @@ The `children` array contains executable elements that define the entry actions:
     <assign location="status" expr="'active'"/>
     <assign location="entryTime" expr="Date.now()"/>
   </onentry>
-  
+
   <transition event="deactivate" target="inactive"/>
 </state>
 ```
@@ -44,7 +44,7 @@ The `children` array contains executable elements that define the entry actions:
     <assign location="score" expr="0"/>
     <raise event="gameStarted"/>
   </onentry>
-  
+
   <parallel id="gameSystems">
     <!-- Game systems -->
   </parallel>
@@ -61,7 +61,7 @@ The `children` array contains executable elements that define the entry actions:
     <assign location="session.timeout" expr="3600000"/>
     <raise event="sessionStarted"/>
   </onentry>
-  
+
   <state id="dashboard">
     <!-- User dashboard -->
   </state>
@@ -78,7 +78,7 @@ The `children` array contains executable elements that define the entry actions:
     <assign location="app.startTime" expr="Date.now()"/>
     <raise event="initializationStarted"/>
   </onentry>
-  
+
   <transition event="initialized" target="running"/>
 </state>
 ```
@@ -92,16 +92,16 @@ The `children` array contains executable elements that define the entry actions:
     <assign location="process.status" expr="'starting'"/>
     <assign location="process.startTime" expr="Date.now()"/>
     <assign location="process.progress" expr="0"/>
-    
+
     <!-- Set up processing environment -->
     <assign location="process.workerId" expr="Math.random().toString(36)"/>
     <assign location="process.priority" expr="'normal'"/>
-    
+
     <!-- Notify system of processing start -->
     <raise event="processingStarted"/>
     <raise event="workerAssigned"/>
   </onentry>
-  
+
   <transition event="processComplete" target="completed"/>
   <transition event="processError" target="error"/>
 </state>
@@ -115,14 +115,14 @@ The `children` array contains executable elements that define the entry actions:
     <assign location="systemsActive" expr="true"/>
     <assign location="systemStartTime" expr="Date.now()"/>
   </onentry>
-  
+
   <state id="healthSystem" initial="healthy">
     <onentry>
       <assign location="playerHealth" expr="100"/>
     </onentry>
     <!-- Health system states -->
   </state>
-  
+
   <state id="scoreSystem" initial="scoring">
     <onentry>
       <assign location="playerScore" expr="0"/>
@@ -139,15 +139,15 @@ The `children` array contains executable elements that define the entry actions:
   <onentry>
     <assign location="profile.lastAccess" expr="Date.now()"/>
     <assign location="profile.visitCount" expr="profile.visitCount + 1"/>
-    
+
     <!-- Conditional welcome message -->
-    <assign location="welcomeMessage" 
+    <assign location="welcomeMessage"
             expr="profile.visitCount === 1 ? 'Welcome!' : 'Welcome back!'"/>
-    
+
     <!-- Raise appropriate event -->
     <raise event="profileAccessed"/>
   </onentry>
-  
+
   <transition event="updateProfile" target="editing"/>
 </state>
 ```
@@ -176,8 +176,8 @@ import { OnEntryNode, AssignNode, RaiseNode } from '@your-library/statecharts';
 const onEntryNode = new OnEntryNode({
   onentry: {
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 
 console.log(onEntryNode.isExecutable); // true
@@ -193,8 +193,8 @@ const statusAssign = new AssignNode({
     location: 'status',
     expr: '"active"',
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 
 const timeAssign = new AssignNode({
@@ -202,24 +202,24 @@ const timeAssign = new AssignNode({
     location: 'entryTime',
     expr: 'Date.now()',
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 
 const notifyRaise = new RaiseNode({
   raise: {
     event: 'stateEntered',
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 
 // Create onentry with children
 const onEntryNode = new OnEntryNode({
   onentry: {
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 
 onEntryNode.children.push(statusAssign, timeAssign, notifyRaise);
@@ -234,8 +234,8 @@ console.log(`OnEntry has ${onEntryNode.children.length} actions`);
 const result = OnEntryNode.createFromJSON({
   onentry: {
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 
 if (result.success) {
@@ -248,7 +248,7 @@ if (result.success) {
 // Direct JSON format (without 'onentry' wrapper)
 const directResult = OnEntryNode.createFromJSON({
   content: '',
-  children: []
+  children: [],
 });
 ```
 
@@ -260,8 +260,8 @@ import { InternalState } from '@your-library/statecharts';
 const onEntryNode = new OnEntryNode({
   onentry: {
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 
 // Add executable children
@@ -269,7 +269,7 @@ const onEntryNode = new OnEntryNode({
 
 const state: InternalState = {
   data: { counter: 0 },
-  _datamodel: 'ecmascript'
+  _datamodel: 'ecmascript',
 };
 
 // Execute entry actions
@@ -316,6 +316,7 @@ async run(state: InternalState): Promise<InternalState> {
 ```
 
 This ensures that:
+
 - All executable children are processed sequentially
 - Children are executed in document order
 - State changes are accumulated across all children
@@ -455,6 +456,7 @@ Entry actions can handle errors through:
 This implementation follows the [W3C SCXML specification](https://www.w3.org/TR/scxml/). The `<onentry>` element is defined in [Section 3.8.1](https://www.w3.org/TR/scxml/#onentry) of the specification.
 
 Key specification compliance:
+
 - Container for executable content during state entry
 - Executes children in document order
 - Integrates with state machine entry semantics

@@ -14,19 +14,28 @@ const SCXML_DATAMODEL_DESCRIPTION = `The datamodel that this document requires. 
 const SCXMLNodeAttr = BaseNodeAttr.extend({
   initial: z.string().optional(),
   name: z.string().optional(),
-  version: z.enum(SCXML_VERSIONS, { error: `Invalid SCXML version. ${SCXML_VERSION_DESCRIPTION}` })
+  version: z
+    .enum(SCXML_VERSIONS, {
+      error: `Invalid SCXML version. ${SCXML_VERSION_DESCRIPTION}`,
+    })
     .default('1.0')
     .describe(SCXML_VERSION_DESCRIPTION),
-  datamodel: z.enum(SCXML_DATAMODELS, { error: `Invalid datamodel. ${SCXML_DATAMODEL_DESCRIPTION}` })
+  datamodel: z
+    .enum(SCXML_DATAMODELS, {
+      error: `Invalid datamodel. ${SCXML_DATAMODEL_DESCRIPTION}`,
+    })
     .default('ecmascript')
-    .describe(SCXML_DATAMODEL_DESCRIPTION)
-})
+    .describe(SCXML_DATAMODEL_DESCRIPTION),
+});
 
 export type SCXMLNodeType = {
   scxml: z.infer<typeof SCXMLNodeAttr>;
-}
+};
 
-export class SCXMLNode extends BaseNode implements z.infer<typeof SCXMLNodeAttr> {
+export class SCXMLNode
+  extends BaseNode
+  implements z.infer<typeof SCXMLNodeAttr>
+{
   readonly initial: string;
   readonly name: string;
   readonly version: SCXMLVersion;
@@ -44,19 +53,21 @@ export class SCXMLNode extends BaseNode implements z.infer<typeof SCXMLNodeAttr>
   static label = 'scxml';
   static schema = SCXMLNodeAttr;
 
-  static createFromJSON(jsonInput: Record<string, unknown>): CreateFromJsonResponse<SCXMLNode> {
+  static createFromJSON(
+    jsonInput: Record<string, unknown>,
+  ): CreateFromJsonResponse<SCXMLNode> {
     const { success, data, error } = this.schema.safeParse(
-      this.getAttributes(this.label, jsonInput)
+      this.getAttributes(this.label, jsonInput),
     );
 
     if (!success) {
       return { success: false, error, node: undefined };
     }
-    
+
     return {
       success: true,
       node: new SCXMLNode({ scxml: { ...data } }),
-      error: undefined
-    }
+      error: undefined,
+    };
   }
 }

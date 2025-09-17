@@ -7,6 +7,7 @@ The `BaseExecutableNode` class is the specialized base class for all executable 
 BaseExecutableNode serves as the base class for all SCXML elements that represent executable content - actions that can be performed during state machine execution. These nodes are identified by having `isExecutable = true` and implement the `run()` method to perform their specific actions.
 
 Key responsibilities include:
+
 - Marking nodes as executable content
 - Providing the `run()` method contract for state modification
 - Detecting executable children for container nodes
@@ -30,21 +31,22 @@ BaseNode
 
 ### Instance Properties
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `isExecutable` | `boolean` | `true` | Marks node as executable content |
+| Property       | Type      | Default | Description                      |
+| -------------- | --------- | ------- | -------------------------------- |
+| `isExecutable` | `boolean` | `true`  | Marks node as executable content |
 
 ### Inherited Properties
 
 BaseExecutableNode inherits all properties from `BaseNode`:
+
 - `allowChildren`: Controls whether node can contain children
 - `children`: Array of child nodes
 - `content`: Text content of the node
 
 ### Computed Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
+| Property                | Type      | Description                            |
+| ----------------------- | --------- | -------------------------------------- |
 | `hasExecutableChildren` | `boolean` | True if any child nodes are executable |
 
 ## Schema Validation
@@ -71,16 +73,20 @@ Concrete implementations extend this schema with their specific attributes.
 The primary method that defines the executable behavior of the node.
 
 **Base Implementation:**
+
 - Returns the state unchanged (no-op)
 - Must be overridden by concrete implementations
 
 **Parameters:**
+
 - `state` - Current internal state of the state machine
 
 **Returns:**
+
 - Promise resolving to updated `InternalState`
 
 **Contract:**
+
 - Must not mutate the input state directly
 - Should return a new state object with any modifications
 - Should handle errors gracefully and convert to SCXML error events
@@ -92,10 +98,12 @@ The primary method that defines the executable behavior of the node.
 Determines if the node has any executable child nodes.
 
 **Returns:**
+
 - `true` if any child has `isExecutable = true`
 - `false` if no children are executable
 
 **Usage:**
+
 ```typescript
 if (node.hasExecutableChildren) {
   // Execute children using inherited executeAllChildren method
@@ -124,14 +132,14 @@ class CustomExecutableNode extends BaseExecutableNode {
   async run(state: InternalState): Promise<InternalState> {
     // Custom execution logic
     console.log('Executing custom action');
-    
+
     // Return modified state
     return {
       ...state,
       data: {
         ...state.data,
-        customExecuted: true
-      }
+        customExecuted: true,
+      },
     };
   }
 }
@@ -139,7 +147,7 @@ class CustomExecutableNode extends BaseExecutableNode {
 // Usage
 const customNode = new CustomExecutableNode({
   content: '',
-  children: []
+  children: [],
 });
 
 console.log(customNode.isExecutable); // true
@@ -166,7 +174,9 @@ class ActionContainer extends BaseExecutableNode {
     // Check if we have executable children
     if (this.hasExecutableChildren) {
       // Execute all children sequentially
-      for await (const { state: newState } of this.executeAllChildren(currentState)) {
+      for await (const { state: newState } of this.executeAllChildren(
+        currentState,
+      )) {
         currentState = newState;
       }
     }
@@ -181,8 +191,8 @@ const assign1 = new AssignNode({
     location: 'step1',
     expr: '"completed"',
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 
 const assign2 = new AssignNode({
@@ -190,14 +200,14 @@ const assign2 = new AssignNode({
     location: 'step2',
     expr: '"completed"',
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 
 // Create container with children
 const container = new ActionContainer({
   content: '',
-  children: [assign1, assign2]
+  children: [assign1, assign2],
 });
 
 console.log(container.hasExecutableChildren); // true
@@ -211,7 +221,11 @@ console.log(result.data.step2); // "completed"
 ### Error Handling Pattern
 
 ```typescript
-import { BaseExecutableNode, addPendingEvent, fromJsError } from '@your-library/statecharts';
+import {
+  BaseExecutableNode,
+  addPendingEvent,
+  fromJsError,
+} from '@your-library/statecharts';
 
 class SafeExecutableNode extends BaseExecutableNode {
   async run(state: InternalState): Promise<InternalState> {
@@ -229,7 +243,9 @@ class SafeExecutableNode extends BaseExecutableNode {
     }
   }
 
-  private async performRiskyOperation(state: InternalState): Promise<InternalState> {
+  private async performRiskyOperation(
+    state: InternalState,
+  ): Promise<InternalState> {
     // Simulated risky operation
     if (Math.random() < 0.5) {
       throw new Error('Random failure occurred');
@@ -239,8 +255,8 @@ class SafeExecutableNode extends BaseExecutableNode {
       ...state,
       data: {
         ...state.data,
-        operationSucceeded: true
-      }
+        operationSucceeded: true,
+      },
     };
   }
 }
@@ -249,7 +265,10 @@ class SafeExecutableNode extends BaseExecutableNode {
 ### Expression Evaluation Pattern
 
 ```typescript
-import { BaseExecutableNode, evaluateExpression } from '@your-library/statecharts';
+import {
+  BaseExecutableNode,
+  evaluateExpression,
+} from '@your-library/statecharts';
 
 class ExpressionNode extends BaseExecutableNode {
   private expression: string;
@@ -268,8 +287,8 @@ class ExpressionNode extends BaseExecutableNode {
         ...state,
         data: {
           ...state.data,
-          expressionResult: result
-        }
+          expressionResult: result,
+        },
       };
     } catch (error) {
       // Handle expression evaluation errors
@@ -282,7 +301,7 @@ class ExpressionNode extends BaseExecutableNode {
 // Usage
 const exprNode = new ExpressionNode(
   { content: '', children: [] },
-  'Math.random() * 100'
+  'Math.random() * 100',
 );
 
 const result = await exprNode.run(initialState);
@@ -351,14 +370,14 @@ class RaiseNode extends BaseExecutableNode {
         origin: '',
         origintype: '',
         invokeid: '',
-        data: {}
+        data: {},
       };
 
       // Add to pending internal events
       const pendingEvents = state._pendingInternalEvents || [];
       return {
         ...state,
-        _pendingInternalEvents: [...pendingEvents, eventToRaise]
+        _pendingInternalEvents: [...pendingEvents, eventToRaise],
       };
     } catch (error) {
       // Handle error by generating error event
@@ -392,8 +411,8 @@ class DataNode extends BaseExecutableNode {
       ...state,
       data: {
         ...state.data,
-        [this.id]: value
-      }
+        [this.id]: value,
+      },
     };
   }
 }
@@ -450,14 +469,22 @@ class OnExitNode extends BaseExecutableNode {
 ### Conditional Execution
 
 ```typescript
-import { BaseExecutableNode, evaluateExpression } from '@your-library/statecharts';
+import {
+  BaseExecutableNode,
+  evaluateExpression,
+} from '@your-library/statecharts';
 
 class ConditionalNode extends BaseExecutableNode {
   private condition: string;
   private thenAction: BaseExecutableNode;
   private elseAction?: BaseExecutableNode;
 
-  constructor(data: any, condition: string, thenAction: BaseExecutableNode, elseAction?: BaseExecutableNode) {
+  constructor(
+    data: any,
+    condition: string,
+    thenAction: BaseExecutableNode,
+    elseAction?: BaseExecutableNode,
+  ) {
     super(data);
     this.condition = condition;
     this.thenAction = thenAction;
@@ -531,7 +558,10 @@ import { BaseExecutableNode } from '@your-library/statecharts';
 class AsyncNode extends BaseExecutableNode {
   private asyncOperation: (state: InternalState) => Promise<any>;
 
-  constructor(data: any, asyncOperation: (state: InternalState) => Promise<any>) {
+  constructor(
+    data: any,
+    asyncOperation: (state: InternalState) => Promise<any>,
+  ) {
     super(data);
     this.asyncOperation = asyncOperation;
   }
@@ -546,8 +576,8 @@ class AsyncNode extends BaseExecutableNode {
         ...state,
         data: {
           ...state.data,
-          asyncResult: result
-        }
+          asyncResult: result,
+        },
       };
     } catch (error) {
       // Handle async errors
@@ -560,22 +590,19 @@ class AsyncNode extends BaseExecutableNode {
         invokeid: '',
         data: {
           error: error.message,
-          source: 'async-operation'
-        }
+          source: 'async-operation',
+        },
       });
     }
   }
 }
 
 // Usage
-const asyncNode = new AsyncNode(
-  { content: '', children: [] },
-  async (state) => {
-    // Simulate async API call
-    await new Promise(resolve => setTimeout(resolve, 100));
-    return { timestamp: Date.now(), status: 'success' };
-  }
-);
+const asyncNode = new AsyncNode({ content: '', children: [] }, async state => {
+  // Simulate async API call
+  await new Promise(resolve => setTimeout(resolve, 100));
+  return { timestamp: Date.now(), status: 'success' };
+});
 ```
 
 ## Testing Patterns
@@ -590,7 +617,7 @@ describe('BaseExecutableNode', () => {
     it('should be marked as executable', () => {
       const node = new BaseExecutableNode({
         content: '',
-        children: []
+        children: [],
       });
 
       expect(node.isExecutable).toBe(true);
@@ -599,7 +626,7 @@ describe('BaseExecutableNode', () => {
     it('should detect executable children', () => {
       const executableChild = new BaseExecutableNode({
         content: '',
-        children: []
+        children: [],
       });
 
       const nonExecutableChild = new (class extends BaseNode {
@@ -611,7 +638,7 @@ describe('BaseExecutableNode', () => {
 
       const parent = new BaseExecutableNode({
         content: '',
-        children: [executableChild, nonExecutableChild]
+        children: [executableChild, nonExecutableChild],
       });
 
       expect(parent.hasExecutableChildren).toBe(true);
@@ -627,7 +654,7 @@ describe('BaseExecutableNode', () => {
 
       const parent = new BaseExecutableNode({
         content: '',
-        children: [nonExecutableChild]
+        children: [nonExecutableChild],
       });
 
       expect(parent.hasExecutableChildren).toBe(false);
@@ -638,12 +665,12 @@ describe('BaseExecutableNode', () => {
     it('should return state unchanged in base implementation', async () => {
       const node = new BaseExecutableNode({
         content: '',
-        children: []
+        children: [],
       });
 
       const initialState: InternalState = {
         data: { test: 'value' },
-        _datamodel: 'ecmascript'
+        _datamodel: 'ecmascript',
       };
 
       const result = await node.run(initialState);
@@ -659,20 +686,20 @@ describe('BaseExecutableNode', () => {
             ...state,
             data: {
               ...state.data,
-              executed: true
-            }
+              executed: true,
+            },
           };
         }
       }
 
       const node = new CustomExecutableNode({
         content: '',
-        children: []
+        children: [],
       });
 
       const initialState: InternalState = {
         data: {},
-        _datamodel: 'ecmascript'
+        _datamodel: 'ecmascript',
       };
 
       const result = await node.run(initialState);
@@ -702,13 +729,13 @@ describe('BaseExecutableNode', () => {
 
       const parent = new BaseExecutableNode({
         content: '',
-        children: [child1, child2]
+        children: [child1, child2],
       });
       parent.allowChildren = true;
 
       const initialState: InternalState = {
         data: {},
-        _datamodel: 'ecmascript'
+        _datamodel: 'ecmascript',
       };
 
       // Execute children manually (base implementation doesn't do this automatically)
@@ -799,8 +826,8 @@ class RobustExecutableNode extends BaseExecutableNode {
         data: {
           error: error.message,
           source: this.constructor.name,
-          location: 'run-method'
-        }
+          location: 'run-method',
+        },
       };
 
       return addPendingEvent(state, errorEvent);
@@ -832,8 +859,8 @@ class ValidatedExecutableNode extends BaseExecutableNode {
         invokeid: '',
         data: {
           error: 'Preconditions not met for execution',
-          source: this.constructor.name
-        }
+          source: this.constructor.name,
+        },
       });
     }
 
@@ -850,8 +877,8 @@ class ValidatedExecutableNode extends BaseExecutableNode {
         invokeid: '',
         data: {
           error: 'Postconditions not met after execution',
-          source: this.constructor.name
-        }
+          source: this.constructor.name,
+        },
       });
     }
 
@@ -868,7 +895,9 @@ class ValidatedExecutableNode extends BaseExecutableNode {
     return true;
   }
 
-  private async performValidatedOperation(state: InternalState): Promise<InternalState> {
+  private async performValidatedOperation(
+    state: InternalState,
+  ): Promise<InternalState> {
     // Safe operation implementation
     return state;
   }

@@ -7,19 +7,22 @@ import { evaluateExpression } from '../parser/expressions.nodejs';
 const TransitionNodeAttr = BaseNodeAttr.extend({
   event: z.string().optional().default(''),
   target: z.string().min(1),
-  cond: z.string().optional()
-})
+  cond: z.string().optional(),
+});
 
 export type TransitionNodeType = {
-    transition: z.infer<typeof TransitionNodeAttr>;
-}
+  transition: z.infer<typeof TransitionNodeAttr>;
+};
 
 /**
  * Class implementation of the SCXML <transition> node.
- * 
+ *
  * @see https://www.w3.org/TR/scxml/#transition
  */
-export class TransitionNode extends BaseNode implements z.infer<typeof TransitionNodeAttr> {
+export class TransitionNode
+  extends BaseNode
+  implements z.infer<typeof TransitionNodeAttr>
+{
   readonly event: string;
   readonly target: string;
   readonly cond: string | undefined;
@@ -34,7 +37,6 @@ export class TransitionNode extends BaseNode implements z.infer<typeof Transitio
     this.event = transition.event;
     this.target = transition.target;
     this.cond = transition.cond;
-    
   }
 
   get isEventLess() {
@@ -68,8 +70,8 @@ export class TransitionNode extends BaseNode implements z.infer<typeof Transitio
         invokeid: '',
         data: {
           error: (err as Error).message,
-          source: 'transition'
-        }
+          source: 'transition',
+        },
       });
 
       return false;
@@ -96,29 +98,31 @@ export class TransitionNode extends BaseNode implements z.infer<typeof Transitio
             invokeid: '',
             data: {
               error: (error as Error).message,
-              source: 'transition'
-            }
+              source: 'transition',
+            },
           });
         }
       }
     }
-    
+
     return currentState;
   }
 
-  static createFromJSON(jsonInput: Record<string, unknown>): CreateFromJsonResponse<TransitionNode> {
+  static createFromJSON(
+    jsonInput: Record<string, unknown>,
+  ): CreateFromJsonResponse<TransitionNode> {
     const { success, data, error } = this.schema.safeParse(
-      this.getAttributes(this.label, jsonInput)
+      this.getAttributes(this.label, jsonInput),
     );
 
     if (!success) {
       return { success: false, error, node: undefined };
     }
-    
+
     return {
       success: true,
       node: new TransitionNode({ transition: data }),
-      error: undefined
-    }
+      error: undefined,
+    };
   }
 }

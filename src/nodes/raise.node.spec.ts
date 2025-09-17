@@ -1,4 +1,3 @@
-
 import { RaiseNode } from './raise.node';
 import { InternalState, SCXMLEvent } from '../models/internalState';
 
@@ -14,11 +13,11 @@ describe('Node: <raise>', () => {
         origin: 'test-origin',
         origintype: 'test-origin-type',
         invokeid: 'test-invoke-id',
-        data: { currentData: 'test' }
+        data: { currentData: 'test' },
       },
       _datamodel: 'ecmascript', // Add datamodel for expression evaluation
       data: { counter: 1 },
-      _pendingInternalEvents: []
+      _pendingInternalEvents: [],
     };
   });
 
@@ -28,8 +27,8 @@ describe('Node: <raise>', () => {
         raise: {
           event: 'test.event',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       expect(raiseNode.event).toBe('test.event');
@@ -41,8 +40,8 @@ describe('Node: <raise>', () => {
         raise: {
           eventexpr: 'dynamic.event',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       expect(raiseNode.eventexpr).toBe('dynamic.event');
@@ -56,8 +55,8 @@ describe('Node: <raise>', () => {
         raise: {
           event: 'test.event',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const result = await raiseNode.run(mockEventState);
@@ -70,7 +69,7 @@ describe('Node: <raise>', () => {
         origin: '',
         origintype: '',
         invokeid: '',
-        data: {}
+        data: {},
       });
 
       // Should preserve original state data
@@ -83,8 +82,8 @@ describe('Node: <raise>', () => {
         raise: {
           eventexpr: '"dynamic.event"', // Proper JavaScript string literal
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const result = await raiseNode.run(mockEventState);
@@ -97,7 +96,7 @@ describe('Node: <raise>', () => {
         origin: '',
         origintype: '',
         invokeid: '',
-        data: {}
+        data: {},
       });
     });
 
@@ -109,20 +108,20 @@ describe('Node: <raise>', () => {
         origin: '',
         origintype: '',
         invokeid: '',
-        data: {}
+        data: {},
       };
 
       const stateWithExistingEvents: InternalState = {
         ...mockEventState,
-        _pendingInternalEvents: [existingEvent]
+        _pendingInternalEvents: [existingEvent],
       };
 
       const raiseNode = new RaiseNode({
         raise: {
           event: 'new.event',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const result = await raiseNode.run(stateWithExistingEvents);
@@ -135,15 +134,15 @@ describe('Node: <raise>', () => {
     it('should handle state with no existing pending events', async () => {
       const stateWithoutPendingEvents: InternalState = {
         ...mockEventState,
-        _pendingInternalEvents: undefined
+        _pendingInternalEvents: undefined,
       };
 
       const raiseNode = new RaiseNode({
         raise: {
           event: 'test.event',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const result = await raiseNode.run(stateWithoutPendingEvents);
@@ -160,15 +159,17 @@ describe('Node: <raise>', () => {
             raise: {
               event: 'test.event', // Valid construction
               content: '',
-              children: []
-            }
+              children: [],
+            },
           });
         }
 
         async run(state: InternalState): Promise<InternalState> {
           // Simulate the error condition by throwing the same error
           try {
-            throw new Error('RaiseNode must have either event or eventexpr attribute');
+            throw new Error(
+              'RaiseNode must have either event or eventexpr attribute',
+            );
           } catch (err) {
             // Per SCXML spec: place error event in internal event queue when raise fails
             // Using structured error naming: error.<label>.<type>
@@ -189,15 +190,15 @@ describe('Node: <raise>', () => {
               invokeid: '',
               data: {
                 error: errorMessage,
-                source: 'raise'
-              }
+                source: 'raise',
+              },
             };
 
             const pendingEvents = state._pendingInternalEvents || [];
 
             return {
               ...state,
-              _pendingInternalEvents: [...pendingEvents, errorEvent]
+              _pendingInternalEvents: [...pendingEvents, errorEvent],
             };
           }
         }
@@ -216,8 +217,8 @@ describe('Node: <raise>', () => {
         invokeid: '',
         data: {
           error: 'RaiseNode must have either event or eventexpr attribute',
-          source: 'raise'
-        }
+          source: 'raise',
+        },
       });
     });
 
@@ -229,8 +230,8 @@ describe('Node: <raise>', () => {
             raise: {
               event: 'test.event', // Valid construction
               content: '',
-              children: []
-            }
+              children: [],
+            },
           });
         }
 
@@ -258,15 +259,15 @@ describe('Node: <raise>', () => {
               invokeid: '',
               data: {
                 error: errorMessage,
-                source: 'raise'
-              }
+                source: 'raise',
+              },
             };
 
             const pendingEvents = state._pendingInternalEvents || [];
 
             return {
               ...state,
-              _pendingInternalEvents: [...pendingEvents, errorEvent]
+              _pendingInternalEvents: [...pendingEvents, errorEvent],
             };
           }
         }
@@ -285,8 +286,8 @@ describe('Node: <raise>', () => {
         invokeid: '',
         data: {
           error: 'Some unexpected error occurred',
-          source: 'raise'
-        }
+          source: 'raise',
+        },
       });
     });
   });
@@ -295,8 +296,8 @@ describe('Node: <raise>', () => {
     it('should create RaiseNode from valid JSON with event attribute', () => {
       const jsonInput = {
         raise: {
-          event: 'test.event'
-        }
+          event: 'test.event',
+        },
       };
 
       const result = RaiseNode.createFromJSON(jsonInput);
@@ -310,8 +311,8 @@ describe('Node: <raise>', () => {
     it('should create RaiseNode from valid JSON with eventexpr attribute', () => {
       const jsonInput = {
         raise: {
-          eventexpr: 'dynamic.event'
-        }
+          eventexpr: 'dynamic.event',
+        },
       };
 
       const result = RaiseNode.createFromJSON(jsonInput);
@@ -326,8 +327,8 @@ describe('Node: <raise>', () => {
       const jsonInput = {
         raise: {
           event: 'test.event',
-          eventexpr: 'dynamic.event'
-        }
+          eventexpr: 'dynamic.event',
+        },
       };
 
       const result = RaiseNode.createFromJSON(jsonInput);
@@ -339,7 +340,7 @@ describe('Node: <raise>', () => {
 
     it('should fail validation when neither event nor eventexpr are provided', () => {
       const jsonInput = {
-        raise: {}
+        raise: {},
       };
 
       const result = RaiseNode.createFromJSON(jsonInput);

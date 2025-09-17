@@ -1,47 +1,70 @@
-import z from "zod";
-import { BaseNode, Node } from "../models/base";
-import { CreateFromJsonResponse} from "../models/methods";
-import { DataNode, DataModelNode, FinalNode, StateNode, TransitionNode, AssignNode } from "../nodes";
-import { InitialNode } from "../nodes/initial.node";
-import { SCXMLNode } from "../nodes/scxml.node";
-import { ParallelNode } from "../nodes/parallel.node";
-import { OnExitNode } from "../nodes/onexit.node";
-import { OnEntryNode } from "../nodes/onentry.node";
-import { RaiseNode } from "../nodes/raise.node";
+import z from 'zod';
+import { BaseNode, Node } from '../models/base';
+import { CreateFromJsonResponse } from '../models/methods';
+import {
+  DataNode,
+  DataModelNode,
+  FinalNode,
+  StateNode,
+  TransitionNode,
+  AssignNode,
+} from '../nodes';
+import { InitialNode } from '../nodes/initial.node';
+import { SCXMLNode } from '../nodes/scxml.node';
+import { ParallelNode } from '../nodes/parallel.node';
+import { OnExitNode } from '../nodes/onexit.node';
+import { OnEntryNode } from '../nodes/onentry.node';
+import { RaiseNode } from '../nodes/raise.node';
 
-type NodeInitMethod<T extends BaseNode = BaseNode> = (input: Record<string, unknown>) => CreateFromJsonResponse<T>
-
+type NodeInitMethod<T extends BaseNode = BaseNode> = (
+  input: Record<string, unknown>,
+) => CreateFromJsonResponse<T>;
 
 const nodeMap: Record<string, NodeInitMethod> = {
-  'assign': (input: Record<string, unknown>) => AssignNode.createFromJSON(input),
-  'data': (input: Record<string, unknown>) => DataNode.createFromJSON(input),
-  'datamodel': (input: Record<string, unknown>) => DataModelNode.createFromJSON(input),
-  'final': (input: Record<string, unknown>) => FinalNode.createFromJSON(input),
-  'initial': (input: Record<string, unknown>) => InitialNode.createFromJSON(input),
-  'onentry': (input: Record<string, unknown>) => OnEntryNode.createFromJSON(input),
-  'onexit': (input: Record<string, unknown>) => OnExitNode.createFromJSON(input),
-  'parallel': (input: Record<string, unknown>) => ParallelNode.createFromJSON(input),
-  'raise': (input: Record<string, unknown>) => RaiseNode.createFromJSON(input),
-  'scxml': (input: Record<string, unknown>) => SCXMLNode.createFromJSON(input),
-  'state': (input: Record<string, unknown>) => StateNode.createFromJSON(input),
-  'transition': (input: Record<string, unknown>) => TransitionNode.createFromJSON(input),
-}
+  assign: (input: Record<string, unknown>) => AssignNode.createFromJSON(input),
+  data: (input: Record<string, unknown>) => DataNode.createFromJSON(input),
+  datamodel: (input: Record<string, unknown>) =>
+    DataModelNode.createFromJSON(input),
+  final: (input: Record<string, unknown>) => FinalNode.createFromJSON(input),
+  initial: (input: Record<string, unknown>) =>
+    InitialNode.createFromJSON(input),
+  onentry: (input: Record<string, unknown>) =>
+    OnEntryNode.createFromJSON(input),
+  onexit: (input: Record<string, unknown>) => OnExitNode.createFromJSON(input),
+  parallel: (input: Record<string, unknown>) =>
+    ParallelNode.createFromJSON(input),
+  raise: (input: Record<string, unknown>) => RaiseNode.createFromJSON(input),
+  scxml: (input: Record<string, unknown>) => SCXMLNode.createFromJSON(input),
+  state: (input: Record<string, unknown>) => StateNode.createFromJSON(input),
+  transition: (input: Record<string, unknown>) =>
+    TransitionNode.createFromJSON(input),
+};
 
-
-export function mergeMaps(sourceMap: Map<string, BaseNode>, targetMap: Map<string, BaseNode>) {
-  for (const [ key, value ] of sourceMap) {
+export function mergeMaps(
+  sourceMap: Map<string, BaseNode>,
+  targetMap: Map<string, BaseNode>,
+) {
+  for (const [key, value] of sourceMap) {
     targetMap.set(key, value);
   }
 }
 
-export function appendToMapKey(suffix: string, sourceMap: Map<string, BaseNode>) {
+export function appendToMapKey(
+  suffix: string,
+  sourceMap: Map<string, BaseNode>,
+) {
   return new Map(
-    Array.from(sourceMap.entries()).map(([key, value]) => [`${suffix}.${key}`, value])
-  )
+    Array.from(sourceMap.entries()).map(([key, value]) => [
+      `${suffix}.${key}`,
+      value,
+    ]),
+  );
 }
 
-export function parseType(input: Record<string, unknown>): CreateFromJsonResponse<BaseNode> {
-  const [ key ] = Object.keys(input);
+export function parseType(
+  input: Record<string, unknown>,
+): CreateFromJsonResponse<BaseNode> {
+  const [key] = Object.keys(input);
 
   if (key && key in nodeMap) {
     const nodeInitMethod = nodeMap[key];
@@ -54,10 +77,9 @@ export function parseType(input: Record<string, unknown>): CreateFromJsonRespons
   return {
     success: false,
     node: undefined,
-    error: new Error(`Unknown node type: ${key || 'undefined'}`)
+    error: new Error(`Unknown node type: ${key || 'undefined'}`),
   };
 }
-
 
 interface ParseResponse<T extends BaseNode = BaseNode> {
   root?: T | undefined;
@@ -65,33 +87,36 @@ interface ParseResponse<T extends BaseNode = BaseNode> {
   error: Array<z.ZodError | Error>;
 }
 
-export function parse<T extends BaseNode = BaseNode>(input: Node): ParseResponse<T> {
+export function parse<T extends BaseNode = BaseNode>(
+  input: Node,
+): ParseResponse<T> {
   // Create a map to store children with ids
   const childrenWithIds = new Map<string, BaseNode>();
-  
+
   // Parse the Node
   const { success, node, error } = parseType(input);
 
   // Handle Error
   if (!success) {
-    
     // If there was an error parsing the node, we should record it
     if (error) {
-      return { 
+      return {
         root: undefined,
         identifiableChildren: childrenWithIds,
-        error: [error]
+        error: [error],
       };
     }
-    
+
     // We should not reach this state but if we do, we record the issue
     // and return to the caller
-    return { 
+    return {
       root: undefined,
       identifiableChildren: childrenWithIds,
       error: [
-        new Error(`Node could not be loaded even though it contained the correct schema`)
-      ]
+        new Error(
+          `Node could not be loaded even though it contained the correct schema`,
+        ),
+      ],
     };
   }
 
@@ -99,63 +124,56 @@ export function parse<T extends BaseNode = BaseNode>(input: Node): ParseResponse
   const nodeLabel = node.label;
 
   const childIssues: ParseResponse['error'] = [];
-  
+
   // Parse children and assign to parent
-  if (
-    node.allowChildren &&
-    Array.isArray(input[nodeLabel]?.children)
-  ) {
-    const parsedChildren = input[nodeLabel].children
-      .map((child) => {
-        // Parse the child
-        const childNode = parse(child);
+  if (node.allowChildren && Array.isArray(input[nodeLabel]?.children)) {
+    const parsedChildren = input[nodeLabel].children.map(child => {
+      // Parse the child
+      const childNode = parse(child);
 
-        if (!childNode.root) {
-          childIssues.push(...childNode.error);
-          return;
-        }
+      if (!childNode.root) {
+        childIssues.push(...childNode.error);
+        return;
+      }
 
-        // If there were any issues parsing the child, we should
-        // record them and continue
-        if (childNode.error.length > 0) {
-          childIssues.push(...childNode.error);
-          return;
-        }
+      // If there were any issues parsing the child, we should
+      // record them and continue
+      if (childNode.error.length > 0) {
+        childIssues.push(...childNode.error);
+        return;
+      }
 
+      // Capture the child node in the map so we can access it
+      // later during execution
+      if ('id' in childNode.root) {
+        childrenWithIds.set(childNode.root.id as string, childNode.root);
+      }
 
-        // Capture the child node in the map so we can access it
-        // later during execution
-        if ('id' in childNode.root) {
-          childrenWithIds.set(childNode.root.id as string, childNode.root);
-        }
+      // Add the child's children to the map if they have an id
+      if (childNode.identifiableChildren.size > 0) {
+        for (const [key, value] of childNode.identifiableChildren.entries()) {
+          let nodeId = key;
 
-        // Add the child's children to the map if they have an id
-        if (childNode.identifiableChildren.size > 0) {
-          for (const [ key, value ] of childNode.identifiableChildren.entries()) {
-            let nodeId = key;
-
-
-            if ('id' in childNode.root) {
-              nodeId = `${childNode.root.id}.${key}`;
-            }
-
-
-            childrenWithIds.set(nodeId, value);
+          if ('id' in childNode.root) {
+            nodeId = `${childNode.root.id}.${key}`;
           }
+
+          childrenWithIds.set(nodeId, value);
         }
+      }
 
-        // Return the child
-        return childNode.root;
-      })
+      // Return the child
+      return childNode.root;
+    });
 
-      // Filter out any undefined children
-      node.children = parsedChildren.filter(child => child !== undefined);
+    // Filter out any undefined children
+    node.children = parsedChildren.filter(child => child !== undefined);
   }
 
   // Return the node
   return {
-      root: node as T,
-      identifiableChildren: childrenWithIds,
-      error: childIssues
-    };
+    root: node as T,
+    identifiableChildren: childrenWithIds,
+    error: childIssues,
+  };
 }

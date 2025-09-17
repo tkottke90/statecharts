@@ -1,9 +1,15 @@
-import { BaseNode, Node } from "../models";
-import { DataModelNode, DataNode, FinalNode, StateNode, TransitionNode } from "../nodes";
-import { InitialNode } from "../nodes/initial.node";
-import { ParallelNode } from "../nodes/parallel.node";
-import { SCXMLNode } from "../nodes/scxml.node";
-import { mergeMaps, parse, parseType } from "./index";
+import { BaseNode, Node } from '../models';
+import {
+  DataModelNode,
+  DataNode,
+  FinalNode,
+  StateNode,
+  TransitionNode,
+} from '../nodes';
+import { InitialNode } from '../nodes/initial.node';
+import { ParallelNode } from '../nodes/parallel.node';
+import { SCXMLNode } from '../nodes/scxml.node';
+import { mergeMaps, parse, parseType } from './index';
 import SimpleXML from 'simple-xml-to-json';
 
 describe('Parser', () => {
@@ -29,7 +35,7 @@ describe('Parser', () => {
       StateNode.createFromJSON = jest.fn().mockReturnValue({
         success: false,
         error: new Error('Creation failed'),
-        node: undefined
+        node: undefined,
       });
 
       const input = { state: { content: '', children: [] } } as Node;
@@ -52,12 +58,14 @@ describe('Parser', () => {
   describe('Node Without Children', () => {
     it('should parse node with allowChildren=false', () => {
       // Arrange
-      const mockNode = new FinalNode({ final: { id: 'end', content: '', children: [] } });
+      const mockNode = new FinalNode({
+        final: { id: 'end', content: '', children: [] },
+      });
       const originalCreateFromJSON = FinalNode.createFromJSON;
       FinalNode.createFromJSON = jest.fn().mockReturnValue({
         success: true,
         error: undefined,
-        node: mockNode
+        node: mockNode,
       });
 
       const input = { final: { id: 'end', content: '', children: [] } } as Node;
@@ -77,15 +85,19 @@ describe('Parser', () => {
 
     it('should parse node with allowChildren=true but no children in input', () => {
       // Arrange
-      const mockNode = new StateNode({ state: { id: 'main', content: '', children: [] } });
+      const mockNode = new StateNode({
+        state: { id: 'main', content: '', children: [] },
+      });
       const originalCreateFromJSON = StateNode.createFromJSON;
       StateNode.createFromJSON = jest.fn().mockReturnValue({
         success: true,
         error: undefined,
-        node: mockNode
+        node: mockNode,
       });
 
-      const input = { state: { id: 'main', content: '', children: [] } } as Node; // No children array
+      const input = {
+        state: { id: 'main', content: '', children: [] },
+      } as Node; // No children array
 
       // Act
       const result = parse(input);
@@ -102,15 +114,29 @@ describe('Parser', () => {
 
     it('should return empty errors array for successful childless nodes', () => {
       // Arrange
-      const mockNode = new TransitionNode({ transition: { event: 'click', target: 'next', content: '', children: [] } });
+      const mockNode = new TransitionNode({
+        transition: {
+          event: 'click',
+          target: 'next',
+          content: '',
+          children: [],
+        },
+      });
       const originalCreateFromJSON = TransitionNode.createFromJSON;
       TransitionNode.createFromJSON = jest.fn().mockReturnValue({
         success: true,
         error: undefined,
-        node: mockNode
+        node: mockNode,
       });
 
-      const input = { transition: { event: 'click', target: 'next', content: '', children: [] } } as Node;
+      const input = {
+        transition: {
+          event: 'click',
+          target: 'next',
+          content: '',
+          children: [],
+        },
+      } as Node;
 
       // Act
       const result = parse(input);
@@ -128,29 +154,36 @@ describe('Parser', () => {
   describe('Node With Children - Success Cases', () => {
     it('should parse node with children and build identifiable children map', () => {
       // Arrange
-      const mockParentNode = new StateNode({ state: { id: 'parent', content: '', children: [] } });
-      const mockChild1 = new StateNode({ state: { id: 'child1', content: '', children: [] } });
-      const mockChild2 = new FinalNode({ final: { id: 'child2', content: '', children: [] } });
+      const mockParentNode = new StateNode({
+        state: { id: 'parent', content: '', children: [] },
+      });
+      const mockChild1 = new StateNode({
+        state: { id: 'child1', content: '', children: [] },
+      });
+      const mockChild2 = new FinalNode({
+        final: { id: 'child2', content: '', children: [] },
+      });
 
       const originalStateCreateFromJSON = StateNode.createFromJSON;
       const originalFinalCreateFromJSON = FinalNode.createFromJSON;
 
-      StateNode.createFromJSON = jest.fn()
+      StateNode.createFromJSON = jest
+        .fn()
         .mockReturnValueOnce({
           success: true,
           error: undefined,
-          node: mockParentNode
+          node: mockParentNode,
         })
         .mockReturnValueOnce({
           success: true,
           error: undefined,
-          node: mockChild1
+          node: mockChild1,
         });
 
       FinalNode.createFromJSON = jest.fn().mockReturnValue({
         success: true,
         error: undefined,
-        node: mockChild2
+        node: mockChild2,
       });
 
       const input = {
@@ -159,9 +192,9 @@ describe('Parser', () => {
           content: '',
           children: [
             { state: { id: 'child1', content: '', children: [] } },
-            { final: { id: 'child2', content: '', children: [] } }
-          ]
-        }
+            { final: { id: 'child2', content: '', children: [] } },
+          ],
+        },
       } as Node;
 
       // Act
@@ -184,8 +217,17 @@ describe('Parser', () => {
 
     it('should handle children without IDs', () => {
       // Arrange
-      const mockParentNode = new StateNode({ state: { id: 'parent', content: '', children: [] } });
-      const mockChild = new TransitionNode({ transition: { event: 'click', target: 'next', content: '', children: [] } });
+      const mockParentNode = new StateNode({
+        state: { id: 'parent', content: '', children: [] },
+      });
+      const mockChild = new TransitionNode({
+        transition: {
+          event: 'click',
+          target: 'next',
+          content: '',
+          children: [],
+        },
+      });
 
       const originalStateCreateFromJSON = StateNode.createFromJSON;
       const originalTransitionCreateFromJSON = TransitionNode.createFromJSON;
@@ -193,13 +235,13 @@ describe('Parser', () => {
       StateNode.createFromJSON = jest.fn().mockReturnValue({
         success: true,
         error: undefined,
-        node: mockParentNode
+        node: mockParentNode,
       });
 
       TransitionNode.createFromJSON = jest.fn().mockReturnValue({
         success: true,
         error: undefined,
-        node: mockChild
+        node: mockChild,
       });
 
       const input = {
@@ -207,9 +249,16 @@ describe('Parser', () => {
           id: 'parent',
           content: '',
           children: [
-            { transition: { event: 'click', target: 'next', content: '', children: [] } }
-          ]
-        }
+            {
+              transition: {
+                event: 'click',
+                target: 'next',
+                content: '',
+                children: [],
+              },
+            },
+          ],
+        },
       } as Node;
 
       // Act
@@ -229,26 +278,33 @@ describe('Parser', () => {
 
     it('should return empty errors array when all children parse successfully', () => {
       // Arrange
-      const mockParentNode = new StateNode({ state: { id: 'parent', content: '', children: [] } });
-      const mockChild1 = new StateNode({ state: { id: 'child1', content: '', children: [] } });
-      const mockChild2 = new StateNode({ state: { id: 'child2', content: '', children: [] } });
+      const mockParentNode = new StateNode({
+        state: { id: 'parent', content: '', children: [] },
+      });
+      const mockChild1 = new StateNode({
+        state: { id: 'child1', content: '', children: [] },
+      });
+      const mockChild2 = new StateNode({
+        state: { id: 'child2', content: '', children: [] },
+      });
 
       const originalCreateFromJSON = StateNode.createFromJSON;
-      StateNode.createFromJSON = jest.fn()
+      StateNode.createFromJSON = jest
+        .fn()
         .mockReturnValueOnce({
           success: true,
           error: undefined,
-          node: mockParentNode
+          node: mockParentNode,
         })
         .mockReturnValueOnce({
           success: true,
           error: undefined,
-          node: mockChild1
+          node: mockChild1,
         })
         .mockReturnValueOnce({
           success: true,
           error: undefined,
-          node: mockChild2
+          node: mockChild2,
         });
 
       const input = {
@@ -257,9 +313,9 @@ describe('Parser', () => {
           content: '',
           children: [
             { state: { id: 'child1', content: '', children: [] } },
-            { state: { id: 'child2', content: '', children: [] } }
-          ]
-        }
+            { state: { id: 'child2', content: '', children: [] } },
+          ],
+        },
       } as Node;
 
       // Act
@@ -279,25 +335,30 @@ describe('Parser', () => {
   describe('Node With Children - Error Handling', () => {
     it('should collect errors from failed child parsing and continue processing remaining children', () => {
       // Arrange
-      const mockParentNode = new StateNode({ state: { id: 'parent', content: '', children: [] } });
-      const mockSuccessChild = new StateNode({ state: { id: 'success', content: '', children: [] } });
+      const mockParentNode = new StateNode({
+        state: { id: 'parent', content: '', children: [] },
+      });
+      const mockSuccessChild = new StateNode({
+        state: { id: 'success', content: '', children: [] },
+      });
 
       const originalCreateFromJSON = StateNode.createFromJSON;
-      StateNode.createFromJSON = jest.fn()
+      StateNode.createFromJSON = jest
+        .fn()
         .mockReturnValueOnce({
           success: true,
           error: undefined,
-          node: mockParentNode
+          node: mockParentNode,
         })
         .mockReturnValueOnce({
           success: false,
           error: new Error('Child parsing failed'),
-          node: undefined
+          node: undefined,
         })
         .mockReturnValueOnce({
           success: true,
           error: undefined,
-          node: mockSuccessChild
+          node: mockSuccessChild,
         });
 
       const input = {
@@ -306,9 +367,9 @@ describe('Parser', () => {
           content: '',
           children: [
             { state: { id: 'failed', content: '', children: [] } },
-            { state: { id: 'success', content: '', children: [] } }
-          ]
-        }
+            { state: { id: 'success', content: '', children: [] } },
+          ],
+        },
       } as Node;
 
       // Act
@@ -339,13 +400,13 @@ describe('Parser', () => {
         <state id="yellow"></state>
         <state id="red"></state>
       </state>
-      `)
+      `);
 
       // Act
-      const result = parse(xmlJson)
+      const result = parse(xmlJson);
 
       // Assert
-      expect(result.error.length).toBeGreaterThan(0)
+      expect(result.error.length).toBeGreaterThan(0);
     });
 
     it('should skip failed children but continue processing subsequent children', () => {
@@ -364,40 +425,43 @@ describe('Parser', () => {
         <state id="yellow"></state>
         <state id="red"></state>
       </state>
-      `)
+      `);
 
       // Act
-      const result = parse(xmlJson)
+      const result = parse(xmlJson);
 
       // Assert
 
       // We expect that the first state node will fail because the `id` property is required
-      expect(result.error.length).toBe(1)
+      expect(result.error.length).toBe(1);
 
       // We expect that the other 2 child nodes should be parsed to also check for errors.
-      expect(result.root?.children.length).toBe(2)
+      expect(result.root?.children.length).toBe(2);
     });
 
     it('should accumulate errors from multiple failed children', () => {
       // Arrange
-      const mockParentNode = new StateNode({ state: { id: 'parent', content: '', children: [] } });
+      const mockParentNode = new StateNode({
+        state: { id: 'parent', content: '', children: [] },
+      });
 
       const originalCreateFromJSON = StateNode.createFromJSON;
-      StateNode.createFromJSON = jest.fn()
+      StateNode.createFromJSON = jest
+        .fn()
         .mockReturnValueOnce({
           success: true,
           error: undefined,
-          node: mockParentNode
+          node: mockParentNode,
         })
         .mockReturnValueOnce({
           success: false,
           error: new Error('First child failed'),
-          node: undefined
+          node: undefined,
         })
         .mockReturnValueOnce({
           success: false,
           error: new Error('Second child failed'),
-          node: undefined
+          node: undefined,
         });
 
       const input = {
@@ -406,9 +470,9 @@ describe('Parser', () => {
           content: '',
           children: [
             { state: { id: 'child1', content: '', children: [] } },
-            { state: { id: 'child2', content: '', children: [] } }
-          ]
-        }
+            { state: { id: 'child2', content: '', children: [] } },
+          ],
+        },
       } as Node;
 
       // Act
@@ -428,28 +492,33 @@ describe('Parser', () => {
 
     it('should handle mix of successful and failed children', () => {
       // Arrange
-      const mockParentNode = new StateNode({ state: { id: 'parent', content: '', children: [] } });
-      const mockSuccessChild = new FinalNode({ final: { id: 'success', content: '', children: [] } });
+      const mockParentNode = new StateNode({
+        state: { id: 'parent', content: '', children: [] },
+      });
+      const mockSuccessChild = new FinalNode({
+        final: { id: 'success', content: '', children: [] },
+      });
 
       const originalStateCreateFromJSON = StateNode.createFromJSON;
       const originalFinalCreateFromJSON = FinalNode.createFromJSON;
 
-      StateNode.createFromJSON = jest.fn()
+      StateNode.createFromJSON = jest
+        .fn()
         .mockReturnValueOnce({
           success: true,
           error: undefined,
-          node: mockParentNode
+          node: mockParentNode,
         })
         .mockReturnValueOnce({
           success: false,
           error: new Error('State child failed'),
-          node: undefined
+          node: undefined,
         });
 
       FinalNode.createFromJSON = jest.fn().mockReturnValue({
         success: true,
         error: undefined,
-        node: mockSuccessChild
+        node: mockSuccessChild,
       });
 
       const input = {
@@ -458,9 +527,9 @@ describe('Parser', () => {
           content: '',
           children: [
             { state: { id: 'failed', content: '', children: [] } },
-            { final: { id: 'success', content: '', children: [] } }
-          ]
-        }
+            { final: { id: 'success', content: '', children: [] } },
+          ],
+        },
       } as Node;
 
       // Act
@@ -507,7 +576,9 @@ describe('Parser', () => {
       const expectedResponse = { success: true, error: undefined, node: {} };
 
       const originalCreateFromJSON = DataModelNode.createFromJSON;
-      DataModelNode.createFromJSON = jest.fn().mockReturnValue(expectedResponse);
+      DataModelNode.createFromJSON = jest
+        .fn()
+        .mockReturnValue(expectedResponse);
 
       // Act
       const result = parseType(input);
@@ -560,7 +631,9 @@ describe('Parser', () => {
 
     it('should correctly identify parallel node type and call ParallelNode.createFromJSON', () => {
       // Arrange
-      const input = { parallel: { id: 'concurrent', content: '', children: [] } };
+      const input = {
+        parallel: { id: 'concurrent', content: '', children: [] },
+      };
       const expectedResponse = { success: true, error: undefined, node: {} };
 
       const originalCreateFromJSON = ParallelNode.createFromJSON;
@@ -617,11 +690,20 @@ describe('Parser', () => {
 
     it('should correctly identify transition node type and call TransitionNode.createFromJSON', () => {
       // Arrange
-      const input = { transition: { event: 'click', target: 'next', content: '', children: [] } };
+      const input = {
+        transition: {
+          event: 'click',
+          target: 'next',
+          content: '',
+          children: [],
+        },
+      };
       const expectedResponse = { success: true, error: undefined, node: {} };
 
       const originalCreateFromJSON = TransitionNode.createFromJSON;
-      TransitionNode.createFromJSON = jest.fn().mockReturnValue(expectedResponse);
+      TransitionNode.createFromJSON = jest
+        .fn()
+        .mockReturnValue(expectedResponse);
 
       // Act
       const result = parseType(input);
@@ -660,7 +742,7 @@ describe('Parser', () => {
       // Arrange
       const input = {
         state: { id: 'first', content: '', children: [] },
-        final: { id: 'second', content: '', children: [] }
+        final: { id: 'second', content: '', children: [] },
       };
       const expectedResponse = { success: true, error: undefined, node: {} };
 
@@ -685,10 +767,14 @@ describe('Parser', () => {
 
     it('should pass correct input structure to createFromJSON methods', () => {
       // Arrange
-      const input = { state: { id: 'test', content: 'some content', children: [1, 2, 3] } };
+      const input = {
+        state: { id: 'test', content: 'some content', children: [1, 2, 3] },
+      };
 
       const originalCreateFromJSON = StateNode.createFromJSON;
-      StateNode.createFromJSON = jest.fn().mockReturnValue({ success: true, error: undefined, node: {} });
+      StateNode.createFromJSON = jest
+        .fn()
+        .mockReturnValue({ success: true, error: undefined, node: {} });
 
       // Act
       parseType(input);
@@ -708,7 +794,7 @@ describe('Parser', () => {
         success: false,
         error: new Error('Custom error'),
         node: undefined,
-        customProperty: 'should be preserved'
+        customProperty: 'should be preserved',
       };
 
       const originalCreateFromJSON = FinalNode.createFromJSON;
@@ -720,7 +806,9 @@ describe('Parser', () => {
       // Assert
       expect(result).toBe(mockResponse); // Exact same object reference
       expect(result).toEqual(mockResponse); // Same content
-      expect((result as unknown as { customProperty: string }).customProperty).toBe('should be preserved');
+      expect(
+        (result as unknown as { customProperty: string }).customProperty,
+      ).toBe('should be preserved');
 
       // Cleanup
       FinalNode.createFromJSON = originalCreateFromJSON;
@@ -730,9 +818,15 @@ describe('Parser', () => {
   describe('mergeMaps Method', () => {
     it('should merge all entries from source map to target map', () => {
       // Arrange
-      const mockNode1 = new StateNode({ state: { id: 'node1', content: '', children: [] } });
-      const mockNode2 = new FinalNode({ final: { id: 'node2', content: '', children: [] } });
-      const mockNode3 = new StateNode({ state: { id: 'node3', content: '', children: [] } });
+      const mockNode1 = new StateNode({
+        state: { id: 'node1', content: '', children: [] },
+      });
+      const mockNode2 = new FinalNode({
+        final: { id: 'node2', content: '', children: [] },
+      });
+      const mockNode3 = new StateNode({
+        state: { id: 'node3', content: '', children: [] },
+      });
 
       const sourceMap = new Map<string, BaseNode>();
       sourceMap.set('key1', mockNode1);
@@ -753,7 +847,9 @@ describe('Parser', () => {
 
     it('should handle empty source map (no changes to target)', () => {
       // Arrange
-      const mockNode = new StateNode({ state: { id: 'existing', content: '', children: [] } });
+      const mockNode = new StateNode({
+        state: { id: 'existing', content: '', children: [] },
+      });
       const sourceMap = new Map<string, BaseNode>();
       const targetMap = new Map<string, BaseNode>();
       targetMap.set('existing', mockNode);
@@ -770,8 +866,12 @@ describe('Parser', () => {
 
     it('should handle empty target map (all source entries added)', () => {
       // Arrange
-      const mockNode1 = new StateNode({ state: { id: 'node1', content: '', children: [] } });
-      const mockNode2 = new FinalNode({ final: { id: 'node2', content: '', children: [] } });
+      const mockNode1 = new StateNode({
+        state: { id: 'node1', content: '', children: [] },
+      });
+      const mockNode2 = new FinalNode({
+        final: { id: 'node2', content: '', children: [] },
+      });
 
       const sourceMap = new Map<string, BaseNode>();
       sourceMap.set('key1', mockNode1);
@@ -802,8 +902,12 @@ describe('Parser', () => {
 
     it('should overwrite existing keys in target map with source map values', () => {
       // Arrange
-      const originalNode = new StateNode({ state: { id: 'original', content: '', children: [] } });
-      const newNode = new FinalNode({ final: { id: 'new', content: '', children: [] } });
+      const originalNode = new StateNode({
+        state: { id: 'original', content: '', children: [] },
+      });
+      const newNode = new FinalNode({
+        final: { id: 'new', content: '', children: [] },
+      });
 
       const sourceMap = new Map<string, BaseNode>();
       sourceMap.set('duplicate', newNode);
@@ -822,8 +926,12 @@ describe('Parser', () => {
 
     it('should preserve existing target map entries not present in source map', () => {
       // Arrange
-      const existingNode = new StateNode({ state: { id: 'existing', content: '', children: [] } });
-      const newNode = new FinalNode({ final: { id: 'new', content: '', children: [] } });
+      const existingNode = new StateNode({
+        state: { id: 'existing', content: '', children: [] },
+      });
+      const newNode = new FinalNode({
+        final: { id: 'new', content: '', children: [] },
+      });
 
       const sourceMap = new Map<string, BaseNode>();
       sourceMap.set('new', newNode);
@@ -842,8 +950,12 @@ describe('Parser', () => {
 
     it('should not modify the source map during merge operation', () => {
       // Arrange
-      const sourceNode = new StateNode({ state: { id: 'source', content: '', children: [] } });
-      const targetNode = new FinalNode({ final: { id: 'target', content: '', children: [] } });
+      const sourceNode = new StateNode({
+        state: { id: 'source', content: '', children: [] },
+      });
+      const targetNode = new FinalNode({
+        final: { id: 'target', content: '', children: [] },
+      });
 
       const sourceMap = new Map<string, BaseNode>();
       sourceMap.set('source', sourceNode);
@@ -871,13 +983,17 @@ describe('Parser', () => {
 
       // Create 1000 nodes for source map
       for (let i = 0; i < 1000; i++) {
-        const node = new StateNode({ state: { id: `source${i}`, content: '', children: [] } });
+        const node = new StateNode({
+          state: { id: `source${i}`, content: '', children: [] },
+        });
         sourceMap.set(`source${i}`, node);
       }
 
       // Create 500 nodes for target map
       for (let i = 0; i < 500; i++) {
-        const node = new FinalNode({ final: { id: `target${i}`, content: '', children: [] } });
+        const node = new FinalNode({
+          final: { id: `target${i}`, content: '', children: [] },
+        });
         targetMap.set(`target${i}`, node);
       }
 
@@ -901,7 +1017,9 @@ describe('Parser', () => {
 
     it('should maintain reference integrity (values should be the same objects, not copies)', () => {
       // Arrange
-      const originalNode = new StateNode({ state: { id: 'test', content: '', children: [] } });
+      const originalNode = new StateNode({
+        state: { id: 'test', content: '', children: [] },
+      });
 
       const sourceMap = new Map<string, BaseNode>();
       sourceMap.set('test', originalNode);
@@ -924,26 +1042,33 @@ describe('Parser', () => {
   describe('Hierarchical ID Path Construction', () => {
     it('should build hierarchical paths for nested identifiable children', () => {
       // Arrange
-      const mockParentNode = new StateNode({ state: { id: 'parent', content: '', children: [] } });
-      const mockChildNode = new StateNode({ state: { id: 'child', content: '', children: [] } });
-      const mockGrandchildNode = new StateNode({ state: { id: 'grandchild', content: '', children: [] } });
+      const mockParentNode = new StateNode({
+        state: { id: 'parent', content: '', children: [] },
+      });
+      const mockChildNode = new StateNode({
+        state: { id: 'child', content: '', children: [] },
+      });
+      const mockGrandchildNode = new StateNode({
+        state: { id: 'grandchild', content: '', children: [] },
+      });
 
       const originalCreateFromJSON = StateNode.createFromJSON;
-      StateNode.createFromJSON = jest.fn()
+      StateNode.createFromJSON = jest
+        .fn()
         .mockReturnValueOnce({
           success: true,
           error: undefined,
-          node: mockParentNode
+          node: mockParentNode,
         })
         .mockReturnValueOnce({
           success: true,
           error: undefined,
-          node: mockChildNode
+          node: mockChildNode,
         })
         .mockReturnValueOnce({
           success: true,
           error: undefined,
-          node: mockGrandchildNode
+          node: mockGrandchildNode,
         });
 
       const input = {
@@ -956,12 +1081,12 @@ describe('Parser', () => {
                 id: 'child',
                 content: '',
                 children: [
-                  { state: { id: 'grandchild', content: '', children: [] } }
-                ]
-              }
-            }
-          ]
-        }
+                  { state: { id: 'grandchild', content: '', children: [] } },
+                ],
+              },
+            },
+          ],
+        },
       } as Node;
 
       // Act
@@ -972,7 +1097,9 @@ describe('Parser', () => {
       expect(result.error).toHaveLength(0);
       expect(result.identifiableChildren.size).toBe(2);
       expect(result.identifiableChildren.get('child')).toBe(mockChildNode);
-      expect(result.identifiableChildren.get('child.grandchild')).toBe(mockGrandchildNode);
+      expect(result.identifiableChildren.get('child.grandchild')).toBe(
+        mockGrandchildNode,
+      );
 
       // Cleanup
       StateNode.createFromJSON = originalCreateFromJSON;

@@ -1,4 +1,3 @@
-
 import { ParallelNode } from './parallel.node';
 import { StateNode } from './state.node';
 import { FinalNode } from './final.node';
@@ -16,14 +15,14 @@ describe('Node: <parallel>', () => {
         id: 'testParallel',
         initial: undefined,
         content: '',
-        children: []
-      }
+        children: [],
+      },
     });
 
     initialState = {
       data: {},
       _name: 'TestStateMachine',
-      _sessionId: 'test-session-123'
+      _sessionId: 'test-session-123',
     };
   });
 
@@ -67,15 +66,15 @@ describe('Node: <parallel>', () => {
         state: {
           id: 'child1',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
       const childState2 = new StateNode({
         state: {
           id: 'child2',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       parallelNode.children.push(childState1, childState2);
@@ -93,8 +92,8 @@ describe('Node: <parallel>', () => {
       const onEntryNode = new OnEntryNode({
         onentry: {
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       // Add assign node to onentry
@@ -103,8 +102,8 @@ describe('Node: <parallel>', () => {
           location: 'testVar',
           expr: '"onentry executed"',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
       onEntryNode.children.push(assignNode);
       parallelNode.children.push(onEntryNode);
@@ -121,15 +120,15 @@ describe('Node: <parallel>', () => {
         state: {
           id: 'region1',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
       const childState2 = new StateNode({
         state: {
           id: 'region2',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
       parallelNode.children.push(childState1, childState2);
 
@@ -147,7 +146,7 @@ describe('Node: <parallel>', () => {
     it('should preserve state data through mount process', async () => {
       const stateWithData = {
         ...initialState,
-        data: { existingData: 'preserved' }
+        data: { existingData: 'preserved' },
       };
 
       const result = await parallelNode.mount(stateWithData);
@@ -167,15 +166,15 @@ describe('Node: <parallel>', () => {
         state: {
           id: 'region1',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
       const finalNode1 = new FinalNode({
         final: {
           id: 'final1',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
       childState1.children.push(finalNode1);
 
@@ -183,15 +182,15 @@ describe('Node: <parallel>', () => {
         state: {
           id: 'region2',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
       const finalNode2 = new FinalNode({
         final: {
           id: 'final2',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
       childState2.children.push(finalNode2);
 
@@ -206,15 +205,15 @@ describe('Node: <parallel>', () => {
         state: {
           id: 'region1',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
       const finalNode1 = new FinalNode({
         final: {
           id: 'final1',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
       childState1.children.push(finalNode1);
 
@@ -222,8 +221,8 @@ describe('Node: <parallel>', () => {
         state: {
           id: 'region2',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
       // No final node for childState2
 
@@ -239,8 +238,8 @@ describe('Node: <parallel>', () => {
         parallel: {
           id: 'testParallel',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       };
 
       const result = ParallelNode.createFromJSON(jsonInput);
@@ -256,8 +255,8 @@ describe('Node: <parallel>', () => {
         parallel: {
           // Missing required id
           content: '',
-          children: []
-        }
+          children: [],
+        },
       };
 
       const result = ParallelNode.createFromJSON(jsonInput);
@@ -270,7 +269,7 @@ describe('Node: <parallel>', () => {
     it('should handle missing parallel property', () => {
       const jsonInput = {
         // Missing parallel property
-        someOtherProperty: 'value'
+        someOtherProperty: 'value',
       };
 
       const result = ParallelNode.createFromJSON(jsonInput);

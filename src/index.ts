@@ -4,7 +4,7 @@ export type {
   BaseStateNode,
   CreateFromJsonResponse,
   InternalState,
-  SCXMLEvent
+  SCXMLEvent,
 } from './models';
 
 export { StateChart } from './statechart';

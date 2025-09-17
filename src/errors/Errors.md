@@ -13,6 +13,7 @@ error.<label>.<type>
 ```
 
 Where:
+
 - `error` - Fixed prefix indicating this is an error event
 - `<label>` - The component or node type that generated the error (e.g., `raise`, `assign`, `send`)
 - `<type>` - The specific type of error that occurred (e.g., `unknown`, `missing-attribute`, `bad-expression`)
@@ -21,29 +22,32 @@ Where:
 
 ### RaiseNode Errors
 
-| Error Name | Description | When It Occurs |
-|------------|-------------|----------------|
+| Error Name                      | Description                                   | When It Occurs                                               |
+| ------------------------------- | --------------------------------------------- | ------------------------------------------------------------ |
 | `error.raise.missing-attribute` | Missing required event or eventexpr attribute | When RaiseNode has neither `event` nor `eventexpr` attribute |
-| `error.raise.bad-expression` | Invalid expression in eventexpr | When expression evaluator fails to parse/evaluate eventexpr |
-| `error.raise.unknown` | Unrecognized error in raise operation | Any other unexpected error during raise execution |
+| `error.raise.bad-expression`    | Invalid expression in eventexpr               | When expression evaluator fails to parse/evaluate eventexpr  |
+| `error.raise.unknown`           | Unrecognized error in raise operation         | Any other unexpected error during raise execution            |
 
 ### Future Error Categories
 
 As we implement more SCXML elements, we should follow this pattern:
 
 #### AssignNode Errors
+
 - `error.assign.missing-attribute` - Missing location or expr attribute
 - `error.assign.bad-expression` - Invalid expression in expr attribute
 - `error.assign.invalid-location` - Invalid location path
 - `error.assign.unknown` - Other assign-related errors
 
 #### SendNode Errors
+
 - `error.send.missing-target` - Missing target for send operation
 - `error.send.bad-expression` - Invalid expression in send parameters
 - `error.send.delivery-failed` - Failed to deliver the event
 - `error.send.unknown` - Other send-related errors
 
 #### ScriptNode Errors
+
 - `error.script.syntax-error` - JavaScript/expression syntax error
 - `error.script.runtime-error` - Runtime error during script execution
 - `error.script.unknown` - Other script-related errors
@@ -60,13 +64,13 @@ try {
 } catch (err) {
   // Classify the error based on the error message or type
   let errorName = 'error.<label>.unknown';
-  
+
   const errorMessage = (err as Error).message;
   if (errorMessage.includes('specific error pattern')) {
     errorName = 'error.<label>.<specific-type>';
   }
   // Add more specific error classifications as needed
-  
+
   // Create and return error event
   const errorEvent: SCXMLEvent = {
     name: errorName,
@@ -77,10 +81,10 @@ try {
     invokeid: '',
     data: {
       error: errorMessage,
-      source: '<label>'
-    }
+      source: '<label>',
+    },
   };
-  
+
   // Add to pending events for processing
 }
 ```
@@ -112,9 +116,9 @@ For each error type, implement comprehensive unit tests:
 ```typescript
 it('should create error.<label>.<type> event when <condition>', async () => {
   // Test setup to trigger specific error condition
-  
+
   const result = await node.run(mockState);
-  
+
   expect(result._pendingInternalEvents).toHaveLength(1);
   expect(result._pendingInternalEvents![0]).toEqual({
     name: 'error.<label>.<type>',
@@ -125,8 +129,8 @@ it('should create error.<label>.<type> event when <condition>', async () => {
     invokeid: '',
     data: {
       error: 'Expected error message',
-      source: '<label>'
-    }
+      source: '<label>',
+    },
   });
 });
 ```
@@ -164,4 +168,4 @@ When updating existing error handling code:
 
 ---
 
-*This standard should be followed by all contributors when implementing error handling in SCXML executable content nodes.*
+_This standard should be followed by all contributors when implementing error handling in SCXML executable content nodes._

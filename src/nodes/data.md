@@ -14,18 +14,19 @@ Unlike other executable content, data nodes are primarily used for initializatio
 
 The Data node has the following attributes:
 
-| Attribute | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `id` | `string` | Yes | - | Variable identifier/name |
-| `type` | `string` | No | `"text"` | Data type hint |
-| `expr` | `string` | No* | - | Expression to evaluate for initial value |
-| `src` | `string` | No* | - | External source URL (not yet implemented) |
+| Attribute | Type     | Required | Default  | Description                               |
+| --------- | -------- | -------- | -------- | ----------------------------------------- |
+| `id`      | `string` | Yes      | -        | Variable identifier/name                  |
+| `type`    | `string` | No       | `"text"` | Data type hint                            |
+| `expr`    | `string` | No\*     | -        | Expression to evaluate for initial value  |
+| `src`     | `string` | No\*     | -        | External source URL (not yet implemented) |
 
 **Note**: Exactly one of `expr`, `src`, or element content must be specified.
 
 ### ID Attribute
 
 The `id` attribute specifies the variable name in the data model:
+
 - **Simple Names**: `"counter"`, `"status"`, `"message"`
 - **Camel Case**: `"userName"`, `"isActive"`, `"lastUpdate"`
 - **Namespaced**: `"user.name"`, `"config.timeout"` (creates nested objects)
@@ -33,6 +34,7 @@ The `id` attribute specifies the variable name in the data model:
 ### Type Attribute
 
 The `type` attribute provides a hint about the data type:
+
 - **Text**: `"text"` - String values (default)
 - **Number**: `"number"` - Numeric values
 - **Boolean**: `"boolean"` - Boolean values
@@ -42,6 +44,7 @@ The `type` attribute provides a hint about the data type:
 ### Expr Attribute
 
 The `expr` attribute provides dynamic initialization:
+
 - **Literals**: `"'Hello World'"` - string literal
 - **Numbers**: `"42"`, `"3.14"` - numeric values
 - **Booleans**: `"true"`, `"false"` - boolean values
@@ -53,6 +56,7 @@ The `expr` attribute provides dynamic initialization:
 ### Src Attribute
 
 The `src` attribute specifies external data sources (not yet implemented):
+
 - **JSON Files**: `"config.json"` - JSON configuration
 - **API Endpoints**: `"https://api.example.com/data"` - remote data
 - **Local Files**: `"data/initial.json"` - local data files
@@ -161,7 +165,7 @@ The `src` attribute specifies external data sources (not yet implemented):
     <data id="progress" expr="0"/>
     <data id="errors" expr="[]"/>
   </datamodel>
-  
+
   <onentry>
     <assign location="status" expr="'processing'"/>
   </onentry>
@@ -190,8 +194,8 @@ const counterData = new DataNode({
   data: {
     id: 'counter',
     type: 'number',
-    expr: '0'
-  }
+    expr: '0',
+  },
 });
 
 console.log(counterData.id); // 'counter'
@@ -208,8 +212,8 @@ const messageData = new DataNode({
   data: {
     id: 'message',
     type: 'text',
-    content: 'Hello World'
-  }
+    content: 'Hello World',
+  },
 });
 
 console.log(messageData.id); // 'message'
@@ -225,8 +229,8 @@ const exprResult = DataNode.createFromJSON({
   data: {
     id: 'timestamp',
     type: 'number',
-    expr: 'Date.now()'
-  }
+    expr: 'Date.now()',
+  },
 });
 
 if (exprResult.success) {
@@ -240,8 +244,8 @@ if (exprResult.success) {
 const contentResult = DataNode.createFromJSON({
   data: {
     id: 'status',
-    content: 'ready'
-  }
+    content: 'ready',
+  },
 });
 
 if (contentResult.success) {
@@ -258,13 +262,13 @@ import { InternalState } from '@your-library/statecharts';
 const dataNode = new DataNode({
   data: {
     id: 'counter',
-    expr: '42'
-  }
+    expr: '42',
+  },
 });
 
 const state: InternalState = {
   data: {},
-  _datamodel: 'ecmascript'
+  _datamodel: 'ecmascript',
 };
 
 // Execute data initialization
@@ -281,13 +285,13 @@ const userDataNode = new DataNode({
   data: {
     id: 'user',
     type: 'object',
-    expr: '{ name: "John", age: 30, active: true }'
-  }
+    expr: '{ name: "John", age: 30, active: true }',
+  },
 });
 
 const initialState: InternalState = {
   data: {},
-  _datamodel: 'ecmascript'
+  _datamodel: 'ecmascript',
 };
 
 const result = await userDataNode.run(initialState);
@@ -338,6 +342,7 @@ if (this.expr) {
 ```
 
 This allows for:
+
 - **Dynamic Values**: `Date.now()`, `Math.random()`
 - **Computed Values**: `10 * 5`, `'Hello' + ' World'`
 - **Object Creation**: `{ key: 'value' }`
@@ -355,6 +360,7 @@ else {
 ```
 
 This provides:
+
 - **String Literals**: Direct text content
 - **Simple Values**: Numbers, booleans as strings
 - **Static Configuration**: Fixed values
@@ -368,12 +374,13 @@ return {
   ...state,
   data: {
     ...state.data,
-    [this.id]: value
-  }
+    [this.id]: value,
+  },
 };
 ```
 
 This ensures:
+
 - **Immutable Updates**: State is not mutated directly
 - **Variable Scoping**: Variables are accessible by their ID
 - **Type Preservation**: Values maintain their evaluated types
@@ -538,6 +545,7 @@ The Data node uses a custom schema with mutual exclusion:
 This implementation follows the [W3C SCXML specification](https://www.w3.org/TR/scxml/). The `<data>` element is defined in [Section 5.2.2](https://www.w3.org/TR/scxml/#data) of the specification.
 
 Key specification compliance:
+
 - Variable declaration with unique identifiers
 - Multiple value sources (expr, src, content)
 - Type hints for data model variables

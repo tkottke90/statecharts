@@ -10,17 +10,18 @@ The Assign node extends BaseExecutableNode, making it executable within transiti
 
 ## Attributes
 
-| Attribute | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `location` | `string` | Yes | - | The data model location to assign to |
-| `expr` | `string` | No* | - | JavaScript expression to evaluate for the value |
-| `content` | `string` | No* | `""` | Literal content to assign (inherited from BaseNode) |
+| Attribute  | Type     | Required | Default | Description                                         |
+| ---------- | -------- | -------- | ------- | --------------------------------------------------- |
+| `location` | `string` | Yes      | -       | The data model location to assign to                |
+| `expr`     | `string` | No\*     | -       | JavaScript expression to evaluate for the value     |
+| `content`  | `string` | No\*     | `""`    | Literal content to assign (inherited from BaseNode) |
 
-*Either `expr` or content must be specified, but not both.
+\*Either `expr` or content must be specified, but not both.
 
 ### Location
 
 The `location` attribute specifies where in the data model to assign the value. It supports:
+
 - Simple property names: `"status"`
 - Nested object paths: `"user.profile.name"`
 - Array indexing: `"items[0].name"`
@@ -75,7 +76,7 @@ The Assign node supports two mutually exclusive ways to specify the value:
     <assign location="status" expr="'running'"/>
     <assign location="attempts" expr="attempts + 1"/>
   </onentry>
-  
+
   <transition event="complete" target="finished"/>
 </state>
 ```
@@ -88,7 +89,7 @@ The Assign node supports two mutually exclusive ways to specify the value:
     <assign location="result" expr="'success'"/>
     <assign location="completedAt" expr="Date.now()"/>
   </transition>
-  
+
   <transition event="error" target="failed">
     <assign location="result" expr="'error'"/>
     <assign location="errorMessage" expr="_event.data.message"/>
@@ -104,7 +105,7 @@ The Assign node supports two mutually exclusive ways to specify the value:
     <assign location="playerScore" expr="playerScore + 10"/>
     <assign location="coinsCollected" expr="coinsCollected + 1"/>
   </transition>
-  
+
   <transition event="damage" target="injured" cond="playerHealth > 25">
     <assign location="playerHealth" expr="playerHealth - 25"/>
     <assign location="lastDamageTime" expr="Date.now()"/>
@@ -138,8 +139,8 @@ const assignNode = new AssignNode({
     location: 'user.name',
     expr: '"John Doe"',
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 
 // Assignment with content
@@ -147,8 +148,8 @@ const contentAssignNode = new AssignNode({
   assign: {
     location: 'status',
     content: 'active',
-    children: []
-  }
+    children: [],
+  },
 });
 ```
 
@@ -159,8 +160,8 @@ const contentAssignNode = new AssignNode({
 const result = AssignNode.createFromJSON({
   assign: {
     location: 'counter',
-    expr: 'counter + 1'
-  }
+    expr: 'counter + 1',
+  },
 });
 
 if (result.success) {
@@ -174,7 +175,7 @@ if (result.success) {
 // Direct JSON format (without 'assign' wrapper)
 const directResult = AssignNode.createFromJSON({
   location: 'message',
-  content: 'Hello World'
+  content: 'Hello World',
 });
 ```
 
@@ -188,13 +189,13 @@ const assignNode = new AssignNode({
     location: 'user.email',
     expr: '"user@example.com"',
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 
 const state: InternalState = {
   data: { user: { name: 'John' } },
-  _datamodel: 'ecmascript'
+  _datamodel: 'ecmascript',
 };
 
 // Execute the assignment
@@ -219,6 +220,7 @@ The Assign node uses the state machine's expression evaluator to process JavaScr
 ### Available Context
 
 Expressions have access to:
+
 - **Data model**: All variables in `state.data`
 - **Event data**: Current event via `_event` variable
 - **Built-in functions**: JavaScript standard library
@@ -228,22 +230,22 @@ Expressions have access to:
 
 ```typescript
 // Simple arithmetic
-expr: "count + 1"
+expr: 'count + 1';
 
 // String operations
-expr: "'Hello ' + user.name"
+expr: "'Hello ' + user.name";
 
 // Conditional assignment
-expr: "score > 100 ? 'high' : 'normal'"
+expr: "score > 100 ? 'high' : 'normal'";
 
 // Date operations
-expr: "Date.now()"
+expr: 'Date.now()';
 
 // Event data access
-expr: "_event.data.value"
+expr: '_event.data.value';
 
 // Complex calculations
-expr: "Math.round(playerHealth / maxHealth * 100)"
+expr: 'Math.round(playerHealth / maxHealth * 100)';
 ```
 
 ## Error Handling
@@ -253,6 +255,7 @@ The Assign node includes comprehensive error handling:
 ### Expression Errors
 
 If expression evaluation fails, the node:
+
 1. Catches the JavaScript error
 2. Creates an SCXML error event
 3. Sets event name to `error.assign.src-not-implemented`
@@ -277,7 +280,7 @@ The Assign node performs strict validation:
 // Valid: Expression only
 { location: 'status', expr: '"active"' }
 
-// Valid: Content only  
+// Valid: Content only
 { location: 'message', content: 'Hello' }
 
 // Invalid: Both expression and content
@@ -302,6 +305,7 @@ The Assign node performs strict validation:
 This implementation follows the [W3C SCXML specification](https://www.w3.org/TR/scxml/). The `<assign>` element is defined in [Section 5.4.1](https://www.w3.org/TR/scxml/#assign) of the specification.
 
 Key specification compliance:
+
 - Supports both `expr` attribute and content-based assignment
 - Proper error handling with SCXML error events
 - Integration with data model and expression evaluation

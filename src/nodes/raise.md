@@ -14,16 +14,17 @@ Unlike external events that come from outside the state machine, raised events a
 
 The Raise node has the following attributes:
 
-| Attribute | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `event` | `string` | No* | - | Static event name to raise |
-| `eventexpr` | `string` | No* | - | Expression that evaluates to event name |
+| Attribute   | Type     | Required | Default | Description                             |
+| ----------- | -------- | -------- | ------- | --------------------------------------- |
+| `event`     | `string` | No\*     | -       | Static event name to raise              |
+| `eventexpr` | `string` | No\*     | -       | Expression that evaluates to event name |
 
 **Note**: Exactly one of `event` or `eventexpr` must be specified, but not both.
 
 ### Event Attribute
 
 The `event` attribute specifies a static event name:
+
 - **Simple Event**: `"userAction"` - basic event name
 - **Namespaced Event**: `"user.login.success"` - hierarchical event name
 - **System Event**: `"system.initialized"` - system-level event
@@ -32,6 +33,7 @@ The `event` attribute specifies a static event name:
 ### EventExpr Attribute
 
 The `eventexpr` attribute provides dynamic event generation:
+
 - **Variable-based**: `"data.eventType"` - event name from data
 - **Conditional**: `"user.authenticated ? 'auth.success' : 'auth.failed'"` - conditional event
 - **Computed**: `"'user.' + data.action + '.complete'"` - constructed event name
@@ -47,7 +49,7 @@ The `eventexpr` attribute provides dynamic event generation:
     <assign location="status" expr="'processing'"/>
     <raise event="processingStarted"/>
   </onentry>
-  
+
   <transition event="complete" target="finished">
     <assign location="status" expr="'completed'"/>
     <raise event="processingComplete"/>
@@ -86,7 +88,7 @@ The `eventexpr` attribute provides dynamic event generation:
   <transition event="validate" target="validated" cond="data.isValid === true">
     <raise event="validationSuccess"/>
   </transition>
-  
+
   <transition event="validate" target="validationError" cond="data.isValid === false">
     <assign location="errors" expr="data.validationErrors"/>
     <raise event="validationFailed"/>
@@ -102,7 +104,7 @@ The `eventexpr` attribute provides dynamic event generation:
     <assign location="startTime" expr="Date.now()"/>
     <raise event="processingStarted"/>
   </transition>
-  
+
   <transition event="complete" target="completed">
     <assign location="endTime" expr="Date.now()"/>
     <assign location="duration" expr="endTime - startTime"/>
@@ -119,10 +121,10 @@ The `eventexpr` attribute provides dynamic event generation:
   <transition event="register" target="registered">
     <assign location="user.registered" expr="true"/>
     <assign location="user.registrationTime" expr="Date.now()"/>
-    
+
     <!-- Conditional event based on user type -->
     <raise eventexpr="user.isPremium ? 'premiumUserRegistered' : 'basicUserRegistered'"/>
-    
+
     <!-- Always raise general registration event -->
     <raise event="userRegistered"/>
   </transition>
@@ -137,7 +139,7 @@ The `eventexpr` attribute provides dynamic event generation:
     <assign location="system.status" expr="'starting'"/>
     <raise event="systemStarting"/>
   </onentry>
-  
+
   <transition target="systemReady" cond="system.initialized === true">
     <assign location="system.status" expr="'ready'"/>
     <assign location="system.readyTime" expr="Date.now()"/>
@@ -169,12 +171,12 @@ The `eventexpr` attribute provides dynamic event generation:
     <assign location="upload.startTime" expr="Date.now()"/>
     <raise event="uploadStarted"/>
   </transition>
-  
+
   <transition event="uploadProgress" target="uploading">
     <assign location="upload.progress" expr="_event.data.progress"/>
     <raise eventexpr="'uploadProgress.' + Math.floor(_event.data.progress / 10) * 10"/>
   </transition>
-  
+
   <transition event="uploadComplete" target="uploaded">
     <assign location="upload.status" expr="'completed'"/>
     <assign location="upload.endTime" expr="Date.now()"/>
@@ -193,7 +195,7 @@ The `eventexpr` attribute provides dynamic event generation:
     <assign location="session.startTime" expr="Date.now()"/>
     <raise event="sessionStarted"/>
   </onentry>
-  
+
   <onexit>
     <assign location="session.active" expr="false"/>
     <assign location="session.endTime" expr="Date.now()"/>
@@ -214,8 +216,8 @@ import { RaiseNode } from '@your-library/statecharts';
 // Basic raise node with static event
 const staticRaise = new RaiseNode({
   raise: {
-    event: 'userAction'
-  }
+    event: 'userAction',
+  },
 });
 
 console.log(staticRaise.event); // 'userAction'
@@ -229,8 +231,8 @@ console.log(staticRaise.isExecutable); // true
 // Raise node with dynamic event expression
 const dynamicRaise = new RaiseNode({
   raise: {
-    eventexpr: 'data.eventType + ".completed"'
-  }
+    eventexpr: 'data.eventType + ".completed"',
+  },
 });
 
 console.log(dynamicRaise.event); // undefined
@@ -243,8 +245,8 @@ console.log(dynamicRaise.eventexpr); // 'data.eventType + ".completed"'
 // From parsed XML/JSON with static event
 const staticResult = RaiseNode.createFromJSON({
   raise: {
-    event: 'notification.sent'
-  }
+    event: 'notification.sent',
+  },
 });
 
 if (staticResult.success) {
@@ -257,8 +259,8 @@ if (staticResult.success) {
 // From parsed XML/JSON with dynamic event
 const dynamicResult = RaiseNode.createFromJSON({
   raise: {
-    eventexpr: 'user.role + ".actionPerformed"'
-  }
+    eventexpr: 'user.role + ".actionPerformed"',
+  },
 });
 
 if (dynamicResult.success) {
@@ -274,14 +276,14 @@ import { InternalState } from '@your-library/statecharts';
 
 const raiseNode = new RaiseNode({
   raise: {
-    event: 'testEvent'
-  }
+    event: 'testEvent',
+  },
 });
 
 const state: InternalState = {
   data: { counter: 0 },
   _datamodel: 'ecmascript',
-  _pendingInternalEvents: []
+  _pendingInternalEvents: [],
 };
 
 // Execute the raise node
@@ -297,14 +299,14 @@ console.log('Event type:', resultState._pendingInternalEvents?.[0].type); // 'in
 ```typescript
 const dynamicRaiseNode = new RaiseNode({
   raise: {
-    eventexpr: 'data.action + ".completed"'
-  }
+    eventexpr: 'data.action + ".completed"',
+  },
 });
 
 const stateWithData: InternalState = {
   data: { action: 'upload' },
   _datamodel: 'ecmascript',
-  _pendingInternalEvents: []
+  _pendingInternalEvents: [],
 };
 
 // Execute with dynamic event
@@ -336,12 +338,14 @@ The Raise node follows this execution sequence:
 ### Static vs Dynamic Events
 
 #### Static Events (`event` attribute)
+
 ```typescript
 // Direct event name usage
 eventName = this.event; // "userAction"
 ```
 
 #### Dynamic Events (`eventexpr` attribute)
+
 ```typescript
 // Expression evaluation
 eventName = evaluateExpression(this.eventexpr, state); // Computed at runtime
@@ -353,13 +357,13 @@ Generated events follow the SCXML event structure:
 
 ```typescript
 const eventToRaise: SCXMLEvent = {
-  name: eventName,        // Resolved event name
-  type: 'internal',       // Always internal for raised events
-  sendid: '',            // Empty for internal events
-  origin: '',            // Empty for internal events
-  origintype: '',        // Empty for internal events
-  invokeid: '',          // Empty for internal events
-  data: {}               // Empty data object
+  name: eventName, // Resolved event name
+  type: 'internal', // Always internal for raised events
+  sendid: '', // Empty for internal events
+  origin: '', // Empty for internal events
+  origintype: '', // Empty for internal events
+  invokeid: '', // Empty for internal events
+  data: {}, // Empty data object
 };
 ```
 
@@ -376,16 +380,16 @@ Error events follow this structure:
 
 ```typescript
 const errorEvent: SCXMLEvent = {
-  name: 'error.raise.bad-attribute',  // Specific error type
-  type: 'platform',                  // Platform error type
+  name: 'error.raise.bad-attribute', // Specific error type
+  type: 'platform', // Platform error type
   sendid: '',
   origin: '',
   origintype: '',
   invokeid: '',
   data: {
-    error: errorMessage,              // Error details
-    source: 'raise'                   // Error source
-  }
+    error: errorMessage, // Error details
+    source: 'raise', // Error source
+  },
 };
 ```
 
@@ -399,7 +403,7 @@ Raised events are added to the `_pendingInternalEvents` array:
 const pendingEvents = state._pendingInternalEvents || [];
 return {
   ...state,
-  _pendingInternalEvents: [...pendingEvents, eventToRaise]
+  _pendingInternalEvents: [...pendingEvents, eventToRaise],
 };
 ```
 
@@ -553,6 +557,7 @@ The Raise node uses a custom schema with mutual exclusion:
 This implementation follows the [W3C SCXML specification](https://www.w3.org/TR/scxml/). The `<raise>` element is defined in [Section 6.3](https://www.w3.org/TR/scxml/#raise) of the specification.
 
 Key specification compliance:
+
 - Internal event generation with proper event structure
 - Mutual exclusion of `event` and `eventexpr` attributes
 - Expression evaluation for dynamic event names

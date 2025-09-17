@@ -4,20 +4,22 @@ import { BaseSCXMLError } from '../errors';
 
 class SCXMLExpressionError extends BaseSCXMLError {
   constructor(message: string, name: string = '') {
-    super(
-      message,
-      `error.expression${name ? `.${name}` : ''}`
-    );
+    super(message, `error.expression${name ? `.${name}` : ''}`);
   }
 }
 
-
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export const evaluateNullDataModelExpression = (_expression: string, _data: InternalState) => {
+export const evaluateNullDataModelExpression = (
+  _expression: string,
+  _data: InternalState,
+) => {
   return '';
 };
 
-export const evaluateEcmascriptExpression = (expression: string, data: InternalState) => {
+export const evaluateEcmascriptExpression = (
+  expression: string,
+  data: InternalState,
+) => {
   const context = createContext(data);
 
   const result = runInContext(expression, context);
@@ -28,7 +30,7 @@ export const evaluateExpression = (expression: string, data: InternalState) => {
   // Default to 'ecmascript' if _datamodel is not set
   const datamodel = data._datamodel || 'ecmascript';
 
-  switch(datamodel) {
+  switch (datamodel) {
     case 'null': {
       return evaluateNullDataModelExpression(expression, data);
     }
@@ -36,10 +38,16 @@ export const evaluateExpression = (expression: string, data: InternalState) => {
       return evaluateEcmascriptExpression(expression, data);
     }
     case 'xpath': {
-      throw new SCXMLExpressionError('XPath is not supported', 'xpath-not-supported');
+      throw new SCXMLExpressionError(
+        'XPath is not supported',
+        'xpath-not-supported',
+      );
     }
     default: {
-      throw new SCXMLExpressionError('Unsupported datamodel', 'unsupported-datamodel-value');
+      throw new SCXMLExpressionError(
+        'Unsupported datamodel',
+        'unsupported-datamodel-value',
+      );
     }
   }
 };

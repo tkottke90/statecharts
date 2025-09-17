@@ -14,15 +14,16 @@ Unlike state nodes, transitions are not states themselves but rather the connect
 
 The Transition node has the following attributes:
 
-| Attribute | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `event` | `string` | No | `""` | Event that triggers the transition |
-| `target` | `string` | Yes | - | Target state identifier |
-| `cond` | `string` | No | - | Condition expression for conditional transitions |
+| Attribute | Type     | Required | Default | Description                                      |
+| --------- | -------- | -------- | ------- | ------------------------------------------------ |
+| `event`   | `string` | No       | `""`    | Event that triggers the transition               |
+| `target`  | `string` | Yes      | -       | Target state identifier                          |
+| `cond`    | `string` | No       | -       | Condition expression for conditional transitions |
 
 ### Event Attribute
 
 The `event` attribute specifies which event triggers the transition:
+
 - **Specific Event**: `"user.click"` - matches exact event name
 - **Wildcard**: `"*"` - matches any event
 - **Event Pattern**: `"user.*"` - matches events starting with "user."
@@ -31,6 +32,7 @@ The `event` attribute specifies which event triggers the transition:
 ### Target Attribute
 
 The `target` attribute specifies the destination state:
+
 - **Simple Target**: `"nextState"` - direct state reference
 - **Hierarchical Target**: `"parent.child.grandchild"` - nested state path
 - **Required**: Must be a non-empty string
@@ -38,6 +40,7 @@ The `target` attribute specifies the destination state:
 ### Condition Attribute
 
 The `cond` attribute provides conditional logic:
+
 - **JavaScript Expression**: `"data.count > 5"` - evaluated as boolean
 - **Complex Logic**: `"user.authenticated && user.role === 'admin'"`
 - **Optional**: If omitted, transition always fires when event matches
@@ -72,7 +75,7 @@ The `cond` attribute provides conditional logic:
     <assign location="user.loginTime" expr="Date.now()"/>
     <raise event="authenticationComplete"/>
   </transition>
-  
+
   <transition event="login.failed" target="loginError">
     <assign location="user.failedAttempts" expr="user.failedAttempts + 1"/>
     <raise event="authenticationFailed"/>
@@ -98,7 +101,7 @@ The `cond` attribute provides conditional logic:
   <transition event="damage" target="injured" cond="playerHealth > 50">
     <assign location="playerHealth" expr="playerHealth - 25"/>
   </transition>
-  
+
   <transition event="damage" target="critical" cond="playerHealth <= 50">
     <assign location="playerHealth" expr="playerHealth - 25"/>
   </transition>
@@ -108,7 +111,7 @@ The `cond` attribute provides conditional logic:
   <transition event="heal" target="healthy">
     <assign location="playerHealth" expr="playerHealth + 30"/>
   </transition>
-  
+
   <transition event="damage" target="critical">
     <assign location="playerHealth" expr="playerHealth - 25"/>
   </transition>
@@ -124,7 +127,7 @@ The `cond` attribute provides conditional logic:
     <assign location="user.logoutTime" expr="Date.now()"/>
     <raise event="sessionEnded"/>
   </transition>
-  
+
   <transition event="sessionTimeout" target="anonymous">
     <assign location="user.isAuthenticated" expr="false"/>
     <assign location="user.timeoutReason" expr="'inactivity'"/>
@@ -142,9 +145,9 @@ The `cond` attribute provides conditional logic:
     <assign location="document.isDirty" expr="false"/>
     <raise event="documentPersisted"/>
   </transition>
-  
+
   <transition event="cancel" target="documentViewing" cond="document.isDirty === false"/>
-  
+
   <transition event="cancel" target="confirmDiscard" cond="document.isDirty === true">
     <assign location="dialog.message" expr="'Unsaved changes will be lost'"/>
   </transition>
@@ -161,7 +164,7 @@ The `cond` attribute provides conditional logic:
     <assign location="retryCount" expr="0"/>
     <raise event="errorOccurred"/>
   </transition>
-  
+
   <transition event="timeout" target="timeoutState">
     <assign location="timeoutReason" expr="'processing_timeout'"/>
     <raise event="operationTimedOut"/>
@@ -178,7 +181,7 @@ The `cond` attribute provides conditional logic:
     <assign location="powerUpActive" expr="false"/>
     <assign location="powerUpEndReason" expr="'expired'"/>
   </transition>
-  
+
   <transition event="usePowerUp" target="noPowerUp">
     <assign location="powerUpActive" expr="false"/>
     <assign location="powerUpEndReason" expr="'used'"/>
@@ -192,7 +195,11 @@ The `cond` attribute provides conditional logic:
 ### Creating a Transition Node
 
 ```typescript
-import { TransitionNode, AssignNode, RaiseNode } from '@your-library/statecharts';
+import {
+  TransitionNode,
+  AssignNode,
+  RaiseNode,
+} from '@your-library/statecharts';
 
 // Basic event-driven transition
 const basicTransition = new TransitionNode({
@@ -200,8 +207,8 @@ const basicTransition = new TransitionNode({
     event: 'user.click',
     target: 'nextState',
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 
 console.log(basicTransition.event); // 'user.click'
@@ -219,8 +226,8 @@ const conditionalTransition = new TransitionNode({
     target: 'approved',
     cond: 'data.score >= 80',
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 
 console.log(conditionalTransition.cond); // 'data.score >= 80'
@@ -235,16 +242,16 @@ const statusAssign = new AssignNode({
     location: 'status',
     expr: '"transitioning"',
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 
 const notifyRaise = new RaiseNode({
   raise: {
     event: 'transition.executed',
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 
 // Create transition with executable content
@@ -253,8 +260,8 @@ const transitionWithContent = new TransitionNode({
     event: 'trigger',
     target: 'nextState',
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 
 transitionWithContent.children.push(statusAssign, notifyRaise);
@@ -272,8 +279,8 @@ const result = TransitionNode.createFromJSON({
     target: 'targetState',
     cond: 'data.ready === true',
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 
 if (result.success) {
@@ -288,7 +295,7 @@ const directResult = TransitionNode.createFromJSON({
   event: 'direct.event',
   target: 'directTarget',
   content: '',
-  children: []
+  children: [],
 });
 ```
 
@@ -303,13 +310,13 @@ const conditionalTransition = new TransitionNode({
     target: 'approved',
     cond: 'data.score >= 80',
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 
 const state: InternalState = {
   data: { score: 85 },
-  _datamodel: 'ecmascript'
+  _datamodel: 'ecmascript',
 };
 
 // Check if condition passes
@@ -356,13 +363,13 @@ Event matching supports several patterns:
 
 ```typescript
 // Exact match
-transition.event === 'user.click'
+transition.event === 'user.click';
 
 // Wildcard match
-transition.event === '*'  // matches any event
+transition.event === '*'; // matches any event
 
 // Empty/eventless
-transition.event === ''   // automatic transition
+transition.event === ''; // automatic transition
 ```
 
 ### Condition Evaluation
@@ -584,6 +591,7 @@ Transitions handle errors in several ways:
 This implementation follows the [W3C SCXML specification](https://www.w3.org/TR/scxml/). The `<transition>` element is defined in [Section 3.3](https://www.w3.org/TR/scxml/#transition) of the specification.
 
 Key specification compliance:
+
 - Event-driven and eventless transitions
 - Conditional transitions with guard expressions
 - Executable content during transitions

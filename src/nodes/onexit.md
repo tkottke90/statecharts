@@ -13,6 +13,7 @@ Unlike simple executable nodes, the OnExit node is specifically designed as a co
 ### Children
 
 The `children` array contains executable elements that define the exit actions:
+
 - `<assign>` - Variable assignments and cleanup
 - `<raise>` - Event generation for notifications
 - `<log>` - Logging actions
@@ -29,7 +30,7 @@ The `children` array contains executable elements that define the exit actions:
     <assign location="exitTime" expr="Date.now()"/>
     <raise event="stateExited"/>
   </onexit>
-  
+
   <transition event="deactivate" target="inactive"/>
 </state>
 ```
@@ -42,14 +43,14 @@ The `children` array contains executable elements that define the exit actions:
     <!-- Clean up temporary data -->
     <assign location="tempData" expr="null"/>
     <assign location="workerId" expr="null"/>
-    
+
     <!-- Log completion -->
     <assign location="processLog" expr="'Processing completed'"/>
-    
+
     <!-- Notify system -->
     <raise event="resourcesReleased"/>
   </onexit>
-  
+
   <transition event="complete" target="finished"/>
   <transition event="cancel" target="cancelled"/>
 </state>
@@ -65,7 +66,7 @@ The `children` array contains executable elements that define the exit actions:
     <assign location="session.active" expr="false"/>
     <raise event="sessionEnded"/>
   </onexit>
-  
+
   <transition event="logout" target="anonymous"/>
   <transition event="sessionTimeout" target="anonymous"/>
 </state>
@@ -78,14 +79,14 @@ The `children` array contains executable elements that define the exit actions:
   <onentry>
     <assign location="powerUpActive" expr="true"/>
   </onentry>
-  
+
   <onexit>
     <!-- Always clean up power-up state when exiting -->
     <assign location="powerUpActive" expr="false"/>
     <assign location="powerUpEndTime" expr="Date.now()"/>
     <raise event="powerUpDeactivated"/>
   </onexit>
-  
+
   <transition event="powerUpExpired" target="noPowerUp"/>
   <transition event="usePowerUp" target="noPowerUp"/>
 </state>
@@ -100,11 +101,11 @@ The `children` array contains executable elements that define the exit actions:
     <assign location="connection.status" expr="'disconnected'"/>
     <assign location="connection.handle" expr="null"/>
     <assign location="connection.lastDisconnect" expr="Date.now()"/>
-    
+
     <!-- Notify disconnection -->
     <raise event="connectionClosed"/>
   </onexit>
-  
+
   <transition event="disconnect" target="disconnected"/>
   <transition event="networkError" target="error"/>
 </state>
@@ -118,16 +119,16 @@ The `children` array contains executable elements that define the exit actions:
     <!-- Save application state -->
     <assign location="app.lastShutdown" expr="Date.now()"/>
     <assign location="app.status" expr="'shutting_down'"/>
-    
+
     <!-- Clean up resources -->
     <assign location="app.activeConnections" expr="0"/>
     <assign location="app.tempFiles" expr="[]"/>
-    
+
     <!-- Log shutdown -->
     <assign location="shutdownLog" expr="'Application shutdown initiated'"/>
     <raise event="shutdownStarted"/>
   </onexit>
-  
+
   <transition event="shutdown" target="stopped"/>
 </state>
 ```
@@ -140,15 +141,15 @@ The `children` array contains executable elements that define the exit actions:
     <!-- Auto-save on exit -->
     <assign location="document.lastSaved" expr="Date.now()"/>
     <assign location="document.isDirty" expr="false"/>
-    
+
     <!-- Clear editing state -->
     <assign location="editor.selection" expr="null"/>
     <assign location="editor.clipboard" expr="null"/>
-    
+
     <!-- Notify save completion -->
     <raise event="documentSaved"/>
   </onexit>
-  
+
   <transition event="save" target="saved"/>
   <transition event="cancel" target="viewing"/>
 </state>
@@ -163,12 +164,12 @@ The `children` array contains executable elements that define the exit actions:
     <assign location="lastError" expr="null"/>
     <assign location="errorCount" expr="0"/>
     <assign location="recoveryAttempts" expr="0"/>
-    
+
     <!-- Log recovery -->
     <assign location="recoveryLog" expr="'Error state cleared'"/>
     <raise event="errorRecovered"/>
   </onexit>
-  
+
   <transition event="retry" target="processing"/>
   <transition event="reset" target="idle"/>
 </state>
@@ -185,8 +186,8 @@ import { OnExitNode, AssignNode, RaiseNode } from '@your-library/statecharts';
 const onExitNode = new OnExitNode({
   onexit: {
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 
 console.log(onExitNode.isExecutable); // true
@@ -202,8 +203,8 @@ const clearDataAssign = new AssignNode({
     location: 'tempData',
     expr: 'null',
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 
 const logExitAssign = new AssignNode({
@@ -211,24 +212,24 @@ const logExitAssign = new AssignNode({
     location: 'exitLog',
     expr: '"State cleanup completed"',
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 
 const notifyRaise = new RaiseNode({
   raise: {
     event: 'cleanup.complete',
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 
 // Create onexit with children
 const onExitNode = new OnExitNode({
   onexit: {
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 
 onExitNode.children.push(clearDataAssign, logExitAssign, notifyRaise);
@@ -243,8 +244,8 @@ console.log(`OnExit has ${onExitNode.children.length} cleanup actions`);
 const result = OnExitNode.createFromJSON({
   onexit: {
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 
 if (result.success) {
@@ -257,7 +258,7 @@ if (result.success) {
 // Direct JSON format (without 'onexit' wrapper)
 const directResult = OnExitNode.createFromJSON({
   content: '',
-  children: []
+  children: [],
 });
 ```
 
@@ -269,8 +270,8 @@ import { InternalState } from '@your-library/statecharts';
 const onExitNode = new OnExitNode({
   onexit: {
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 
 // Add cleanup actions
@@ -278,7 +279,7 @@ const onExitNode = new OnExitNode({
 
 const state: InternalState = {
   data: { tempData: 'cleanup me', persistentData: 'keep me' },
-  _datamodel: 'ecmascript'
+  _datamodel: 'ecmascript',
 };
 
 // Execute exit actions
@@ -325,6 +326,7 @@ async run(state: InternalState): Promise<InternalState> {
 ```
 
 This ensures that:
+
 - All executable children are processed sequentially
 - Children are executed in document order
 - State changes are accumulated across all children
@@ -505,6 +507,7 @@ Exit actions can handle errors through:
 This implementation follows the [W3C SCXML specification](https://www.w3.org/TR/scxml/). The `<onexit>` element is defined in [Section 3.8.2](https://www.w3.org/TR/scxml/#onexit) of the specification.
 
 Key specification compliance:
+
 - Container for executable content during state exit
 - Executes children in document order
 - Integrates with state machine exit semantics

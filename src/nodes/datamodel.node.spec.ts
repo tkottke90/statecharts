@@ -3,11 +3,10 @@ import { DataModelNode } from './datamodel.node';
 import SimpleXML from 'simple-xml-to-json';
 
 describe('Node: <datamodel>', () => {
-
   describe('#createFromJSON', () => {
     it('should create a DataModelNode instance from XML', () => {
       // Arrange
-      
+
       // Accepts XML and converts it to JSON
       const dataXML = `
         <datamodel>
@@ -28,19 +27,19 @@ describe('Node: <datamodel>', () => {
 
     it('should create a DataModelNode instance from JSON', () => {
       // Arrange
-      
+
       const { node: dataNode } = DataNode.createFromJSON({
         data: {
           id: 'test',
           content: 'test',
           type: 'text',
-          src: undefined
-        }
+          src: undefined,
+        },
       });
 
       // Accepts already parsed JSON or custom json schema
       const dataJSON = {
-        children: [dataNode]
+        children: [dataNode],
       };
 
       // Act
@@ -52,9 +51,4 @@ describe('Node: <datamodel>', () => {
       expect(node).toBeInstanceOf(DataModelNode);
     });
   });
-
-
-
-
-
 });

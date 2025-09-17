@@ -1,13 +1,17 @@
-import z from "zod";
-import { BaseStateNode, BaseStateNodeAttr, MountResponse } from "../models/base-state";
-import { InternalState } from "../models/internalState";
-import { CreateFromJsonResponse } from "../models";
-import { FinalNode } from "./final.node";
+import z from 'zod';
+import {
+  BaseStateNode,
+  BaseStateNodeAttr,
+  MountResponse,
+} from '../models/base-state';
+import { InternalState } from '../models/internalState';
+import { CreateFromJsonResponse } from '../models';
+import { FinalNode } from './final.node';
 
 const ParallelNodeAttr = BaseStateNodeAttr;
 export type ParallelNodeType = {
   parallel: z.infer<typeof ParallelNodeAttr>;
-}
+};
 
 /**
  * Class implementation of the SCXML <parallel> node.
@@ -23,7 +27,10 @@ export type ParallelNodeType = {
  *
  * @see https://www.w3.org/TR/scxml/#parallel
  */
-export class ParallelNode extends BaseStateNode implements z.infer<typeof ParallelNodeAttr> {
+export class ParallelNode
+  extends BaseStateNode
+  implements z.infer<typeof ParallelNodeAttr>
+{
   static label = 'parallel';
   static schema = ParallelNodeAttr;
   readonly id: string;
@@ -69,7 +76,7 @@ export class ParallelNode extends BaseStateNode implements z.infer<typeof Parall
     return {
       state: currentState,
       node: this,
-      childPath: this.buildParallelChildPath()
+      childPath: this.buildParallelChildPath(),
     };
   }
 

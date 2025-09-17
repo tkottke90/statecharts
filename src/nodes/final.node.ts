@@ -1,21 +1,29 @@
 import z from 'zod';
 import { BaseStateNode, MountResponse } from '../models/base-state';
-import { InternalState, SCXMLEvent, addPendingEvent, fromJsError } from '../models/internalState';
+import {
+  InternalState,
+  SCXMLEvent,
+  addPendingEvent,
+  fromJsError,
+} from '../models/internalState';
 import { CreateFromJsonResponse } from '../models/methods';
 import { StateNodeAttr } from './state.node';
 
 const FinalNodeAttr = StateNodeAttr;
 
 export type FinalNodeType = {
-    final: z.infer<typeof FinalNodeAttr>;
-}
+  final: z.infer<typeof FinalNodeAttr>;
+};
 
 /**
  * Class implementation of the SCXML <final> node.
- * 
+ *
  * @see https://www.w3.org/TR/scxml/#final
  */
-export class FinalNode extends BaseStateNode implements z.infer<typeof FinalNodeAttr> {
+export class FinalNode
+  extends BaseStateNode
+  implements z.infer<typeof FinalNodeAttr>
+{
   readonly id: string;
 
   static label = 'final';
@@ -41,7 +49,7 @@ export class FinalNode extends BaseStateNode implements z.infer<typeof FinalNode
           origin: '',
           origintype: '',
           invokeid: '',
-          data: {}
+          data: {},
         };
 
         // Add the done event to pending internal events
@@ -84,19 +92,21 @@ export class FinalNode extends BaseStateNode implements z.infer<typeof FinalNode
     return pathSegments.slice(0, -1).join('.');
   }
 
-  static createFromJSON(jsonInput: Record<string, unknown>): CreateFromJsonResponse<FinalNode> {
+  static createFromJSON(
+    jsonInput: Record<string, unknown>,
+  ): CreateFromJsonResponse<FinalNode> {
     const { success, data, error } = this.schema.safeParse(
-      this.getAttributes(this.label, jsonInput)
+      this.getAttributes(this.label, jsonInput),
     );
 
     if (!success) {
       return { success: false, error, node: undefined };
     }
-    
+
     return {
       success: true,
       node: new FinalNode({ final: data }),
-      error: undefined
-    }
+      error: undefined,
+    };
   }
 }

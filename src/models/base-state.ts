@@ -1,14 +1,14 @@
-import z from "zod";
-import { TransitionNode } from "../nodes/transition.node";
-import { BaseNode, BaseNodeAttr } from "./base";
-import { InitialNode } from "../nodes/initial.node";
-import { InternalState } from "./internalState";
-import { OnEntryNode } from "../nodes/onentry.node";
-import { OnExitNode } from "../nodes/onexit.node";
+import z from 'zod';
+import { TransitionNode } from '../nodes/transition.node';
+import { BaseNode, BaseNodeAttr } from './base';
+import { InitialNode } from '../nodes/initial.node';
+import { InternalState } from './internalState';
+import { OnEntryNode } from '../nodes/onentry.node';
+import { OnExitNode } from '../nodes/onexit.node';
 
 export const BaseStateNodeAttr = BaseNodeAttr.extend({
   id: z.string().min(1),
-  initial: z.string().optional()
+  initial: z.string().optional(),
 });
 
 export type StateNodeType = {
@@ -26,7 +26,6 @@ export class BaseStateNode extends BaseNode {
   readonly id: string = '';
   readonly initial: string | undefined;
 
-
   /**
    * Identifies if the state is atomic (has no child states) or not.
    */
@@ -42,13 +41,13 @@ export class BaseStateNode extends BaseNode {
       return this.initial;
     }
 
-    const [ initialChild ] = this.getChildrenOfType(InitialNode);
+    const [initialChild] = this.getChildrenOfType(InitialNode);
 
     if (initialChild) {
       return initialChild.content;
     }
 
-    const [ firstChild ] = this.getChildrenOfType<BaseStateNode>(BaseStateNode);
+    const [firstChild] = this.getChildrenOfType<BaseStateNode>(BaseStateNode);
 
     if (firstChild) {
       return firstChild.id;
@@ -73,7 +72,7 @@ export class BaseStateNode extends BaseNode {
    */
   getEventlessTransitions() {
     return this.getChildrenOfType(TransitionNode).filter(
-      transition => transition.isEventLess
+      transition => transition.isEventLess,
     );
   }
 
@@ -100,14 +99,12 @@ export class BaseStateNode extends BaseNode {
    * @returns A list of all onentry nodes
    */
   getOnEntryNodes() {
-    return this.children.filter(
-      (child) => {
-        if (child instanceof OnEntryNode && child.hasExecutableChildren) {
-          return true;
-        }
-        return false;
+    return this.children.filter(child => {
+      if (child instanceof OnEntryNode && child.hasExecutableChildren) {
+        return true;
       }
-    );
+      return false;
+    });
   }
 
   /**
@@ -115,14 +112,12 @@ export class BaseStateNode extends BaseNode {
    * @returns A list of all onexit nodes
    */
   getOnExitNodes() {
-    return this.children.filter(
-      (child) => {
-        if (child instanceof OnExitNode && child.hasExecutableChildren) {
-          return true;
-        }
-        return false;
+    return this.children.filter(child => {
+      if (child instanceof OnExitNode && child.hasExecutableChildren) {
+        return true;
       }
-    );
+      return false;
+    });
   }
 
   /**

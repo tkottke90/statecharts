@@ -6,7 +6,7 @@ describe('Node: <final>', () => {
   describe('#createFromJSON', () => {
     it('should create a FinalNode instance from XML', () => {
       // Arrange
-      
+
       // Accepts XML and converts it to JSON
       const finalXML = `
         <final id="test"></final>
@@ -25,10 +25,10 @@ describe('Node: <final>', () => {
 
     it('should create a FinalNode instance from JSON', () => {
       // Arrange
-      
+
       // Accepts already parsed JSON or custom json schema
       const finalJSON = {
-        id: 'test'
+        id: 'test',
       };
 
       // Act
@@ -45,13 +45,13 @@ describe('Node: <final>', () => {
     it('should generate done.state.{parent_id} event when entering final state with parent', async () => {
       // Arrange
       const { node } = FinalNode.createFromJSON({
-        id: 'playing.healthSystem.dead' // Has parent 'playing.healthSystem'
+        id: 'playing.healthSystem.dead', // Has parent 'playing.healthSystem'
       });
 
       const initialState: InternalState = {
         data: {},
         _name: 'test-session',
-        _sessionId: 'session-123'
+        _sessionId: 'session-123',
       };
 
       // Act
@@ -66,7 +66,7 @@ describe('Node: <final>', () => {
         origin: '',
         origintype: '',
         invokeid: '',
-        data: {}
+        data: {},
       });
 
       // Should preserve original state data
@@ -78,13 +78,13 @@ describe('Node: <final>', () => {
     it('should not generate done event for top-level final state', async () => {
       // Arrange
       const { node } = FinalNode.createFromJSON({
-        id: 'terminated' // Top-level final state (no parent)
+        id: 'terminated', // Top-level final state (no parent)
       });
 
       const initialState: InternalState = {
         data: {},
         _name: 'test-session',
-        _sessionId: 'session-123'
+        _sessionId: 'session-123',
       };
 
       // Act
@@ -102,13 +102,13 @@ describe('Node: <final>', () => {
     it('should handle final state with single-segment ID (no parent)', async () => {
       // Arrange
       const { node } = FinalNode.createFromJSON({
-        id: 'terminated' // Single segment ID (no parent)
+        id: 'terminated', // Single segment ID (no parent)
       });
 
       const initialState: InternalState = {
         data: {},
         _name: 'test-session',
-        _sessionId: 'session-123'
+        _sessionId: 'session-123',
       };
 
       // Act
@@ -126,13 +126,13 @@ describe('Node: <final>', () => {
     it('should generate done event for deeply nested final state', async () => {
       // Arrange
       const { node } = FinalNode.createFromJSON({
-        id: 'game.playing.level1.boss.defeated' // Parent: 'game.playing.level1.boss'
+        id: 'game.playing.level1.boss.defeated', // Parent: 'game.playing.level1.boss'
       });
 
       const initialState: InternalState = {
         data: {},
         _name: 'test-session',
-        _sessionId: 'session-123'
+        _sessionId: 'session-123',
       };
 
       // Act
@@ -147,14 +147,14 @@ describe('Node: <final>', () => {
         origin: '',
         origintype: '',
         invokeid: '',
-        data: {}
+        data: {},
       });
     });
 
     it('should preserve existing pending events when adding done event', async () => {
       // Arrange
       const { node } = FinalNode.createFromJSON({
-        id: 'playing.combat.victory'
+        id: 'playing.combat.victory',
       });
 
       const existingEvent = {
@@ -164,14 +164,14 @@ describe('Node: <final>', () => {
         origin: '',
         origintype: '',
         invokeid: '',
-        data: {}
+        data: {},
       };
 
       const initialState: InternalState = {
         data: {},
         _name: 'test-session',
         _sessionId: 'session-123',
-        _pendingInternalEvents: [existingEvent]
+        _pendingInternalEvents: [existingEvent],
       };
 
       // Act
@@ -187,7 +187,7 @@ describe('Node: <final>', () => {
         origin: '',
         origintype: '',
         invokeid: '',
-        data: {}
+        data: {},
       });
     });
   });

@@ -249,14 +249,17 @@ describe('Queue', () => {
       eventQueue = new Queue<SCXMLEvent>();
     });
 
-    const createEvent = (name: string, type: 'internal' | 'external' | 'platform' = 'internal'): SCXMLEvent => ({
+    const createEvent = (
+      name: string,
+      type: 'internal' | 'external' | 'platform' = 'internal',
+    ): SCXMLEvent => ({
       name,
       type,
       sendid: '',
       origin: '',
       origintype: '',
       invokeid: '',
-      data: {}
+      data: {},
     });
 
     it('should handle SCXMLEvent objects correctly', () => {
@@ -292,9 +295,9 @@ describe('Queue', () => {
           action: 'click',
           metadata: {
             timestamp: Date.now(),
-            coordinates: { x: 100, y: 200 }
-          }
-        }
+            coordinates: { x: 100, y: 200 },
+          },
+        },
       };
 
       eventQueue.enqueue(complexEvent);
@@ -302,7 +305,9 @@ describe('Queue', () => {
 
       expect(retrieved).toEqual(complexEvent);
       expect(retrieved?.data.userId).toBe(123);
-      const metadata = retrieved?.data.metadata as { coordinates: { x: number; y: number } };
+      const metadata = retrieved?.data.metadata as {
+        coordinates: { x: number; y: number };
+      };
       expect(metadata?.coordinates?.x).toBe(100);
     });
 

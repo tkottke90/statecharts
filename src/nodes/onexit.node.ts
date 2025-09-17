@@ -1,13 +1,16 @@
-import z from "zod";
-import { BaseExecutableNode, BaseExecutableNodeAttr } from "../models/base-executable";
-import { InternalState } from "../models/internalState";
-import { CreateFromJsonResponse } from "../models/methods";
+import z from 'zod';
+import {
+  BaseExecutableNode,
+  BaseExecutableNodeAttr,
+} from '../models/base-executable';
+import { InternalState } from '../models/internalState';
+import { CreateFromJsonResponse } from '../models/methods';
 
 const OnExitNodeAttr = BaseExecutableNodeAttr;
 
 export type OnExitNodeType = {
   onexit: z.infer<typeof OnExitNodeAttr>;
-}
+};
 
 export class OnExitNode extends BaseExecutableNode {
   static label = 'onexit';
@@ -28,19 +31,21 @@ export class OnExitNode extends BaseExecutableNode {
     return nextState;
   }
 
-  static createFromJSON(jsonInput: Record<string, unknown>): CreateFromJsonResponse<OnExitNode> {
+  static createFromJSON(
+    jsonInput: Record<string, unknown>,
+  ): CreateFromJsonResponse<OnExitNode> {
     const { success, data, error } = this.schema.safeParse(
-      this.getAttributes(this.label, jsonInput)
+      this.getAttributes(this.label, jsonInput),
     );
 
     if (!success) {
       return { success: false, error, node: undefined };
     }
-    
+
     return {
       success: true,
       node: new OnExitNode({ onexit: data }),
-      error: undefined
-    }
+      error: undefined,
+    };
   }
 }

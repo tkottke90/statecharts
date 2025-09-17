@@ -8,24 +8,26 @@ The SCXML node serves as the document root and container for all other state mac
 
 ## Attributes
 
-| Attribute | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `version` | `"1.0" \| "1.1"` | No | `"1.0"` | SCXML specification version |
-| `datamodel` | `"null" \| "ecmascript" \| "xpath"` | No | `"ecmascript"` | Data model implementation |
-| `initial` | `string` | No | `""` | ID of the initial state |
-| `name` | `string` | No | `""` | Optional name for the state machine |
+| Attribute   | Type                                | Required | Default        | Description                         |
+| ----------- | ----------------------------------- | -------- | -------------- | ----------------------------------- |
+| `version`   | `"1.0" \| "1.1"`                    | No       | `"1.0"`        | SCXML specification version         |
+| `datamodel` | `"null" \| "ecmascript" \| "xpath"` | No       | `"ecmascript"` | Data model implementation           |
+| `initial`   | `string`                            | No       | `""`           | ID of the initial state             |
+| `name`      | `string`                            | No       | `""`           | Optional name for the state machine |
 
 ### Version
 
 Specifies which version of the SCXML specification this document conforms to:
+
 - `"1.0"` - SCXML 1.0 specification (default)
 - `"1.1"` - SCXML 1.1 specification
 
 ### Datamodel
 
 Defines the data model implementation used for data manipulation and expression evaluation:
+
 - `"null"` - No data model (expressions not supported)
-- `"ecmascript"` - ECMAScript/JavaScript data model.  All `expr` and `cond` attributes will be processed as javascript
+- `"ecmascript"` - ECMAScript/JavaScript data model. All `expr` and `cond` attributes will be processed as javascript
 - `"xpath"` - XPath data model (Not Supported - Future)
 
 ### Initial
@@ -46,7 +48,7 @@ An optional human-readable name for the state machine, useful for debugging and 
   <state id="idle">
     <transition event="start" target="active"/>
   </state>
-  
+
   <state id="active">
     <transition event="stop" target="idle"/>
   </state>
@@ -62,7 +64,7 @@ An optional human-readable name for the state machine, useful for debugging and 
     <data id="counter" expr="0"/>
     <data id="message">Hello World</data>
   </datamodel>
-  
+
   <state id="main">
     <transition event="increment" target="main">
       <assign location="counter" expr="counter + 1"/>
@@ -94,8 +96,8 @@ const scxmlNode = new SCXMLNode({
     content: '',
     children: [],
     version: '1.0',
-    datamodel: 'ecmascript'
-  }
+    datamodel: 'ecmascript',
+  },
 });
 
 // Full configuration
@@ -106,8 +108,8 @@ const fullScxmlNode = new SCXMLNode({
     version: '1.1',
     initial: 'startState',
     name: 'MyStateMachine',
-    datamodel: 'ecmascript'
-  }
+    datamodel: 'ecmascript',
+  },
 });
 ```
 
@@ -120,8 +122,8 @@ const result = SCXMLNode.createFromJSON({
     version: '1.0',
     initial: 'idle',
     name: 'TestMachine',
-    datamodel: 'ecmascript'
-  }
+    datamodel: 'ecmascript',
+  },
 });
 
 if (result.success) {

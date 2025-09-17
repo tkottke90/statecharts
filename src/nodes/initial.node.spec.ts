@@ -4,11 +4,11 @@ describe('Node: <initial>', () => {
   describe('#createFromJSON', () => {
     it('should create a InitialNode instance from JSON', () => {
       // Arrange
-      
+
       // Accepts already parsed JSON or custom json schema
       const initialJSON = {
         content: 'test',
-        children: []
+        children: [],
       };
 
       // Act

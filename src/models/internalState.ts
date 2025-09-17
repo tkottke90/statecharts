@@ -1,4 +1,3 @@
-
 import { Queue } from './event-queue';
 
 export interface SCXMLEvent {
@@ -18,7 +17,7 @@ export function fromJsError(err: unknown): SCXMLEvent {
     message = err.message;
   }
 
-  return ({
+  return {
     name: '',
     type: 'platform',
     sendid: '',
@@ -26,11 +25,10 @@ export function fromJsError(err: unknown): SCXMLEvent {
     origintype: '',
     invokeid: '',
     data: {
-      error: message
-    }
-  })
+      error: message,
+    },
+  };
 }
-
 
 /**
  * Unified internal state interface that replaces both EventlessState and EventState.
@@ -53,7 +51,10 @@ export interface InternalState {
 
 export type EventState = InternalState & { _event: SCXMLEvent };
 
-export function processPendingEvents(state: InternalState, queue: Queue<SCXMLEvent>): void {
+export function processPendingEvents(
+  state: InternalState,
+  queue: Queue<SCXMLEvent>,
+): void {
   if (state._pendingInternalEvents) {
     state._pendingInternalEvents.forEach(event => {
       queue.enqueue(event);
@@ -65,9 +66,12 @@ export function processPendingEvents(state: InternalState, queue: Queue<SCXMLEve
 /**
  * Helper function to safely add events to the pending internal events queue
  */
-export function addPendingEvent(state: InternalState, event: SCXMLEvent): InternalState {
+export function addPendingEvent(
+  state: InternalState,
+  event: SCXMLEvent,
+): InternalState {
   return {
     ...state,
-    _pendingInternalEvents: [...(state._pendingInternalEvents || []), event]
+    _pendingInternalEvents: [...(state._pendingInternalEvents || []), event],
   };
 }

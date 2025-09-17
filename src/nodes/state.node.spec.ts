@@ -5,7 +5,7 @@ describe('Node: <state>', () => {
   describe('#createFromJSON', () => {
     it('should create a StateNode instance from XML', () => {
       // Arrange
-      
+
       // Accepts XML and converts it to JSON
       const stateXML = `
         <state id="test">test</state>
@@ -24,13 +24,13 @@ describe('Node: <state>', () => {
 
     it('should create a StateNode instance from JSON', () => {
       // Arrange
-      
+
       // Accepts already parsed JSON or custom json schema
       const stateJSON = {
         id: 'test',
         content: 'test',
         type: 'text',
-        src: undefined
+        src: undefined,
       };
 
       // Act

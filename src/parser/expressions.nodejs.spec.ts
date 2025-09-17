@@ -7,7 +7,7 @@ describe('Parser: Expression Evaluation', () => {
     const expression = '2 + 2';
     const state: InternalState = {
       _datamodel: 'ecmascript',
-      data: {}
+      data: {},
     };
 
     // Act
@@ -22,7 +22,7 @@ describe('Parser: Expression Evaluation', () => {
     const expression = '2 + 2';
     const state: InternalState = {
       _datamodel: 'null',
-      data: {}
+      data: {},
     };
 
     // Act
@@ -37,11 +37,13 @@ describe('Parser: Expression Evaluation', () => {
     const expression = '2 + 2';
     const state: InternalState = {
       _datamodel: 'xpath',
-      data: {}
+      data: {},
     };
 
     // Act & Assert
-    expect(() => evaluateExpression(expression, state)).toThrow('XPath is not supported');
+    expect(() => evaluateExpression(expression, state)).toThrow(
+      'XPath is not supported',
+    );
   });
 
   it('should throw error for unsupported datamodel', () => {
@@ -49,11 +51,13 @@ describe('Parser: Expression Evaluation', () => {
     const expression = '2 + 2';
     const state: InternalState = {
       _datamodel: 'python',
-      data: {}
+      data: {},
     };
 
     // Act & Assert
-    expect(() => evaluateExpression(expression, state)).toThrow('Unsupported datamodel');
+    expect(() => evaluateExpression(expression, state)).toThrow(
+      'Unsupported datamodel',
+    );
   });
 
   describe('Data Types', () => {
@@ -62,7 +66,7 @@ describe('Parser: Expression Evaluation', () => {
       const expression = '1 === 1';
       const state: InternalState = {
         _datamodel: 'ecmascript',
-        data: {}
+        data: {},
       };
 
       // Act
@@ -77,7 +81,7 @@ describe('Parser: Expression Evaluation', () => {
       const expression = '1 === 2';
       const state: InternalState = {
         _datamodel: 'ecmascript',
-        data: {}
+        data: {},
       };
 
       // Act
@@ -87,4 +91,4 @@ describe('Parser: Expression Evaluation', () => {
       expect(result).toBe(false);
     });
   });
-})
+});

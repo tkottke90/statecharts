@@ -8,14 +8,15 @@ State nodes are the fundamental building blocks of SCXML state machines. They en
 
 ## Attributes
 
-| Attribute | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `id` | `string` | Yes | - | Unique identifier for the state |
-| `initial` | `string` | No | `""` | ID of the initial child state (for compound states) |
+| Attribute | Type     | Required | Default | Description                                         |
+| --------- | -------- | -------- | ------- | --------------------------------------------------- |
+| `id`      | `string` | Yes      | -       | Unique identifier for the state                     |
+| `initial` | `string` | No       | `""`    | ID of the initial child state (for compound states) |
 
 ### ID
 
 A unique identifier for the state within the state machine. This is required and must be a non-empty string. The ID is used for:
+
 - Targeting states in transitions
 - Referencing states in the state machine hierarchy
 - Debugging and state tracking
@@ -23,6 +24,7 @@ A unique identifier for the state within the state machine. This is required and
 ### Initial
 
 For compound states (states with child states), this specifies which child state should be entered by default. If not specified, the state machine will use other mechanisms to determine the initial child state:
+
 1. An explicit `<initial>` child element
 2. The first child state in document order
 
@@ -37,7 +39,7 @@ Atomic states are leaf states that contain no child states. They represent the a
   <onentry>
     <assign location="status" expr="'ready'"/>
   </onentry>
-  
+
   <transition event="start" target="active"/>
 </state>
 ```
@@ -51,7 +53,7 @@ Compound states contain one or more child states and must specify which child st
   <state id="playing">
     <transition event="pause" target="paused"/>
   </state>
-  
+
   <state id="paused">
     <transition event="resume" target="playing"/>
   </state>
@@ -77,12 +79,12 @@ Compound states contain one or more child states and must specify which child st
     <assign location="startTime" expr="Date.now()"/>
     <assign location="status" expr="'running'"/>
   </onentry>
-  
+
   <onexit>
     <assign location="endTime" expr="Date.now()"/>
     <assign location="status" expr="'stopped'"/>
   </onexit>
-  
+
   <transition event="stop" target="idle"/>
 </state>
 ```
@@ -116,12 +118,12 @@ Compound states contain one or more child states and must specify which child st
   <state id="loading">
     <transition event="loaded" target="main"/>
   </state>
-  
+
   <state id="main" initial="dashboard">
     <state id="dashboard">
       <transition event="navigate.settings" target="settings"/>
     </state>
-    
+
     <state id="settings">
       <transition event="navigate.back" target="dashboard"/>
     </state>
@@ -141,8 +143,8 @@ const idleState = new StateNode({
   state: {
     id: 'idle',
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 
 // Compound state with initial child
@@ -151,8 +153,8 @@ const gameState = new StateNode({
     id: 'gameRunning',
     initial: 'playing',
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 ```
 
@@ -163,8 +165,8 @@ const gameState = new StateNode({
 const result = StateNode.createFromJSON({
   state: {
     id: 'active',
-    initial: 'substate1'
-  }
+    initial: 'substate1',
+  },
 });
 
 if (result.success) {
@@ -179,7 +181,7 @@ if (result.success) {
 const directResult = StateNode.createFromJSON({
   id: 'myState',
   content: 'State content',
-  initial: 'childState'
+  initial: 'childState',
 });
 ```
 
@@ -195,18 +197,22 @@ The StateNode class exposes the following readonly properties:
 StateNode inherits from BaseStateNode, providing additional functionality:
 
 ### State Classification
+
 - `isAtomic: boolean` - True if the state has no child states
 - `initialState: string` - Computed initial child state
 
 ### Child State Management
+
 - `getChildState(id?: string)` - Get child states by ID or all child states
 - `getChildrenOfType<T>(typeCtor)` - Get children of specific type
 
 ### Entry/Exit Behavior
+
 - `mount(state): Promise<MountResponse>` - Execute entry actions and determine next state
 - `unmount(state): Promise<InternalState>` - Execute exit actions
 
 ### Action Handlers
+
 - `getOnEntryNodes()` - Get all onentry action nodes
 - `getOnExitNodes()` - Get all onexit action nodes
 

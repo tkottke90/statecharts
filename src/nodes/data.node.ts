@@ -4,54 +4,55 @@ import { CreateFromJsonResponse } from '../models/methods';
 import { addPendingEvent, InternalState } from '../models/internalState';
 import { evaluateExpression } from '../parser/expressions.nodejs';
 
-const DataNodeAttr = BaseExecutableNode.schema.extend({
-  id: z.string(),
-  type: z.string().optional().default('text'),
-  src: z.string().optional(),
-  expr: z.string().optional()
-}).check((ctx) => {
-  const { expr, content, src } = ctx.value;
+const DataNodeAttr = BaseExecutableNode.schema
+  .extend({
+    id: z.string(),
+    type: z.string().optional().default('text'),
+    src: z.string().optional(),
+    expr: z.string().optional(),
+  })
+  .check(ctx => {
+    const { expr, content, src } = ctx.value;
 
-  const hasExpr = (expr?.length ?? 0) > 0;
-  const hasContent = (content?.length ?? 0) > 0;
-  const hasSrc = (src?.length ?? 0) > 0;
+    const hasExpr = (expr?.length ?? 0) > 0;
+    const hasContent = (content?.length ?? 0) > 0;
+    const hasSrc = (src?.length ?? 0) > 0;
 
-  const fields = [
-    hasExpr,
-    hasContent,
-    hasSrc
-  ]
+    const fields = [hasExpr, hasContent, hasSrc];
 
-  // If none of the attributes are populated, we throw an error
-  if (!fields.some(Boolean)) {
-    ctx.issues.push({
-      code: "custom",
-      message: `Must specify exactly one of 'expr', 'src', or child content`,
-      input: ctx.value,
-      continue: true // make this issue continuable (default: false)
-    });
-  }
+    // If none of the attributes are populated, we throw an error
+    if (!fields.some(Boolean)) {
+      ctx.issues.push({
+        code: 'custom',
+        message: `Must specify exactly one of 'expr', 'src', or child content`,
+        input: ctx.value,
+        continue: true, // make this issue continuable (default: false)
+      });
+    }
 
-  if (fields.filter(Boolean).length > 1) {
-    ctx.issues.push({
-      code: "custom",
-      message: `Only one of 'expr', 'src', or child content may be specified`,
-      input: ctx.value,
-      continue: true // make this issue continuable (default: false)
-    });
-  }
-});
+    if (fields.filter(Boolean).length > 1) {
+      ctx.issues.push({
+        code: 'custom',
+        message: `Only one of 'expr', 'src', or child content may be specified`,
+        input: ctx.value,
+        continue: true, // make this issue continuable (default: false)
+      });
+    }
+  });
 
 export type DataNodeType = {
-    data: z.infer<typeof DataNodeAttr>;
-}
+  data: z.infer<typeof DataNodeAttr>;
+};
 
 /**
  * Class implementation of the SCXML <data> node.
- * 
+ *
  * @see https://www.w3.org/TR/scxml/#data
  */
-export class DataNode extends BaseExecutableNode implements z.infer<typeof DataNodeAttr> {
+export class DataNode
+  extends BaseExecutableNode
+  implements z.infer<typeof DataNodeAttr>
+{
   id: string;
   type: string;
   src: string | undefined;
@@ -91,9 +92,9 @@ export class DataNode extends BaseExecutableNode implements z.infer<typeof DataN
         invokeid: '',
         data: {
           error: 'The `src` attribute on the data node is not yet available',
-          source: 'data'
-        }
-      })
+          source: 'data',
+        },
+      });
     } else {
       // Use child content as the value
       value = this.content;
@@ -103,24 +104,26 @@ export class DataNode extends BaseExecutableNode implements z.infer<typeof DataN
       ...state,
       data: {
         ...state.data,
-        [this.id]: value
-      }
+        [this.id]: value,
+      },
     };
   }
 
-  static createFromJSON(jsonInput: Record<string, unknown>): CreateFromJsonResponse<DataNode> {
+  static createFromJSON(
+    jsonInput: Record<string, unknown>,
+  ): CreateFromJsonResponse<DataNode> {
     const { success, data, error } = this.schema.safeParse(
-      this.getAttributes(this.label, jsonInput)
+      this.getAttributes(this.label, jsonInput),
     );
 
     if (!success) {
       return { success: false, error, node: undefined };
     }
-    
+
     return {
       success: true,
       node: new DataNode({ data }),
-      error: undefined
-    }
+      error: undefined,
+    };
   }
 }

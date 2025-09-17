@@ -2,16 +2,18 @@
 created: 2025-09-08T22:58:20 (UTC -05:00)
 tags: []
 source: https://www.w3.org/TR/scxml/
-author: 
+author:
 type: Article
 ---
 
 # State Chart XML (SCXML): State Machine Notation for Control Abstraction
 
 > ## Excerpt
+>
 > [This section is informative.]
 
 ---
+
 ## 2 Overview
 
 \[This section is informative.\]
@@ -67,7 +69,7 @@ In the following example, parallel state 'p' has two children S1 and S2. Suppose
             &lt;transition event="e1" target="S1Final"/&gt;
         &lt;/state&gt;
         &lt;final id="S1Final"/&gt;
-    &lt;/state&gt; 
+    &lt;/state&gt;
 
     &lt;state id="S2" initial="S21"&gt;
         &lt;state id=S21"&gt;
@@ -77,7 +79,7 @@ In the following example, parallel state 'p' has two children S1 and S2. Suppose
             &lt;transition event="e2" target="S2Final/&gt;
         &lt;/state&gt;
         &lt;final id="S2Final"/&gt;
-    &lt;/state&gt; 
+    &lt;/state&gt;
 
 &lt;/parallel&gt;
 ```
@@ -104,19 +106,19 @@ In the example below, assume that state s11 is active when event 'e' occurs. The
       &lt;onexit&gt;
          &lt;log expr="'leaving s1'"/&gt;
      &lt;/onexit&gt;
-     
+
      &lt;state id="s11"&gt;
         &lt;onexit&gt;
            &lt;log expr="'leaving s11'"/&gt;
         &lt;/onexit&gt;
      &lt;/state&gt;
-     
+
      &lt;transition event="e" target="s21"&gt;
         &lt;log expr="'executing transition'"/&gt;
      &lt;/transition&gt;
 
    &lt;/state&gt;
-  
+
    &lt;state id="s2" initial="s21"&gt;
       &lt;state id="s21"&gt;
          &lt;onentry&gt;
@@ -130,7 +132,7 @@ In the example below, assume that state s11 is active when event 'e' occurs. The
 
    &lt;onentry&gt;
      &lt;log expr="'entering S'"/&gt;
-   &lt;onentry&gt;   
+   &lt;onentry&gt;
    &lt;onexit&gt;
      &lt;log expr="'leaving S'"/&gt;
    &lt;onexit&gt;
@@ -156,7 +158,7 @@ The behavior of transitions with 'type' of "internal" is identical, except in th
       &lt;onexit&gt;
          &lt;log expr="'leaving s1'"/&gt;
      &lt;/onexit&gt;
-     
+
      &lt;state id="s11"&gt;
        &lt;onentry&gt;
         &lt;log expr="entering s11"/&gt;
@@ -165,13 +167,13 @@ The behavior of transitions with 'type' of "internal" is identical, except in th
            &lt;log expr="'leaving s11'"/&gt;
         &lt;/onexit&gt;
      &lt;/state&gt;
-     
+
      &lt;transition event="e" target="s11" type="internal"&gt;
         &lt;log expr="'executing transition'"/&gt;
      &lt;/transition&gt;
 
    &lt;/state&gt;
-  
+
 
 
 ==== log output will be ======&gt;
@@ -200,16 +202,16 @@ Holds the representation of a state.
 
 #### 3.3.2 Children
 
--   <onentry> Optional element holding executable content to be run upon entering this <state>. Occurs 0 or more times. See [_3.8 <onentry>_](https://www.w3.org/TR/scxml/#onentry)
--   <onexit> Optional element holding executable content to be run when exiting this <state>. Occurs 0 or more times. See [_3.9 <onexit>_](https://www.w3.org/TR/scxml/#onexit)
--   <transition> Defines an outgoing transition from this state. Occurs 0 or more times. See [_3.5 <transition>_](https://www.w3.org/TR/scxml/#transition)
--   <initial> In states that have substates, an optional child which identifies the default initial state. Any transition which takes the parent state as its target will result in the state machine also taking the transition contained inside the <initial> element. See [_3.6 <initial>_](https://www.w3.org/TR/scxml/#initial)
--   <state> Defines a sequential substate of the parent state. Occurs 0 or more times.
--   <parallel> Defines a parallel substate. Occurs 0 or more times. See [_3.4 <parallel>_](https://www.w3.org/TR/scxml/#parallel)
--   <final>. Defines a final substate. Occurs 0 or more times. See [_3.7 <final>_](https://www.w3.org/TR/scxml/#final).
--   <history> A child pseudo-state which records the descendant state(s) that the parent state was in the last time the system transitioned _from_ the parent. May occur 0 or more times. See [_3.10 <history>_](https://www.w3.org/TR/scxml/#history).
--   <datamodel> Defines part or all of the data model. Occurs 0 or 1 times. See [_5.2 <datamodel>_](https://www.w3.org/TR/scxml/#datamodel)
--   <invoke> Invokes an external service. Occurs 0 or more times. See [_6.4 <invoke>_](https://www.w3.org/TR/scxml/#invoke) for details.
+- <onentry> Optional element holding executable content to be run upon entering this <state>. Occurs 0 or more times. See [_3.8 <onentry>_](https://www.w3.org/TR/scxml/#onentry)
+- <onexit> Optional element holding executable content to be run when exiting this <state>. Occurs 0 or more times. See [_3.9 <onexit>_](https://www.w3.org/TR/scxml/#onexit)
+- <transition> Defines an outgoing transition from this state. Occurs 0 or more times. See [_3.5 <transition>_](https://www.w3.org/TR/scxml/#transition)
+- <initial> In states that have substates, an optional child which identifies the default initial state. Any transition which takes the parent state as its target will result in the state machine also taking the transition contained inside the <initial> element. See [_3.6 <initial>_](https://www.w3.org/TR/scxml/#initial)
+- <state> Defines a sequential substate of the parent state. Occurs 0 or more times.
+- <parallel> Defines a parallel substate. Occurs 0 or more times. See [_3.4 <parallel>_](https://www.w3.org/TR/scxml/#parallel)
+- <final>. Defines a final substate. Occurs 0 or more times. See [_3.7 <final>_](https://www.w3.org/TR/scxml/#final).
+- <history> A child pseudo-state which records the descendant state(s) that the parent state was in the last time the system transitioned _from_ the parent. May occur 0 or more times. See [_3.10 <history>_](https://www.w3.org/TR/scxml/#history).
+- <datamodel> Defines part or all of the data model. Occurs 0 or 1 times. See [_5.2 <datamodel>_](https://www.w3.org/TR/scxml/#datamodel)
+- <invoke> Invokes an external service. Occurs 0 or more times. See [_6.4 <invoke>_](https://www.w3.org/TR/scxml/#invoke) for details.
 
 \[Definition: An _atomic state_ is a <state> that has no <state>, <parallel> or <final> children.\]
 
@@ -227,9 +229,9 @@ In a conformant SCXML document, a compound state _MAY_ specify either an "initia
 
 #### 3.7.2 Children
 
--   <onentry> Optional element holding executable content to be run upon entering this state. Occurs 0 or more times. See [_3.8 <onentry>_](https://www.w3.org/TR/scxml/#onentry) for details.
--   <onexit> Optional element holding executable content to be run when exiting this state. Occurs 0 or more times. See [_3.9 <onexit>_](https://www.w3.org/TR/scxml/#onexit) for details.
--   <donedata> Optional element specifying data to be included in the done.state._id_ or done.invoke._id_ event. See [_5.5 <donedata>_](https://www.w3.org/TR/scxml/#donedata) for details.
+- <onentry> Optional element holding executable content to be run upon entering this state. Occurs 0 or more times. See [_3.8 <onentry>_](https://www.w3.org/TR/scxml/#onentry) for details.
+- <onexit> Optional element holding executable content to be run when exiting this state. Occurs 0 or more times. See [_3.9 <onexit>_](https://www.w3.org/TR/scxml/#onexit) for details.
+- <donedata> Optional element specifying data to be included in the done.state._id_ or done.invoke._id_ event. See [_5.5 <donedata>_](https://www.w3.org/TR/scxml/#donedata) for details.
 
 When the state machine enters the <final> child of a <state> element, the SCXML Processor _MUST_ generate the event done.state._id_ after completion of the <onentry> elements, where _id_ is the id of the parent state. Immediately thereafter, if the parent <state> is a child of a <parallel> element, and all of the <parallel>'s other children are also in final states, the Processor _MUST_ generate the event done.state._id_ where _id_ is the id of the <parallel> element.
 
@@ -241,7 +243,7 @@ The <history> pseudo-state allows a state machine to remember its state configur
 
 #### 3.10.2 Children
 
--   <transition> A transition whose 'target' specifies the default history configuration. Occurs once. In a conformant SCXML document, this transition _MUST NOT_ contain 'cond' or 'event' attributes, and _MUST_ specify a non-null 'target' whose value is a valid state specification (see [_3.11 Legal State Configurations and Specifications_](https://www.w3.org/TR/scxml/#LegalStateConfigurations)). This transition _MAY_ contain executable content. If 'type' is "shallow", then the 'target' of this <transition> _MUST_ contain only immediate children of the parent state. Otherwise it _MUST_ contain only descendants of the parent. Occurs once. (Note that under the definition of a legal state specification, if the parent of the history element is <state> and the default state specification contains a multiple states, then, in a conformant SCXML document, the 'type' of the history element _MUST_ be "deep" and the states _MUST_ be atomic descendants of a <parallel> element that is itself a descendant of the parent <state> element.)
+- <transition> A transition whose 'target' specifies the default history configuration. Occurs once. In a conformant SCXML document, this transition _MUST NOT_ contain 'cond' or 'event' attributes, and _MUST_ specify a non-null 'target' whose value is a valid state specification (see [_3.11 Legal State Configurations and Specifications_](https://www.w3.org/TR/scxml/#LegalStateConfigurations)). This transition _MAY_ contain executable content. If 'type' is "shallow", then the 'target' of this <transition> _MUST_ contain only immediate children of the parent state. Otherwise it _MUST_ contain only descendants of the parent. Occurs once. (Note that under the definition of a legal state specification, if the parent of the history element is <state> and the default state specification contains a multiple states, then, in a conformant SCXML document, the 'type' of the history element _MUST_ be "deep" and the states _MUST_ be atomic descendants of a <parallel> element that is itself a descendant of the parent <state> element.)
 
 If the 'type' of a <history> element is "shallow", the SCXML processor _MUST_ record the immediately active children of its parent before taking any transition that exits the parent. If the 'type' of a <history> element is "deep", the SCXML processor _MUST_ record the active atomic descendants of the parent before taking any transition that exits the parent. After the parent state has been visited for the first time, for each <history> element, we define the set of states that the processor has recorded to be the 'stored state configuration' for that history state. We also define the states specified by the 'target' of the <history> element's <transition> child to be the 'default stored state configuration' for that element. If a transition is executed that takes the <history> state as its target, the behavior depends on whether the parent state has been visited before. If it has, the SCXML processor _MUST_ behave as if the transition had taken the stored state configuration for that history state as its target. If it has not, the SCXML processor _MUST_ behave as if the transition had taken the default stored state configuration for that history state as its target. The Process _MUST_ execute any executable content in the transition after the parent state's onentry handlers, and, in the case where the history pseudo-state is the target of an <initial> transition, the executable content inside the <initial> transition. (Note that in a conformant SCXML document, a <state> or <parallel> element _MAY_ have both "deep" and "shallow" <history> children.)
 
@@ -255,11 +257,11 @@ If the 'type' of a <history> element is "shallow", the SCXML processor _MUST_ re
 
 An SCXML document places the state machine in an initial state configuration at initialization time (via the 'initial' attribute of the <scxml> element). Each transition that the state machine takes thereafter places the state machine in another state configuration (which need not be distinct from the former one.) A conformant SCXML document _MUST_ place the state machine only in legal state configurations, where a legal state configuration is one that meets the following conditions:
 
--   The configuration contains exactly one child of the <scxml> element.
--   The configuration contains one or more atomic states.
--   When the configuration contains an atomic state, it contains all of its <state> and <parallel> ancestors.
--   When the configuration contains a non-atomic <state>, it contains one and only one of the state's children.
--   If the configuration contains a <parallel> state, it contains all of its children.
+- The configuration contains exactly one child of the <scxml> element.
+- The configuration contains one or more atomic states.
+- When the configuration contains an atomic state, it contains all of its <state> and <parallel> ancestors.
+- When the configuration contains a non-atomic <state>, it contains one and only one of the state's children.
+- If the configuration contains a <parallel> state, it contains all of its children.
 
 It follows from this definition that if a state machine is in more than one atomic state, the atomic states can be traced back through a chain of <state> or <parallel> ancestors to a single <parallel> ancestor.
 
@@ -273,8 +275,8 @@ In a conformant SCXML document, there is an additional requirement on the value 
 
 Events are one of the basic concepts in SCXML since they drive most transitions. The internal structure of events is platform-specific as long as the following external interface is observed:
 
--   The SCXML processor _MUST_ make the data contained in an event accessible via the '\_event' variable, as specified in [_5.10 System Variables_](https://www.w3.org/TR/scxml/#SystemVariables).
--   The SCXML processor _MUST_ make the event's name accessible via the '\_event' variable, as specified in [_5.10 System Variables_](https://www.w3.org/TR/scxml/#SystemVariables). The SCXML processor _MUST_ use this same name value to match against the 'event' attribute of transitions.
+- The SCXML processor _MUST_ make the data contained in an event accessible via the '\_event' variable, as specified in [_5.10 System Variables_](https://www.w3.org/TR/scxml/#SystemVariables).
+- The SCXML processor _MUST_ make the event's name accessible via the '\_event' variable, as specified in [_5.10 System Variables_](https://www.w3.org/TR/scxml/#SystemVariables). The SCXML processor _MUST_ use this same name value to match against the 'event' attribute of transitions.
 
 For the most part, the set of events raised during the execution of an SCXML document is application-specific and generated under author control by use of the <raise> and <send> elements. However, certain events are mandatory and generated automatically by the interpreter. These are described in [_3.12.3 List of Errors and Events_](https://www.w3.org/TR/scxml/#errorsAndEvents). Platforms _MAY_ extend the names of these automatically generated events by adding a suffix. For example, a platform could extend done.state._id_ with a timestamp suffix and generate done.state._id.timestamp_ instead. Because any prefix of done.state._id_ is also a prefix of done.state._id.timestamp_, any transition that matches the former event will also match the latter.
 
@@ -296,13 +298,13 @@ An event designator consisting solely of "\*" can be used as a wildcard matching
 
 The following events are generated automatically by the SCXML implementation under conditions defined elsewhere in this document.
 
-| Name | Description | Defined in | See also |
-| --- | --- | --- | --- |
-| done.state._id_ | Indicates that the state machine has entered a final substate of state _id_. | [_3.7 <final>_](https://www.w3.org/TR/scxml/#final) | [_3.1 Introduction_](https://www.w3.org/TR/scxml/#CoreIntroduction) |
-| done.invoke._id_ | Indicates that the invoked process with invokeid _id_ has completed processing. | [_6.4 <invoke>_](https://www.w3.org/TR/scxml/#invoke) | [_3.7 <final>_](https://www.w3.org/TR/scxml/#final), exitInterpreter procedure in [_D Algorithm for SCXML Interpretation_](https://www.w3.org/TR/scxml/#AlgorithmforSCXMLInterpretation) |
-| error.communication | Indicates that an error has occurred while trying to communicate with an external entity. | [_3.12.2 Errors_](https://www.w3.org/TR/scxml/#ErrorEvents) | [_6.2 <send>_](https://www.w3.org/TR/scxml/#send), [_C.1 SCXML Event I/O Processor_](https://www.w3.org/TR/scxml/#SCXMLEventProcessor), [_C.2 Basic HTTP Event I/O Processor_](https://www.w3.org/TR/scxml/#BasicHTTPEventProcessor) |
-| error.execution | Indicates that an error internal to the execution of the document has occurred, such as one arising from expression evaluation. | [_3.12.2 Errors_](https://www.w3.org/TR/scxml/#ErrorEvents) | [_4.6 <foreach>_](https://www.w3.org/TR/scxml/#foreach), [_5.4 <assign>_](https://www.w3.org/TR/scxml/#assign), [_5.7 <param>_](https://www.w3.org/TR/scxml/#param), [_5.9.1 Conditional Expressions_](https://www.w3.org/TR/scxml/#ConditionalExpressions), [_5.9.2 Location Expressions_](https://www.w3.org/TR/scxml/#LocationExpressions), [_5.9.3 Legal Data Values and Value Expressions_](https://www.w3.org/TR/scxml/#ValueExpressions), [_5.9.4 Errors in Expressions_](https://www.w3.org/TR/scxml/#ErrorsinExpressions), [_5.10 System Variables_](https://www.w3.org/TR/scxml/#SystemVariables), [_6.2 <send>_](https://www.w3.org/TR/scxml/#send), [_B.2.4 Location Expressions_](https://www.w3.org/TR/scxml/#ecma_location_expressions), [_B.2.7 <assign>_](https://www.w3.org/TR/scxml/#ecma_assign) |
-| error.platform | Indicates that a platform- or application-specific error has occurred. | [_3.12.2 Errors_](https://www.w3.org/TR/scxml/#ErrorEvents) |  |
+| Name                | Description                                                                                                                     | Defined in                                                  | See also                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| done.state._id_     | Indicates that the state machine has entered a final substate of state _id_.                                                    | [_3.7 <final>_](https://www.w3.org/TR/scxml/#final)         | [_3.1 Introduction_](https://www.w3.org/TR/scxml/#CoreIntroduction)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| done.invoke._id_    | Indicates that the invoked process with invokeid _id_ has completed processing.                                                 | [_6.4 <invoke>_](https://www.w3.org/TR/scxml/#invoke)       | [_3.7 <final>_](https://www.w3.org/TR/scxml/#final), exitInterpreter procedure in [_D Algorithm for SCXML Interpretation_](https://www.w3.org/TR/scxml/#AlgorithmforSCXMLInterpretation)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| error.communication | Indicates that an error has occurred while trying to communicate with an external entity.                                       | [_3.12.2 Errors_](https://www.w3.org/TR/scxml/#ErrorEvents) | [_6.2 <send>_](https://www.w3.org/TR/scxml/#send), [_C.1 SCXML Event I/O Processor_](https://www.w3.org/TR/scxml/#SCXMLEventProcessor), [_C.2 Basic HTTP Event I/O Processor_](https://www.w3.org/TR/scxml/#BasicHTTPEventProcessor)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| error.execution     | Indicates that an error internal to the execution of the document has occurred, such as one arising from expression evaluation. | [_3.12.2 Errors_](https://www.w3.org/TR/scxml/#ErrorEvents) | [_4.6 <foreach>_](https://www.w3.org/TR/scxml/#foreach), [_5.4 <assign>_](https://www.w3.org/TR/scxml/#assign), [_5.7 <param>_](https://www.w3.org/TR/scxml/#param), [_5.9.1 Conditional Expressions_](https://www.w3.org/TR/scxml/#ConditionalExpressions), [_5.9.2 Location Expressions_](https://www.w3.org/TR/scxml/#LocationExpressions), [_5.9.3 Legal Data Values and Value Expressions_](https://www.w3.org/TR/scxml/#ValueExpressions), [_5.9.4 Errors in Expressions_](https://www.w3.org/TR/scxml/#ErrorsinExpressions), [_5.10 System Variables_](https://www.w3.org/TR/scxml/#SystemVariables), [_6.2 <send>_](https://www.w3.org/TR/scxml/#send), [_B.2.4 Location Expressions_](https://www.w3.org/TR/scxml/#ecma_location_expressions), [_B.2.7 <assign>_](https://www.w3.org/TR/scxml/#ecma_assign) |
+| error.platform      | Indicates that a platform- or application-specific error has occurred.                                                          | [_3.12.2 Errors_](https://www.w3.org/TR/scxml/#ErrorEvents) |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 
 ### 3.13 Selecting and Executing Transitions
 
@@ -354,9 +356,9 @@ After completing a macrostep, the SCXML Processor _MUST_ execute in document ord
 
 #### 4.3.2 Children
 
--   <elseif> Occurs 0 or more times. See [_4.4 <elseif>_](https://www.w3.org/TR/scxml/#elseif)
--   <else> Occurs 0 or 1 times. See [_4.5 <else>_](https://www.w3.org/TR/scxml/#else)
--   The other children of <if> consist of executable content. Note that since <if> itself is executable content, nested <if> statements are allowed.
+- <elseif> Occurs 0 or more times. See [_4.4 <elseif>_](https://www.w3.org/TR/scxml/#elseif)
+- <else> Occurs 0 or 1 times. See [_4.5 <else>_](https://www.w3.org/TR/scxml/#else)
+- The other children of <if> consist of executable content. Note that since <if> itself is executable content, nested <if> statements are allowed.
 
 The behavior of <if> is defined in terms of partitions of executable content. The first partition consists of the executable content between the <if> and the first <elseif>, <else> or </if> tag. Each <elseif> tag defines a partition that extends from it to the next <elseif>, <else> or </if> tag. The <else> tag defines a partition that extends from it to the closing </if> tag. In a conformant SCXML document, a partition _MAY_ be empty. In a conformant SCXML document, <else> _MUST_ occur after all <elseif> tags.
 
@@ -374,7 +376,7 @@ Here is an example:
 &lt;else/&gt;
   &lt;!-- selected when "cond1", "cond2", and "cond3" are false --&gt;
 &lt;/if&gt;
-           
+
 ```
 
 ## 5 Data Model and Data Manipulation
@@ -425,11 +427,11 @@ Assignment to a data model is done by using a location expression to denote the 
 
 The SCXML Processor _MUST_ maintain a protected portion of the data model containing information that can be useful to applications. We refer to the items in this special part of the data model as 'system variables'. Implementations _MUST_ provide the following system variables, and _MAY_ support others.
 
--   _\_event_. The SCXML Processor _MUST_ use the variable '\_event' to hold a structure containing the current event's name and any data contained in the event (see [_5.10.1 The Internal Structure of Events_](https://www.w3.org/TR/scxml/#InternalStructureofEvents). The exact nature of the structure depends on the data model being used. See [_B Data Models_](https://www.w3.org/TR/scxml/#profiles) for details. The SCXML Processor _MUST_ bind the \_event variable when an event is pulled off the internal or external event queue to be processed, and _MUST_ keep the variable bound to that event until another event is processed. (It follows that when an application is testing the 'cond' attribute of a <transition> element that contains an 'event' attribute, \_event will be bound to the event that the transition is being matched against. If the transition is selected to be executed, \_event will remain bound to that event in the <onexit> handlers of the states being exited, the executable content of the transition itself, and the <onentry> handlers of the states being entered. In the case of <transition> elements that do not contain an 'event' attribute and the <onexit> and <onentry> handlers of any states that are exited or entered by such transitions, the \_event variable will not have a easily predictable value since the transition is not being driven by an event. In these cases, \_event will be bound to the last event that was matched against a transition.) The SCXML Processor _MUST NOT_ bind \_event at initialization time until the first event is processed. Hence \_event is unbound when the state machine starts up. If the data in the event is not a legal instance of the data model language, and the Processor cannot translate it into one, then the Processor _MUST_ place the error 'error.execution' in the internal event queue at the point at which it attempts to bind \_event. In this case, the Processor _MUST_ leave the event data part of the \_event structure unbound. (Note that the event's name will still be available, however and that processing of both the original event and the error event will proceed as usual.)
--   _\_sessionid_. The SCXML Processor _MUST_ bind the variable \_sessionid at load time to the system-generated id for the current SCXML session. (This is of type NMTOKEN.) The Processor _MUST_ keep the variable bound to this value until the session terminates.
--   _\_name_. The SCXML Processor _MUST_ bind the variable \_name at load time to the value of the 'name' attribute of the <scxml> element. The Processor _MUST_ keep the variable bound to this value until the session terminates.
--   _\_ioprocessors_. The SCXML Processor _MUST_ bind the variable \_ioprocessors to a set of values, one for each Event I/O Processor that it supports. The syntax to access it depends on the data model. See [_B Data Models_](https://www.w3.org/TR/scxml/#profiles) for details. The nature of the values associated with the individual Event I/O Processors depends on the Event I/O Processor in question. See [_C Event I/O Processors_](https://www.w3.org/TR/scxml/#eventioprocessors) for details. The Processor _MUST_ keep the variable bound to this set of values until the session terminates.
--   _\_x_. The variable \_x is the root element for platform-specific system variables. The Processor _MUST_ place all platform-specific system variables underneath it. The exact structure of the platform-specific variables depends on the data model. For example, in the ECMAScript data model [_B.2 The ECMAScript Data Model_](https://www.w3.org/TR/scxml/#ecma-profile), '\_x' will be a top-level ECMAScript object and the platform-specific system variables will be its properties.
+- _\_event_. The SCXML Processor _MUST_ use the variable '\_event' to hold a structure containing the current event's name and any data contained in the event (see [_5.10.1 The Internal Structure of Events_](https://www.w3.org/TR/scxml/#InternalStructureofEvents). The exact nature of the structure depends on the data model being used. See [_B Data Models_](https://www.w3.org/TR/scxml/#profiles) for details. The SCXML Processor _MUST_ bind the \_event variable when an event is pulled off the internal or external event queue to be processed, and _MUST_ keep the variable bound to that event until another event is processed. (It follows that when an application is testing the 'cond' attribute of a <transition> element that contains an 'event' attribute, \_event will be bound to the event that the transition is being matched against. If the transition is selected to be executed, \_event will remain bound to that event in the <onexit> handlers of the states being exited, the executable content of the transition itself, and the <onentry> handlers of the states being entered. In the case of <transition> elements that do not contain an 'event' attribute and the <onexit> and <onentry> handlers of any states that are exited or entered by such transitions, the \_event variable will not have a easily predictable value since the transition is not being driven by an event. In these cases, \_event will be bound to the last event that was matched against a transition.) The SCXML Processor _MUST NOT_ bind \_event at initialization time until the first event is processed. Hence \_event is unbound when the state machine starts up. If the data in the event is not a legal instance of the data model language, and the Processor cannot translate it into one, then the Processor _MUST_ place the error 'error.execution' in the internal event queue at the point at which it attempts to bind \_event. In this case, the Processor _MUST_ leave the event data part of the \_event structure unbound. (Note that the event's name will still be available, however and that processing of both the original event and the error event will proceed as usual.)
+- _\_sessionid_. The SCXML Processor _MUST_ bind the variable \_sessionid at load time to the system-generated id for the current SCXML session. (This is of type NMTOKEN.) The Processor _MUST_ keep the variable bound to this value until the session terminates.
+- _\_name_. The SCXML Processor _MUST_ bind the variable \_name at load time to the value of the 'name' attribute of the <scxml> element. The Processor _MUST_ keep the variable bound to this value until the session terminates.
+- _\_ioprocessors_. The SCXML Processor _MUST_ bind the variable \_ioprocessors to a set of values, one for each Event I/O Processor that it supports. The syntax to access it depends on the data model. See [_B Data Models_](https://www.w3.org/TR/scxml/#profiles) for details. The nature of the values associated with the individual Event I/O Processors depends on the Event I/O Processor in question. See [_C Event I/O Processors_](https://www.w3.org/TR/scxml/#eventioprocessors) for details. The Processor _MUST_ keep the variable bound to this set of values until the session terminates.
+- _\_x_. The variable \_x is the root element for platform-specific system variables. The Processor _MUST_ place all platform-specific system variables underneath it. The exact structure of the platform-specific variables depends on the data model. For example, in the ECMAScript data model [_B.2 The ECMAScript Data Model_](https://www.w3.org/TR/scxml/#ecma-profile), '\_x' will be a top-level ECMAScript object and the platform-specific system variables will be its properties.
 
 The set of system variables may be expanded in future versions of this specification. Variable names beginning with '\_' are reserved for system use. A conformant SCXML document _MUST NOT_ contain ids beginning with '\_' in the <data> element. Platforms _MUST_ place all platform-specific system variables under the '\_x' root.
 
@@ -441,12 +443,12 @@ Events have an internal structure which is reflected in the \_event variable. Th
 
 The SCXML Processor _MUST_ ensure that the following fields are present in all events, whether internal or external.
 
--   _name_. This is a character string giving the name of the event. The SCXML Processor _MUST_ set the name field to the name of this event. It is what is matched against the 'event' attribute of <transition>. Note that transitions can do additional tests by using the value of this field inside boolean expressions in the 'cond' attribute.
--   _type_. This field describes the event type. The SCXML Processor _MUST_ set it to: "platform" (for events raised by the platform itself, such as error events), "internal" (for events raised by <raise> and <send> with target '\_internal') or "external" (for all other events).-   _sendid_. If the sending entity has specified a value for this, the Processor _MUST_ set this field to that value (see [_C Event I/O Processors_](https://www.w3.org/TR/scxml/#eventioprocessors) for details). Otherwise, in the case of error events triggered by a failed attempt to send an event, the Processor _MUST_ set this field to the send id of the triggering <send> element. Otherwise it _MUST_ leave it blank.
--   _origin_. This is a URI, equivalent to the 'target' attribute on the <send> element. For external events, the SCXML Processor _SHOULD_ set this field to a value which, when used as the value of 'target', will allow the receiver of the event to <send> a response back to the originating entity via the Event I/O Processor specified in 'origintype'. For internal and platform events, the Processor _MUST_ leave this field blank.
--   _origintype_. This is equivalent to the 'type' field on the <send> element. For external events, the SCXML Processor _SHOULD_ set this field to a value which, when used as the value of 'type', will allow the receiver of the event to <send> a response back to the originating entity at the URI specified by 'origin'. For internal and platform events, the Processor _MUST_ leave this field blank.
--   _invokeid_. If this event is generated from an invoked child process, the SCXML Processor _MUST_ set this field to the invoke id of the invocation that triggered the child process. Otherwise it _MUST_ leave it blank.
--   _data_. This field contains whatever data the sending entity chose to include in this event. The receiving SCXML Processor _SHOULD_ reformat this data to match its data model, but _MUST NOT_ otherwise modify it. If the conversion is not possible, the Processor _MUST_ leave the field blank and _MUST_ place an error 'error.execution' in the internal event queue.
+- _name_. This is a character string giving the name of the event. The SCXML Processor _MUST_ set the name field to the name of this event. It is what is matched against the 'event' attribute of <transition>. Note that transitions can do additional tests by using the value of this field inside boolean expressions in the 'cond' attribute.
+- _type_. This field describes the event type. The SCXML Processor _MUST_ set it to: "platform" (for events raised by the platform itself, such as error events), "internal" (for events raised by <raise> and <send> with target '\_internal') or "external" (for all other events).- _sendid_. If the sending entity has specified a value for this, the Processor _MUST_ set this field to that value (see [_C Event I/O Processors_](https://www.w3.org/TR/scxml/#eventioprocessors) for details). Otherwise, in the case of error events triggered by a failed attempt to send an event, the Processor _MUST_ set this field to the send id of the triggering <send> element. Otherwise it _MUST_ leave it blank.
+- _origin_. This is a URI, equivalent to the 'target' attribute on the <send> element. For external events, the SCXML Processor _SHOULD_ set this field to a value which, when used as the value of 'target', will allow the receiver of the event to <send> a response back to the originating entity via the Event I/O Processor specified in 'origintype'. For internal and platform events, the Processor _MUST_ leave this field blank.
+- _origintype_. This is equivalent to the 'type' field on the <send> element. For external events, the SCXML Processor _SHOULD_ set this field to a value which, when used as the value of 'type', will allow the receiver of the event to <send> a response back to the originating entity at the URI specified by 'origin'. For internal and platform events, the Processor _MUST_ leave this field blank.
+- _invokeid_. If this event is generated from an invoked child process, the SCXML Processor _MUST_ set this field to the invoke id of the invocation that triggered the child process. Otherwise it _MUST_ leave it blank.
+- _data_. This field contains whatever data the sending entity chose to include in this event. The receiving SCXML Processor _SHOULD_ reformat this data to match its data model, but _MUST NOT_ otherwise modify it. If the conversion is not possible, the Processor _MUST_ leave the field blank and _MUST_ place an error 'error.execution' in the internal event queue.
 
 ## 6 External Communications
 
@@ -468,8 +470,8 @@ Since an invocation will be canceled when the state machine leaves the invoking 
 
 #### 6.2.3 Children
 
--   <param>. The SCXML Processor _MUST_ evaluate this element when the parent <send> element is evaluated and pass the resulting data to the external service when the message is delivered. Occurs 0 or more times. See [_5.7 <param>_](https://www.w3.org/TR/scxml/#param) for details.
--   <content>. The SCXML Processor _MUST_ evaluate this element when the parent <send> element is evaluated and pass the resulting data to the external service when the message is delivered. Occurs 0 or 1 times. See [_5.6 <content>_](https://www.w3.org/TR/scxml/#content) for details.
+- <param>. The SCXML Processor _MUST_ evaluate this element when the parent <send> element is evaluated and pass the resulting data to the external service when the message is delivered. Occurs 0 or more times. See [_5.7 <param>_](https://www.w3.org/TR/scxml/#param) for details.
+- <content>. The SCXML Processor _MUST_ evaluate this element when the parent <send> element is evaluated and pass the resulting data to the external service when the message is delivered. Occurs 0 or 1 times. See [_5.6 <content>_](https://www.w3.org/TR/scxml/#content) for details.
 
 A conformant SCXML document _MUST_ specify exactly one of 'event', 'eventexpr' and <content>. A conformant document _MUST NOT_ specify "namelist" or <param> with <content>.
 
@@ -487,9 +489,9 @@ The <invoke> element is used to create an instance of an external service.
 
 #### 6.4.2 Children
 
--   <param>. Element containing data to be passed to the external service. Occurs 0 or more times. See [_5.7 <param>_](https://www.w3.org/TR/scxml/#param).
--   <finalize>. Element containing executable content to massage the data returned from the invoked component. Occurs 0 or 1 times. See [_6.5 <finalize>_](https://www.w3.org/TR/scxml/#finalize) for details.
--   <content>. The SCXML Processor MUST evaluate this element when the parent <invoke> element is evaluated and pass the resulting data to the invoked service. Occurs 0 or 1 times. See [_5.6 <content>_](https://www.w3.org/TR/scxml/#content) for details.
+- <param>. Element containing data to be passed to the external service. Occurs 0 or more times. See [_5.7 <param>_](https://www.w3.org/TR/scxml/#param).
+- <finalize>. Element containing executable content to massage the data returned from the invoked component. Occurs 0 or 1 times. See [_6.5 <finalize>_](https://www.w3.org/TR/scxml/#finalize) for details.
+- <content>. The SCXML Processor MUST evaluate this element when the parent <invoke> element is evaluated and pass the resulting data to the invoked service. Occurs 0 or 1 times. See [_5.6 <content>_](https://www.w3.org/TR/scxml/#content) for details.
 
 Platforms _MUST_ support http://www.w3.org/TR/scxml/ as a value for the 'type' attribute. Platforms _MAY_ support http://www.w3.org/TR/voicexml21/, which indicates a VoiceXML 2.1 interpreter, http://www.w3.org/TR/voicexml30/, which indicates a VoiceXML 3.x interpreter, and http://www.w3.org/TR/ccxml/, which indicates a CCXML 1.0 interpreter. Platforms _MAY_ support additional values, but they _SHOULD_ assign them the URI of a description of the relevant service. Processors _MAY_ define short form notations as an authoring convenience (e.g., "scxml" as equivalent to http://www.w3.org/TR/scxml/).
 
@@ -507,9 +509,9 @@ Invoked services of type http://www.w3.org/TR/scxml/, http://www.w3.org/TR/ccxml
 
 The implementation of <invoke>, including communication between parent and child processes, is platform-specific, but the following requirements hold in the case where the invoked process is itself an SCXML session:
 
--   If the 'name' of a <param> element in the <invoke> matches the 'id' of a <data> element in the top-level data declarations of the invoked session, the SCXML Processor _MUST_ use the value of the <param> element as the initial value of the corresponding <data> element. (The top-level data declarations are those that are contained in the <datamodel> element that is a child of <scxml>.) (Note that this means that any value specified in the <data> element is ignored.) The behavior of 'namelist' is similar. If the value of a key in the namelist matches the 'id' of a <data> element in the top-level data model of the invoked session, the SCXML Processor _MUST_ use the value of the key as the initial value of the corresponding <data> element. If the names do not match, the Processor _MUST NOT_ add the value of the <param> element or namelist key/value pair to the invoked session's data model. However the Processor _MAY_ make the values available by some other platform-specific means.
--   When the invoked state machine reaches a top-level final state, the Processor _MUST_ place the event done.invoke._id_ on the external event queue of the invoking machine, where _id_ is the invokeid for this invocation. Note that reaching a top level final state corresponds to normal termination of the machine and that it cannot generate or process any further events once it is in this state.
--   As described above, if the invoking state machine exits the state containing the invocation before it receives the done.invoke._id_ event, it cancels the invoked session. The method for doing this is platform-specific. However, when it is cancelled, the invoked session _MUST_ exit at the end of the next microstep. The Processor _MUST_ execute the <onexit> handlers for all active states in the invoked session, but it _MUST NOT_ generate the done.invoke._id_ event. Once it cancels the invoked session, the Processor _MUST_ ignore any events it receives from that session. In particular it _MUST NOT_ not insert them into the external event queue of the invoking session.-   The SCXML Processor _MUST_ support the use of SCXML Event/IO processor ([_C.1 SCXML Event I/O Processor_](https://www.w3.org/TR/scxml/#SCXMLEventProcessor)) to communicate between the invoking and the invoked sessions. The Processor _MAY_ support the use of other Event/IO processors to communicate between the invoking and the invoked sessions.
+- If the 'name' of a <param> element in the <invoke> matches the 'id' of a <data> element in the top-level data declarations of the invoked session, the SCXML Processor _MUST_ use the value of the <param> element as the initial value of the corresponding <data> element. (The top-level data declarations are those that are contained in the <datamodel> element that is a child of <scxml>.) (Note that this means that any value specified in the <data> element is ignored.) The behavior of 'namelist' is similar. If the value of a key in the namelist matches the 'id' of a <data> element in the top-level data model of the invoked session, the SCXML Processor _MUST_ use the value of the key as the initial value of the corresponding <data> element. If the names do not match, the Processor _MUST NOT_ add the value of the <param> element or namelist key/value pair to the invoked session's data model. However the Processor _MAY_ make the values available by some other platform-specific means.
+- When the invoked state machine reaches a top-level final state, the Processor _MUST_ place the event done.invoke._id_ on the external event queue of the invoking machine, where _id_ is the invokeid for this invocation. Note that reaching a top level final state corresponds to normal termination of the machine and that it cannot generate or process any further events once it is in this state.
+- As described above, if the invoking state machine exits the state containing the invocation before it receives the done.invoke._id_ event, it cancels the invoked session. The method for doing this is platform-specific. However, when it is cancelled, the invoked session _MUST_ exit at the end of the next microstep. The Processor _MUST_ execute the <onexit> handlers for all active states in the invoked session, but it _MUST NOT_ generate the done.invoke._id_ event. Once it cancels the invoked session, the Processor _MUST_ ignore any events it receives from that session. In particular it _MUST NOT_ not insert them into the external event queue of the invoking session.- The SCXML Processor _MUST_ support the use of SCXML Event/IO processor ([_C.1 SCXML Event I/O Processor_](https://www.w3.org/TR/scxml/#SCXMLEventProcessor)) to communicate between the invoking and the invoked sessions. The Processor _MAY_ support the use of other Event/IO processors to communicate between the invoking and the invoked sessions.
 
 #### 6.4.4 Data Sharing
 
@@ -521,15 +523,15 @@ The invoked and invoking process can also communicate via events. In addition to
 
 ```
   &lt;invoke type="http://www.w3.org/TR/voicexml21/" idlocation="myInvoke"/&gt;
-      
+
 ```
 
 In this case, the unique invoke identifier has been stored in the data model location MyInvoke. Since the target attribute is an expression which is evaluated, the following code will extract that identifier and send a message to the invoked VoiceXML session:
 
 ```
-         
+
   &lt;send type="http://www.w3.org/TR/voicexml21/" targetexpr="'#_' + myInvoke"/&gt;
-           
+
 ```
 
 Finally, in the case where the invoked external service is an SCXML session, it can use <send> with the special target '\_parent' and type 'scxml' to send events, possibly containing data, to the invoking session.
@@ -579,10 +581,10 @@ The 'datamodel' attribute on <scxml> defines the data model that the document us
 
 The definition of a data model _MUST_:
 
--   Specify the boolean expression language used as the value of the 'cond' attribute in <transition>, <if> and <elseif> This language _MUST_ not have side effects and _MUST_ include the predicate 'In', which takes a single argument, the id of a state in the enclosing state machine, and returns 'true' if the state machine is in that state.
--   Specify the location expression language that is used as the value of the 'location' attribute of the <assign> tag.
--   Specify the value expression language that is used as the value of the 'expr' attribute of the <data> and <assign> elements.
--   Specify the scripting language used inside the <script> element
+- Specify the boolean expression language used as the value of the 'cond' attribute in <transition>, <if> and <elseif> This language _MUST_ not have side effects and _MUST_ include the predicate 'In', which takes a single argument, the id of a state in the enclosing state machine, and returns 'true' if the state machine is in that state.
+- Specify the location expression language that is used as the value of the 'location' attribute of the <assign> tag.
+- Specify the value expression language that is used as the value of the 'expr' attribute of the <data> and <assign> elements.
+- Specify the scripting language used inside the <script> element
 
 ### B.2 The ECMAScript Data Model
 
@@ -612,17 +614,17 @@ The SCXML Event I/O Processor is intended to transport messages between SCXML se
 
 The sending and receiving SCXML Processors _MUST_ maintain the following mappings:
 
--   The 'name' field of the event raised in the receiving session _MUST_ match the value of the 'event' attribute of the <send> element in the sending session.
--   The 'origin' field of the event raised in the receiving session _MUST_ match the value of the 'location' field inside the entry for the SCXML Event I/O Processor in the \_ioprocessors system variable in the sending session.
--   The 'sendid' field of the event raised in the receiving session _MUST_ match the sendid in the sending session, if the author of the sending session specifies either the 'id' or 'idlocation' attribute. If the author does not specify either the 'id' or 'idlocation' attribute, the 'sendid' field _MUST_ be left empty.
--   The 'origintype' field of the event raised in the receiving session _MUST_ have the value "scxml".2.  The 'data' field of the event raised in the receiving session _MUST_ contain a copy of the data specified in the 'namelist' attribute or in <param> or <content> elements in the sending session. The nature of the copy operation depends on the data model in question. However, the Processor _MUST_ ensure that changes to the transmitted data in the receiving session do not affect the data in the sending session and vice-versa. The format of the 'data' field will depend on the data model of the receiving session. See [_B Data Models_](https://www.w3.org/TR/scxml/#profiles) for details. If the data models in the sending and receiving sessions are different, the mapping between them is platform-specific.
+- The 'name' field of the event raised in the receiving session _MUST_ match the value of the 'event' attribute of the <send> element in the sending session.
+- The 'origin' field of the event raised in the receiving session _MUST_ match the value of the 'location' field inside the entry for the SCXML Event I/O Processor in the \_ioprocessors system variable in the sending session.
+- The 'sendid' field of the event raised in the receiving session _MUST_ match the sendid in the sending session, if the author of the sending session specifies either the 'id' or 'idlocation' attribute. If the author does not specify either the 'id' or 'idlocation' attribute, the 'sendid' field _MUST_ be left empty.
+- The 'origintype' field of the event raised in the receiving session _MUST_ have the value "scxml".2. The 'data' field of the event raised in the receiving session _MUST_ contain a copy of the data specified in the 'namelist' attribute or in <param> or <content> elements in the sending session. The nature of the copy operation depends on the data model in question. However, the Processor _MUST_ ensure that changes to the transmitted data in the receiving session do not affect the data in the sending session and vice-versa. The format of the 'data' field will depend on the data model of the receiving session. See [_B Data Models_](https://www.w3.org/TR/scxml/#profiles) for details. If the data models in the sending and receiving sessions are different, the mapping between them is platform-specific.
 
 When using the SCXML Event I/O Processor, SCXML Processors _MUST_ support the following special targets for <send>:
 
--   #\_internal. If the target is the special term '#\_internal', the Processor _MUST_ add the event to the internal event queue of the sending session.
--   #\_scxml\__sessionid_. If the target is the special term '#\_scxml\__sessionid_', where _sessionid_ is the id of an SCXML session that is accessible to the Processor, the Processor _MUST_ add the event to the external queue of that session. The set of SCXML sessions that are accessible to a given SCXML Processor is platform-dependent.
--   #\_parent. If the target is the special term '#\_parent', the Processor _MUST_ add the event to the external event queue of the SCXML session that invoked the sending session, if there is one. See [_6.4 <invoke>_](https://www.w3.org/TR/scxml/#invoke) for details.
--   #\__invokeid_. If the target is the special term '#\__invokeid_', where _invokeid_ is the invokeid of an SCXML session that the sending session has created by <invoke>, the Processor _MUST_ add the event to the external queue of that session. See [_6.4 <invoke>_](https://www.w3.org/TR/scxml/#invoke) for details.
+- #\_internal. If the target is the special term '#\_internal', the Processor _MUST_ add the event to the internal event queue of the sending session.
+- #\_scxml\__sessionid_. If the target is the special term '#\_scxml\__sessionid_', where _sessionid_ is the id of an SCXML session that is accessible to the Processor, the Processor _MUST_ add the event to the external queue of that session. The set of SCXML sessions that are accessible to a given SCXML Processor is platform-dependent.
+- #\_parent. If the target is the special term '#\_parent', the Processor _MUST_ add the event to the external event queue of the SCXML session that invoked the sending session, if there is one. See [_6.4 <invoke>_](https://www.w3.org/TR/scxml/#invoke) for details.
+- #\__invokeid_. If the target is the special term '#\__invokeid_', where _invokeid_ is the invokeid of an SCXML session that the sending session has created by <invoke>, the Processor _MUST_ add the event to the external queue of that session. See [_6.4 <invoke>_](https://www.w3.org/TR/scxml/#invoke) for details.
 
 If neither the 'target' nor the 'targetexpr' attribute is specified, the SCXML Processor _MUST_ add the event to the external event queue of the sending session.
 
@@ -761,7 +763,7 @@ datatype List
    <code>function</code> some(f)     // Returns true if some element in the list satisfies the predicate f.  Returns false for an empty list.
    <code>function</code> every(f)    // Returns true if every element in the list satisfies the predicate f.  Returns true for an empty list.
 The notation [...] is used as a list constructor, so that '[t]' denotes a list whose only member is the object t.
- 
+
 datatype OrderedSet
    <code>procedure</code> add(e)              // Adds e to the set if it is not already a member
    <code>procedure</code> delete(e)           // Deletes e from the set
@@ -771,12 +773,12 @@ datatype OrderedSet
    <code>function</code> every(f)             // Returns true if every element in the set satisfies the predicate f. Returns true for an empty set.
    <code>function</code> hasIntersection(s)   // Returns true if this set and  set s have at least one member in common
    <code>function</code>  isEmpty()           // Is the set empty?
-   <code>procedure</code> clear()             // Remove all elements from the set (make it empty) 
+   <code>procedure</code> clear()             // Remove all elements from the set (make it empty)
    <code>function</code>  toList()            // Converts the set to a list that reflects the order in which elements were originally added
-                                 // In the case of sets created by intersection, the order of the first set (the one on which the method was called) is used 
+                                 // In the case of sets created by intersection, the order of the first set (the one on which the method was called) is used
                                  // In the case of sets created by union, the members of the first set (the one on which union was called) retain their original ordering
-                                 // while any members belonging to the second set only are placed after, retaining their ordering in their original set. 
- 
+                                 // while any members belonging to the second set only are placed after, retaining their ordering in their original set.
+
 
 datatype Queue
    <code>procedure</code> enqueue(e) // Puts e last in the queue
@@ -811,9 +813,9 @@ global binding
 The following binary predicates are used for determining the order in which states are entered and exited.
 
 ```
-<a id="AlgorithmforSCXMLInterpretation" name="AlgorithmforSCXMLInterpretation"><code></code></a><code><a id="entryOrder" name="entryOrder">entryOrder</a></code> // Ancestors precede descendants, with document order being used to break ties 
+<a id="AlgorithmforSCXMLInterpretation" name="AlgorithmforSCXMLInterpretation"><code></code></a><code><a id="entryOrder" name="entryOrder">entryOrder</a></code> // Ancestors precede descendants, with document order being used to break ties
     (Note:since ancestors precede descendants, this is equivalent to document order.)
-<code><a id="exitOrder" name="exitOrder">exitOrder</a></code>  // Descendants precede ancestors, with reverse document order being used to break ties 
+<code><a id="exitOrder" name="exitOrder">exitOrder</a></code>  // Descendants precede ancestors, with reverse document order being used to break ties
     (Note: since descendants follow ancestors, this is equivalent to reverse document order.)
 ```
 
@@ -864,12 +866,12 @@ procedure mainEventLoop():
     while running:
         enabledTransitions = null
         macrostepDone = false
-        # Here we handle eventless transitions and transitions 
+        # Here we handle eventless transitions and transitions
         # triggered by internal events until macrostep is complete
         while running and not macrostepDone:
             enabledTransitions = selectEventlessTransitions()
             if enabledTransitions.isEmpty():
-                if internalQueue.isEmpty(): 
+                if internalQueue.isEmpty():
                     macrostepDone = true
                 else:
                     internalEvent = internalQueue.dequeue()
@@ -877,7 +879,7 @@ procedure mainEventLoop():
                     enabledTransitions = selectTransitions(internalEvent)
             if not enabledTransitions.isEmpty():
                 microstep(enabledTransitions.toList())
-        # either we're in a final state, and we break out of the loop 
+        # either we're in a final state, and we break out of the loop
         if not running:
             break
         # or we've completed a macrostep, so we start a new macrostep by waiting for an external event
@@ -886,7 +888,7 @@ procedure mainEventLoop():
             for inv in state.invoke.sort(documentOrder):
                 invoke(inv)
         statesToInvoke.clear()
-        # Invoking may have raised internal error events and we iterate to handle them        
+        # Invoking may have raised internal error events and we iterate to handle them
         if not internalQueue.isEmpty():
             continue
         # A blocking wait for an external event.  Alternatively, if we have been invoked
@@ -902,12 +904,12 @@ procedure mainEventLoop():
                 if inv.invokeid == externalEvent.invokeid:
                     applyFinalize(inv, externalEvent)
                 if inv.autoforward:
-                    send(inv.id, externalEvent) 
+                    send(inv.id, externalEvent)
         enabledTransitions = selectTransitions(externalEvent)
         if not enabledTransitions.isEmpty():
-            microstep(enabledTransitions.toList()) 
-    # End of outer while running loop.  If we get here, we have reached a top-level final state or have been cancelled          
-    exitInterpreter()            
+            microstep(enabledTransitions.toList())
+    # End of outer while running loop.  If we get here, we have reached a top-level final state or have been cancelled
+    exitInterpreter()
 ```
 
 #### `procedure` exitInterpreter()
@@ -923,7 +925,7 @@ procedure exitInterpreter():
         for inv in s.invoke:
             cancelInvoke(inv)
         configuration.delete(s)
-        if isFinalState(s) and isScxmlElement(s.parent):   
+        if isFinalState(s) and isScxmlElement(s.parent):
             returnDoneEvent(s.donedata)
 ```
 
@@ -938,7 +940,7 @@ function selectEventlessTransitions():
     for state in atomicStates:
         loop: for s in [state].append(getProperAncestors(state, null)):
             for t in s.transition.sort(documentOrder):
-                if not t.event and conditionMatch(t): 
+                if not t.event and conditionMatch(t):
                     enabledTransitions.add(t)
                     break loop
     enabledTransitions = removeConflictingTransitions(enabledTransitions)
@@ -982,14 +984,14 @@ function removeConflictingTransitions(enabledTransitions):
             if computeExitSet([t1]).hasIntersection(computeExitSet([t2])):
                 if isDescendant(t1.source, t2.source):
                     transitionsToRemove.add(t2)
-                else: 
+                else:
                     t1Preempted = true
                     break
         if not t1Preempted:
             for t3 in transitionsToRemove.toList():
                 filteredTransitions.delete(t3)
             filteredTransitions.add(t1)
-           
+
     return filteredTransitions
 ```
 
@@ -1014,14 +1016,14 @@ For each state s in the list, if s has a deep history state h, set the history v
 
 ```
 procedure exitStates(enabledTransitions):
-    statesToExit = computeExitSet(enabledTransitions)           
+    statesToExit = computeExitSet(enabledTransitions)
     for s in statesToExit:
         statesToInvoke.delete(s)
     statesToExit = statesToExit.toList().sort(exitOrder)
     for s in statesToExit:
         for h in s.history:
             if h.type == "deep":
-                f = lambda s0: isAtomicState(s0) and isDescendant(s0,s) 
+                f = lambda s0: isAtomicState(s0) and isDescendant(s0,s)
             else:
                 f = lambda s0: s0.parent == s
             historyValue[h.id] = configuration.toList().filter(f)
@@ -1046,8 +1048,8 @@ function computeExitSet(transitions)
             for s in configuration:
                 if isDescendant(s,domain):
                     statesToExit.add(s)
-    return statesToExit   
-   
+    return statesToExit
+
 ```
 
 #### `procedure` executeTransitionContent(enabledTransitions)
@@ -1069,8 +1071,8 @@ procedure enterStates(enabledTransitions):
     statesToEnter = new OrderedSet()
     statesForDefaultEntry = new OrderedSet()
     // initialize the temporary table for default content in history states
-    defaultHistoryContent = new HashTable() 
-    computeEntrySet(enabledTransitions, statesToEnter, statesForDefaultEntry, defaultHistoryContent) 
+    defaultHistoryContent = new HashTable()
+    computeEntrySet(enabledTransitions, statesToEnter, statesForDefaultEntry, defaultHistoryContent)
     for s in statesToEnter.toList().sort(entryOrder):
         configuration.add(s)
         statesToInvoke.add(s)
@@ -1082,7 +1084,7 @@ procedure enterStates(enabledTransitions):
         if statesForDefaultEntry.isMember(s):
             executeContent(s.initial.transition)
         if defaultHistoryContent[s.id]:
-            executeContent(defaultHistoryContent[s.id]) 
+            executeContent(defaultHistoryContent[s.id])
         if isFinalState(s):
             if isSCXMLElement(s.parent):
                 running = false
@@ -1093,7 +1095,7 @@ procedure enterStates(enabledTransitions):
                 if isParallelState(grandparent):
                     if getChildStates(grandparent).every(isInFinalState):
                         internalQueue.enqueue(new Event("done.state." + grandparent.id))
- 
+
 ```
 
 #### `procedure` computeEntrySet(transitions, statesToEnter, statesForDefaultEntry, defaultHistoryContent)
@@ -1104,9 +1106,9 @@ Compute the complete set of states that will be entered as a result of taking 't
 procedure computeEntrySet(transitions, statesToEnter, statesForDefaultEntry, defaultHistoryContent)
     for t in transitions:
         for s in t.target:
-            addDescendantStatesToEnter(s,statesToEnter,statesForDefaultEntry, defaultHistoryContent) 
-        ancestor = getTransitionDomain(t) 
-        for s in getEffectiveTargetStates(t)):            
+            addDescendantStatesToEnter(s,statesToEnter,statesForDefaultEntry, defaultHistoryContent)
+        ancestor = getTransitionDomain(t)
+        for s in getEffectiveTargetStates(t)):
             addAncestorStatesToEnter(s, ancestor, statesToEnter, statesForDefaultEntry, defaultHistoryContent)
 ```
 
@@ -1128,7 +1130,7 @@ procedure addDescendantStatesToEnter(state,statesToEnter,statesForDefaultEntry, 
             defaultHistoryContent[state.parent.id] = state.transition.content
             for s in state.transition.target:
                 addDescendantStatesToEnter(s,statesToEnter,statesForDefaultEntry, defaultHistoryContent)
-            for s in state.transition.target:     
+            for s in state.transition.target:
                 addAncestorStatesToEnter(s, state.parent, statesToEnter, statesForDefaultEntry, defaultHistoryContent)
     else:
         statesToEnter.add(state)
@@ -1136,13 +1138,13 @@ procedure addDescendantStatesToEnter(state,statesToEnter,statesForDefaultEntry, 
             statesForDefaultEntry.add(state)
             for s in state.initial.transition.target:
                 addDescendantStatesToEnter(s,statesToEnter,statesForDefaultEntry, defaultHistoryContent)
-            for s in state.initial.transition.target:    
+            for s in state.initial.transition.target:
                 addAncestorStatesToEnter(s, state, statesToEnter, statesForDefaultEntry, defaultHistoryContent)
         else:
             if isParallelState(state):
                 for child in getChildStates(state):
                     if not statesToEnter.some(lambda s: isDescendant(s,child)):
-                        addDescendantStatesToEnter(child,statesToEnter,statesForDefaultEntry, defaultHistoryContent) 
+                        addDescendantStatesToEnter(child,statesToEnter,statesForDefaultEntry, defaultHistoryContent)
 
 ```
 
@@ -1157,7 +1159,7 @@ procedure addAncestorStatesToEnter(state, ancestor, statesToEnter, statesForDefa
         if isParallelState(anc):
             for child in getChildStates(anc):
                 if not statesToEnter.some(lambda s: isDescendant(s,child)):
-                    addDescendantStatesToEnter(child,statesToEnter,statesForDefaultEntry, defaultHistoryContent) 
+                    addDescendantStatesToEnter(child,statesToEnter,statesForDefaultEntry, defaultHistoryContent)
 ```
 
 #### `procedure` isInFinalState(s)
@@ -1218,7 +1220,7 @@ function getEffectiveTargetStates(transition)
         else:
             targets.add(s)
     return targets
-   
+
 ```
 
 #### `function` getProperAncestors(state1, state2)

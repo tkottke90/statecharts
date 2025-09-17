@@ -19,11 +19,11 @@ The `content` attribute contains the ID of the child state that should be initia
 ```xml
 <state id="gameLevel">
   <initial>playing</initial>
-  
+
   <state id="playing">
     <transition event="pause" target="paused"/>
   </state>
-  
+
   <state id="paused">
     <transition event="resume" target="playing"/>
   </state>
@@ -52,7 +52,7 @@ You can use the `<initial>` element:
 <!-- Using initial element -->
 <state id="workflow">
   <initial>step1</initial>
-  
+
   <state id="step1">
     <transition event="next" target="step2"/>
   </state>
@@ -67,18 +67,18 @@ You can use the `<initial>` element:
 ```xml
 <state id="application">
   <initial>loading</initial>
-  
+
   <state id="loading">
     <transition event="loaded" target="main"/>
   </state>
-  
+
   <state id="main">
     <initial>dashboard</initial>
-    
+
     <state id="dashboard">
       <transition event="navigate.settings" target="settings"/>
     </state>
-    
+
     <state id="settings">
       <transition event="navigate.back" target="dashboard"/>
     </state>
@@ -91,22 +91,22 @@ You can use the `<initial>` element:
 ```xml
 <state id="gameSystem">
   <initial>menu</initial>
-  
+
   <state id="menu">
     <transition event="startGame" target="playing"/>
   </state>
-  
+
   <state id="playing">
     <initial>level1</initial>
-    
+
     <state id="level1">
       <transition event="levelComplete" target="level2"/>
     </state>
-    
+
     <state id="level2">
       <transition event="gameComplete" target="victory"/>
     </state>
-    
+
     <final id="victory"/>
   </state>
 </state>
@@ -125,7 +125,7 @@ When determining the initial child state, the state machine uses the following p
 <state id="example" initial="fromAttribute">
   <!-- This initial element will be ignored because initial attribute exists -->
   <initial>fromElement</initial>
-  
+
   <state id="fromAttribute"/>
   <state id="fromElement"/>
   <state id="firstChild"/>
@@ -143,8 +143,8 @@ import { InitialNode } from '@your-library/statecharts';
 const initialNode = new InitialNode({
   initial: {
     content: 'startState',
-    children: []
-  }
+    children: [],
+  },
 });
 
 console.log(initialNode.content); // 'startState'
@@ -156,8 +156,8 @@ console.log(initialNode.content); // 'startState'
 // From parsed XML/JSON
 const result = InitialNode.createFromJSON({
   initial: {
-    content: 'initialState'
-  }
+    content: 'initialState',
+  },
 });
 
 if (result.success) {
@@ -169,7 +169,7 @@ if (result.success) {
 
 // Direct JSON format (without 'initial' wrapper)
 const directResult = InitialNode.createFromJSON({
-  content: 'myInitialState'
+  content: 'myInitialState',
 });
 ```
 
@@ -215,6 +215,7 @@ The InitialNode class inherits from BaseNode and provides:
 ## Behavior
 
 The Initial node is:
+
 - **Non-executable**: It does not participate in state machine execution
 - **Informational only**: It only provides information about initial state selection
 - **Passive**: It has no runtime behavior beyond providing its content value
@@ -233,6 +234,7 @@ The node uses the base `BaseNodeAttr` schema for validation.
 This implementation follows the [W3C SCXML specification](https://www.w3.org/TR/scxml/). The `<initial>` element is defined in [Section 3.2.1](https://www.w3.org/TR/scxml/#initial) of the specification.
 
 Key specification compliance:
+
 - Provides alternative to `initial` attribute
 - Contains the ID of the initial child state
 - Used for compound state initial state resolution
@@ -243,11 +245,13 @@ Key specification compliance:
 ### When to Use Initial Element vs Attribute
 
 **Use the `initial` attribute when:**
+
 - The initial state is simple and obvious
 - You want concise XML
 - The initial state is unlikely to change
 
 **Use the `<initial>` element when:**
+
 - You want to make the initial state selection more explicit
 - The XML structure benefits from visual clarity
 - You're following a consistent documentation style
@@ -264,11 +268,11 @@ Key specification compliance:
 <!-- Explicit with element -->
 <state id="complex">
   <initial>ready</initial>
-  
+
   <state id="ready">
     <!-- Complex state content -->
   </state>
-  
+
   <state id="active">
     <!-- Complex state content -->
   </state>

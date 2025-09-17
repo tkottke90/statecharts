@@ -4,7 +4,9 @@ import { RaiseNode } from './raise.node';
 import { InternalState, SCXMLEvent } from '../models/internalState';
 
 // Helper function to create test InternalState
-function createTestEventState(data: Record<string, unknown> = {}): InternalState {
+function createTestEventState(
+  data: Record<string, unknown> = {},
+): InternalState {
   const mockEvent: SCXMLEvent = {
     name: 'test.event',
     type: 'internal',
@@ -12,14 +14,14 @@ function createTestEventState(data: Record<string, unknown> = {}): InternalState
     origin: 'test-origin',
     origintype: '',
     invokeid: '',
-    data: {}
+    data: {},
   };
 
   return {
     _event: mockEvent,
     _datamodel: 'ecmascript',
     data: { ...data },
-    ...data // Also spread data at root level for backward compatibility with tests
+    ...data, // Also spread data at root level for backward compatibility with tests
   };
 }
 
@@ -30,8 +32,8 @@ describe('Node: <onentry>', () => {
       const onentryNode = new OnEntryNode({
         onentry: {
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       // Assert
@@ -47,8 +49,8 @@ describe('Node: <onentry>', () => {
       const onentryNode = new OnEntryNode({
         onentry: {
           content: 'Entry action content',
-          children: []
-        }
+          children: [],
+        },
       });
 
       // Assert
@@ -63,24 +65,24 @@ describe('Node: <onentry>', () => {
           location: 'entryFlag',
           expr: 'true',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const raiseChild = new RaiseNode({
         raise: {
           event: 'entry.complete',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       // Act
       const onentryNode = new OnEntryNode({
         onentry: {
           content: '',
-          children: [assignChild, raiseChild]
-        }
+          children: [assignChild, raiseChild],
+        },
       });
 
       // Assert
@@ -102,8 +104,8 @@ describe('Node: <onentry>', () => {
       const onentryNode = new OnEntryNode({
         onentry: {
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const initialState = createTestEventState({ counter: 0 });
@@ -123,15 +125,15 @@ describe('Node: <onentry>', () => {
           location: 'entryExecuted',
           expr: 'true',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const onentryNode = new OnEntryNode({
         onentry: {
           content: '',
-          children: [assignChild]
-        }
+          children: [assignChild],
+        },
       });
 
       const initialState = createTestEventState({ counter: 0 });
@@ -152,8 +154,8 @@ describe('Node: <onentry>', () => {
           location: 'step1',
           expr: '"completed"',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const assignChild2 = new AssignNode({
@@ -161,8 +163,8 @@ describe('Node: <onentry>', () => {
           location: 'step2',
           expr: '"completed"',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const assignChild3 = new AssignNode({
@@ -170,15 +172,15 @@ describe('Node: <onentry>', () => {
           location: 'counter',
           expr: 'counter + 1',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const onentryNode = new OnEntryNode({
         onentry: {
           content: '',
-          children: [assignChild1, assignChild2, assignChild3]
-        }
+          children: [assignChild1, assignChild2, assignChild3],
+        },
       });
 
       const initialState = createTestEventState({ counter: 5 });
@@ -199,15 +201,15 @@ describe('Node: <onentry>', () => {
         raise: {
           event: 'entry.completed',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const onentryNode = new OnEntryNode({
         onentry: {
           content: '',
-          children: [raiseChild]
-        }
+          children: [raiseChild],
+        },
       });
 
       const initialState = createTestEventState({ status: 'entering' });
@@ -230,23 +232,23 @@ describe('Node: <onentry>', () => {
           location: 'entryTime',
           expr: 'Date.now()',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const raiseChild = new RaiseNode({
         raise: {
           event: 'state.entered',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const onentryNode = new OnEntryNode({
         onentry: {
           content: '',
-          children: [assignChild, raiseChild]
-        }
+          children: [assignChild, raiseChild],
+        },
       });
 
       const initialState = createTestEventState({ counter: 1 });
@@ -270,20 +272,20 @@ describe('Node: <onentry>', () => {
           location: 'nested.value',
           expr: '"entry-value"',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const onentryNode = new OnEntryNode({
         onentry: {
           content: '',
-          children: [assignChild]
-        }
+          children: [assignChild],
+        },
       });
 
       const initialState = createTestEventState({
         existing: { prop: 'value' },
-        counter: 42
+        counter: 42,
       });
 
       // Act
@@ -304,8 +306,8 @@ describe('Node: <onentry>', () => {
       const jsonInput = {
         onentry: {
           content: 'Entry content',
-          children: []
-        }
+          children: [],
+        },
       };
 
       // Act
@@ -321,7 +323,7 @@ describe('Node: <onentry>', () => {
     it('should create OnEntryNode from minimal JSON input', () => {
       // Arrange
       const jsonInput = {
-        onentry: {}
+        onentry: {},
       };
 
       // Act
@@ -355,7 +357,7 @@ describe('Node: <onentry>', () => {
       // Arrange & Act
       const result = OnEntryNode.schema.safeParse({
         content: 'Entry content',
-        children: []
+        children: [],
       });
 
       // Assert
@@ -381,8 +383,8 @@ describe('Node: <onentry>', () => {
       const onentryNode = new OnEntryNode({
         onentry: {
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       // Assert - SCXML compliance checks
@@ -398,28 +400,28 @@ describe('Node: <onentry>', () => {
           location: 'log',
           expr: '"Entering state"',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const notifyRaise = new RaiseNode({
         raise: {
           event: 'state.entry.complete',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const onentryNode = new OnEntryNode({
         onentry: {
           content: '',
-          children: [logAssign, notifyRaise]
-        }
+          children: [logAssign, notifyRaise],
+        },
       });
 
       const stateContext = createTestEventState({
         currentState: 'idle',
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
 
       // Act
@@ -429,7 +431,9 @@ describe('Node: <onentry>', () => {
       expect(result.data.log).toBe('Entering state');
       expect(result.data.currentState).toBe('idle'); // Preserved
       expect(result._pendingInternalEvents).toHaveLength(1);
-      expect(result._pendingInternalEvents![0].name).toBe('state.entry.complete');
+      expect(result._pendingInternalEvents![0].name).toBe(
+        'state.entry.complete',
+      );
     });
   });
 
@@ -439,8 +443,8 @@ describe('Node: <onentry>', () => {
       const onentryNode = new OnEntryNode({
         onentry: {
           content: 'Some content',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const initialState = createTestEventState();
@@ -459,20 +463,20 @@ describe('Node: <onentry>', () => {
           location: 'newProp',
           expr: '"test"',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const onentryNode = new OnEntryNode({
         onentry: {
           content: '',
-          children: [assignChild]
-        }
+          children: [assignChild],
+        },
       });
 
       const minimalState: InternalState = {
         _datamodel: 'ecmascript',
-        data: {}
+        data: {},
       };
 
       // Act
@@ -489,8 +493,8 @@ describe('Node: <onentry>', () => {
           location: 'user.profile.name',
           expr: '"John Doe"',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const assignChild2 = new AssignNode({
@@ -498,20 +502,20 @@ describe('Node: <onentry>', () => {
           location: 'user.profile.active',
           expr: 'true',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const onentryNode = new OnEntryNode({
         onentry: {
           content: '',
-          children: [assignChild1, assignChild2]
-        }
+          children: [assignChild1, assignChild2],
+        },
       });
 
       const initialState = createTestEventState({
         user: { id: 123 },
-        system: { version: '1.0' }
+        system: { version: '1.0' },
       });
 
       // Act
@@ -521,7 +525,9 @@ describe('Node: <onentry>', () => {
       expect(result.data.user).toBeDefined();
       expect(result.data.system).toBeDefined();
 
-      const { user } = result.data as { user: { id: number; profile: { name: string; active: boolean } } };
+      const { user } = result.data as {
+        user: { id: number; profile: { name: string; active: boolean } };
+      };
       const { system } = result.data as { system: { version: string } };
 
       expect(user.id).toBe(123); // Preserved

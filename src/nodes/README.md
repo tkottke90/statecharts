@@ -62,7 +62,7 @@ BaseExecutableNode (extends BaseNode)
 
 ## Common Patterns
 
-The below examples show the usage of _Nodes_ via an XML definition.  This outlines the structure of the state machine using the nodes above and is parsed by the StatChart classes `#fromXML` method.
+The below examples show the usage of _Nodes_ via an XML definition. This outlines the structure of the state machine using the nodes above and is parsed by the StatChart classes `#fromXML` method.
 
 ### Basic State Machine Structure
 
@@ -72,27 +72,27 @@ The below examples show the usage of _Nodes_ via an XML definition.  This outlin
     <data id="counter" expr="0"/>
     <data id="status">ready</data>
   </datamodel>
-  
+
   <state id="idle">
     <onentry>
       <assign location="status" expr="'idle'"/>
     </onentry>
-    
+
     <transition event="start" target="active">
       <assign location="counter" expr="counter + 1"/>
       <raise event="stateChanged"/>
     </transition>
   </state>
-  
+
   <state id="active">
     <onentry>
       <assign location="status" expr="'active'"/>
     </onentry>
-    
+
     <onexit>
       <assign location="status" expr="'stopping'"/>
     </onexit>
-    
+
     <transition event="stop" target="idle"/>
   </state>
 </scxml>
@@ -112,7 +112,7 @@ The below examples show the usage of _Nodes_ via an XML definition.  This outlin
           <transition event="heal" target="healthy"/>
         </state>
       </state>
-      
+
       <state id="scoreSystem" initial="scoring">
         <state id="scoring">
           <transition event="scorePoint" target="scoring">
@@ -134,19 +134,19 @@ The below examples show the usage of _Nodes_ via an XML definition.  This outlin
     <data id="currentIndex" expr="0"/>
     <data id="completed" expr="false"/>
   </datamodel>
-  
+
   <state id="processing">
     <transition event="processNext" target="processing" cond="currentIndex < items.length">
       <assign location="currentIndex" expr="currentIndex + 1"/>
       <raise eventexpr="'item.' + currentIndex + '.processed'"/>
     </transition>
-    
+
     <transition event="processNext" target="completed" cond="currentIndex >= items.length">
       <assign location="completed" expr="true"/>
       <raise event="allItemsProcessed"/>
     </transition>
   </state>
-  
+
   <final id="completed">
     <onentry>
       <raise event="processingComplete"/>
@@ -172,7 +172,7 @@ import {
   OnEntryNode,
   OnExitNode,
   RaiseNode,
-  TransitionNode
+  TransitionNode,
 } from '@your-library/statecharts';
 ```
 
@@ -183,26 +183,26 @@ import {
 const activeState = new StateNode({
   state: {
     id: 'active',
-    initial: undefined
-  }
+    initial: undefined,
+  },
 });
 
 // Create entry actions
 const entryAction = new OnEntryNode({
-  onentry: {}
+  onentry: {},
 });
 
 const statusAssign = new AssignNode({
   assign: {
     location: 'status',
-    expr: '"active"'
-  }
+    expr: '"active"',
+  },
 });
 
 const notifyRaise = new RaiseNode({
   raise: {
-    event: 'stateEntered'
-  }
+    event: 'stateEntered',
+  },
 });
 
 // Build the hierarchy
@@ -217,8 +217,8 @@ activeState.children.push(entryAction);
 const result = StateNode.createFromJSON({
   state: {
     id: 'myState',
-    initial: 'substate'
-  }
+    initial: 'substate',
+  },
 });
 
 if (result.success) {
@@ -234,6 +234,7 @@ if (result.success) {
 ### Schema Validation
 
 All nodes use Zod schemas for runtime validation:
+
 - Type safety at runtime
 - Detailed error messages
 - Attribute validation
@@ -242,6 +243,7 @@ All nodes use Zod schemas for runtime validation:
 ### Expression Evaluation
 
 Nodes support JavaScript expression evaluation:
+
 - Dynamic value computation
 - State context access
 - Function calls and operations
@@ -250,6 +252,7 @@ Nodes support JavaScript expression evaluation:
 ### Event System
 
 Comprehensive event handling:
+
 - Internal event generation
 - External event processing
 - Event queuing and processing
@@ -258,6 +261,7 @@ Comprehensive event handling:
 ### State Management
 
 Immutable state updates:
+
 - Structural sharing for performance
 - Predictable state changes
 - Debugging and history tracking
@@ -266,12 +270,14 @@ Immutable state updates:
 ## Error Handling
 
 All nodes implement robust error handling:
+
 - Schema validation errors
 - Expression evaluation errors
 - Runtime execution errors
 - Platform error events
 
 Error events follow SCXML naming conventions:
+
 - `error.node.type` - Specific error types
 - Platform events for system errors
 - Detailed error information in event data
@@ -297,6 +303,7 @@ This implementation follows the [W3C SCXML specification](https://www.w3.org/TR/
 ## Testing
 
 Each node type includes comprehensive test suites:
+
 - Unit tests for individual node behavior
 - Integration tests for node interactions
 - Schema validation tests

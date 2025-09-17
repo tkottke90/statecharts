@@ -8,13 +8,14 @@ Final states are terminal states that signify the end of execution for a particu
 
 ## Attributes
 
-| Attribute | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `id` | `string` | Yes | - | Unique identifier for the final state |
+| Attribute | Type     | Required | Default | Description                           |
+| --------- | -------- | -------- | ------- | ------------------------------------- |
+| `id`      | `string` | Yes      | -       | Unique identifier for the final state |
 
 ### ID
 
 A unique identifier for the final state within the state machine. This is required and must be a non-empty string. The ID is used for:
+
 - Identifying the final state in the state machine hierarchy
 - Generating the appropriate `done.state.{parent_id}` event
 - Debugging and state tracking
@@ -60,20 +61,20 @@ The parent state ID is determined by removing the last segment from the final st
     <transition event="win" target="victory"/>
     <transition event="lose" target="defeat"/>
   </state>
-  
+
   <final id="victory">
     <onentry>
       <assign location="score" expr="score + 1000"/>
       <raise event="levelComplete"/>
     </onentry>
   </final>
-  
+
   <final id="defeat">
     <onentry>
       <assign location="lives" expr="lives - 1"/>
     </onentry>
   </final>
-  
+
   <!-- This transition will be triggered by done.state.gameLevel -->
   <transition event="done.state.gameLevel" target="nextLevel"/>
 </state>
@@ -87,19 +88,19 @@ The parent state ID is determined by removing the last segment from the final st
     <state id="healthy">
       <transition event="damage" target="dead" cond="health <= 0"/>
     </state>
-    
+
     <final id="dead">
       <onentry>
         <raise event="gameOver"/>
       </onentry>
     </final>
   </state>
-  
+
   <state id="scoreSystem" initial="scoring">
     <state id="scoring">
       <transition event="maxScore" target="completed"/>
     </state>
-    
+
     <final id="completed"/>
   </state>
 </parallel>
@@ -115,7 +116,7 @@ The parent state ID is determined by removing the last segment from the final st
   <state id="start">
     <transition event="shutdown" target="terminated"/>
   </state>
-  
+
   <!-- This final state terminates the entire state machine -->
   <final id="terminated">
     <onentry>
@@ -134,20 +135,20 @@ The parent state ID is determined by removing the last segment from the final st
     <transition event="error" target="failed"/>
     <transition event="cancel" target="cancelled"/>
   </state>
-  
+
   <final id="completed">
     <onentry>
       <assign location="result" expr="'success'"/>
     </onentry>
   </final>
-  
+
   <final id="failed">
     <onentry>
       <assign location="result" expr="'error'"/>
       <assign location="errorTime" expr="Date.now()"/>
     </onentry>
   </final>
-  
+
   <final id="cancelled">
     <onentry>
       <assign location="result" expr="'cancelled'"/>
@@ -168,8 +169,8 @@ const finalState = new FinalNode({
   final: {
     id: 'completed',
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 
 // Nested final state (will generate done event)
@@ -177,8 +178,8 @@ const nestedFinal = new FinalNode({
   final: {
     id: 'game.level1.victory',
     content: '',
-    children: []
-  }
+    children: [],
+  },
 });
 ```
 
@@ -188,8 +189,8 @@ const nestedFinal = new FinalNode({
 // From parsed XML/JSON
 const result = FinalNode.createFromJSON({
   final: {
-    id: 'finished'
-  }
+    id: 'finished',
+  },
 });
 
 if (result.success) {
@@ -201,7 +202,7 @@ if (result.success) {
 
 // Direct JSON format (without 'final' wrapper)
 const directResult = FinalNode.createFromJSON({
-  id: 'terminated'
+  id: 'terminated',
 });
 ```
 
@@ -211,12 +212,12 @@ const directResult = FinalNode.createFromJSON({
 import { InternalState } from '@your-library/statecharts';
 
 const finalNode = new FinalNode({
-  final: { id: 'game.combat.victory', content: '', children: [] }
+  final: { id: 'game.combat.victory', content: '', children: [] },
 });
 
 const state: InternalState = {
   data: { score: 100 },
-  _datamodel: 'ecmascript'
+  _datamodel: 'ecmascript',
 };
 
 // Mount the final state (triggers done event generation)
@@ -225,7 +226,7 @@ const result = await finalNode.mount(state);
 // Check for generated done event
 if (result.state._pendingInternalEvents) {
   const doneEvent = result.state._pendingInternalEvents.find(
-    event => event.name === 'done.state.game.combat'
+    event => event.name === 'done.state.game.combat',
   );
   console.log('Done event generated:', doneEvent);
 }
@@ -242,6 +243,7 @@ The FinalNode class exposes the following readonly property:
 ### mount(state: InternalState): Promise<MountResponse>
 
 Overrides the base mount method to:
+
 1. Execute any onentry actions (inherited from BaseStateNode)
 2. Generate the appropriate `done.state.{parent_id}` event if this is not a top-level final state
 3. Add the done event to the pending internal events queue
@@ -270,6 +272,7 @@ Invalid values will cause `createFromJSON()` to return a validation error.
 This implementation follows the [W3C SCXML specification](https://www.w3.org/TR/scxml/). The `<final>` element is defined in [Section 3.4](https://www.w3.org/TR/scxml/#final) of the specification.
 
 Key specification compliance:
+
 - Automatic generation of `done.state.{parent_id}` events
 - Support for onentry actions
 - No outgoing transitions allowed

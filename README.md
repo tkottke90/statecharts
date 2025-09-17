@@ -1,14 +1,214 @@
 # Statecharts
 
-This library is a provides a NodeJS implementation of a Finite State machine driven by XML configuration files. Developed from the (SCXML Specification)(https://www.w3.org/TR/scxml/) this enables the configuration of processes via plain text.
+A comprehensive TypeScript implementation of the [W3C SCXML specification](https://www.w3.org/TR/scxml/) for building robust, event-driven state machines. Define complex state machine logic using XML and execute it with full SCXML compliance in Node.js applications.
 
-## Documentation
+## ✨ Features
 
-- [Getting Started](./docs/Getting_Started.md)
--
-- [Available Nodes](./src/nodes/)
-- [Errors](./src/errors/Errors.md)
+- 🎯 **SCXML Compliant** - Full implementation of W3C SCXML specification
+- 🔧 **TypeScript Support** - Complete type safety with comprehensive TypeScript definitions
+- 🚀 **Easy Integration** - Simple 4-step setup process for quick adoption
+- 📊 **Event-Driven** - Robust event processing with internal/external event queues
+- 🏗️ **Hierarchical States** - Support for nested states, parallel states, and state history
+- 💾 **Data Management** - Built-in data model with expression evaluation
+- 🧪 **Well Tested** - Comprehensive test coverage with Jest
+- 📚 **Extensive Documentation** - Complete API documentation and examples
 
-## Contributing
+## 🚀 Quick Start
 
-Contributions are welcome in the form of Issues and/or PRs.
+### Installation
+
+```bash
+npm install statecharts
+```
+
+**Requirements:**
+- Node.js >= 20.0.0
+- TypeScript (recommended)
+
+### Basic Usage
+
+```typescript
+import { StateChart } from 'statecharts';
+
+// Define your state machine in XML
+const xmlString = `
+  <scxml version="1.0" datamodel="ecmascript" initial="idle">
+    <datamodel>
+      <data id="counter" expr="0"/>
+    </datamodel>
+
+    <state id="idle">
+      <transition event="start" target="active"/>
+    </state>
+
+    <state id="active">
+      <onentry>
+        <assign location="counter" expr="counter + 1"/>
+      </onentry>
+      <transition event="stop" target="idle"/>
+    </state>
+  </scxml>
+`;
+
+// Parse and execute
+const stateChart = StateChart.fromXML(xmlString);
+const result = await stateChart.execute({
+  data: {},
+  _datamodel: 'ecmascript'
+});
+
+console.log('State machine result:', result.data);
+// Output: { counter: 1 }
+```
+
+## 📚 Documentation
+
+### Getting Started
+- **[Getting Started Guide](./docs/Getting_Started.md)** - Complete walkthrough from installation to execution
+
+### Core Documentation
+- **[SCXML Nodes](./src/nodes/README.md)** - Complete reference for all SCXML elements
+- **[Model Classes](./src/models/README.md)** - Understanding the underlying architecture
+- **[Error Handling](./src/errors/Errors.md)** - Comprehensive error handling guide
+
+### Node Reference
+- **[State Node](./src/nodes/state.md)** - Individual states and state hierarchies
+- **[Transition Node](./src/nodes/transition.md)** - State transitions and conditions
+- **[Parallel Node](./src/nodes/parallel.md)** - Concurrent state processing
+- **[SCXML Node](./src/nodes/scxml.md)** - Root state machine container
+- **[Data Management](./src/nodes/datamodel.md)** - Working with data models
+- **[Executable Content](./src/nodes/assign.md)** - Variable assignment and actions
+
+### Advanced Topics
+- **[OnEntry/OnExit Actions](./src/nodes/onentry.md)** - State lifecycle management
+- **[Event Generation](./src/nodes/raise.md)** - Internal event creation
+- **[Final States](./src/nodes/final.md)** - Terminal state handling
+
+## 🏗️ Architecture
+
+The library is built on a solid foundation of TypeScript classes that implement the SCXML specification:
+
+```
+StateChart (Main API)
+├── BaseNode (Foundation for all SCXML elements)
+│   ├── BaseStateNode (State-like elements)
+│   │   ├── StateNode, ParallelNode, FinalNode
+│   └── BaseExecutableNode (Executable content)
+│       ├── AssignNode, RaiseNode, DataNode
+│       └── OnEntryNode, OnExitNode
+├── EventQueue (FIFO/LIFO event processing)
+└── InternalState (Immutable state management)
+```
+
+## 🎯 Use Cases
+
+Perfect for applications that need:
+
+- **Workflow Management** - Complex business process automation
+- **Game State Management** - Character states, game phases, UI states
+- **Protocol Implementation** - Network protocols, communication flows
+- **User Interface Logic** - Multi-step forms, wizards, navigation
+- **IoT Device Control** - Device state management and automation
+- **API Orchestration** - Service coordination and error handling
+
+## 🔧 Advanced Features
+
+### Parallel State Processing
+```xml
+<parallel id="multimedia">
+  <state id="audio">
+    <transition event="mute" target="muted"/>
+  </state>
+  <state id="video">
+    <transition event="pause" target="paused"/>
+  </state>
+</parallel>
+```
+
+### Data Model Integration
+```xml
+<datamodel>
+  <data id="user" expr="{ name: 'John', role: 'admin' }"/>
+  <data id="sessionTimeout" expr="30 * 60 * 1000"/>
+</datamodel>
+```
+
+### Event-Driven Transitions
+```xml
+<state id="waiting">
+  <transition event="success" target="completed"/>
+  <transition event="error.*" target="failed"/>
+  <transition event="timeout" target="expired"/>
+</state>
+```
+
+## 🧪 Testing
+
+The library includes comprehensive test coverage:
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Generate coverage report
+npm run test -- --coverage
+```
+
+## 📖 Standards Compliance
+
+This implementation follows the [W3C SCXML specification](https://www.w3.org/TR/scxml/) and includes:
+
+- ✅ **Core Constructs** - States, transitions, events, data model
+- ✅ **Executable Content** - Variable assignment, event raising, conditionals
+- ✅ **Advanced Features** - Parallel states, history states, error handling
+- ✅ **Event Processing** - Internal/external event queues with proper prioritization
+- ✅ **Data Model** - ECMAScript data model with expression evaluation
+
+## 🤝 Contributing
+
+We welcome contributions! Here's how you can help:
+
+### 🐛 Report Issues
+Found a bug or have a feature request? Please [open an issue](https://github.com/your-repo/statecharts/issues) with:
+- Clear description of the problem or feature
+- Steps to reproduce (for bugs)
+- Expected vs actual behavior
+- Code examples when applicable
+
+### 🔧 Submit Pull Requests
+Ready to contribute code? Great! Please:
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes with tests
+4. Ensure all tests pass (`npm test`)
+5. Follow the existing code style (`npm run format`)
+6. Submit a pull request with a clear description
+
+### 📝 Improve Documentation
+Help make the documentation better:
+- Fix typos or unclear explanations
+- Add more examples
+- Improve existing guides
+- Create new tutorials
+
+### 🧪 Add Tests
+Help improve test coverage:
+- Add unit tests for new features
+- Create integration tests
+- Add edge case testing
+- Improve existing test clarity
+
+## 📄 License
+
+This project is licensed under the ISC License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Built according to the [W3C SCXML Specification](https://www.w3.org/TR/scxml/)
+
+---
+
+**Ready to get started?** Check out the [Getting Started Guide](./docs/Getting_Started.md) for a complete walkthrough!

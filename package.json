@@ -13,8 +13,9 @@
   "scripts": {
     "build": "tsc",
     "format": "eslint --fix . && prettier --write .",
-    "test": "jest --verbose --coverage",
-    "test:watch": "jest --watchAll --verbose",
+    "test": "jest",
+    "test:cicd": "jest --verbose --coverage",
+    "test:watch": "jest --watchAll --verbose --coverage",
     "xml2json": "node scripts/xml-to-json/test.cjs"
   },
   "keywords": [],

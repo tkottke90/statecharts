@@ -6,3 +6,4 @@ export * from './base-state';
 export * from './base-executable';
 export * from './history';
 export * from './state-execution-history';
+export * from './event-io-processor';

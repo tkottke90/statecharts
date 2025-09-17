@@ -21,7 +21,8 @@ This roadmap outlines the path to a complete W3C SCXML-compliant state machine i
 - ✅ **Entry/Exit Actions** - `<onentry>` and `<onexit>` elements with executable content
 - ✅ **Parallel States** - `<parallel>` elements with simultaneous child state entry
 - ✅ **Data Model Initialization** - Expression evaluation during state machine startup
-- ✅ **248+ Passing Tests** - Comprehensive test coverage with parallel states and data model
+- ✅ **External Communication** - `<send>` and `<param>` elements with HTTP processor support
+- ✅ **328+ Passing Tests** - Comprehensive test coverage including external communication system
 
 ### **Ready for Production Usage:**
 
@@ -64,7 +65,7 @@ Complete state machines with parallel states, data model initialization, conditi
 - [x] ~~EventlessState/EventState interface pattern~~ → **Unified InternalState interface** ✨
 - [x] Node-based parsing system with comprehensive error handling
 - [x] BaseNode, BaseStateNode, BaseExecutableNode class hierarchy (updated for unified state)
-- [x] Comprehensive unit test coverage (248 passed, 28 skipped, 17 todo)
+- [x] Comprehensive unit test coverage (328+ passed, 28 skipped, 17 todo)
 
 **SCXML Elements**
 
@@ -77,6 +78,8 @@ Complete state machines with parallel states, data model initialization, conditi
 - [x] `<datamodel>` - Data model container (unified state interface)
 - [x] `<assign>` - Variable assignment (unified state interface, needs expression evaluator)
 - [x] `<raise>` - Event raising with **complete pending event queue integration** ✨
+- [x] `<send>` - **External event sending with HTTP processor support** ✨
+- [x] `<param>` - **Parameter passing for external communication** ✨
 
 **StateChart Infrastructure**
 
@@ -88,6 +91,9 @@ Complete state machines with parallel states, data model initialization, conditi
 - [x] Error event naming standard (`error.<label>.<type>`)
 - [x] **Complete pending internal events system** for executable content ✨
 - [x] **Unified InternalState interface** replacing EventlessState/EventState complexity ✨
+- [x] **Event I/O Processor Registry** - Pluggable external communication system ✨
+- [x] **HTTP Processor** - Built-in HTTP request handling with timeout and error management ✨
+- [x] **SCXML Processor** - Inter-state-machine communication support ✨
 
 ### 🔧 Partially Implemented
 
@@ -391,21 +397,30 @@ Complete state machines with parallel states, data model initialization, conditi
 - [x] **Enhanced history detail** with configurable tracking options - **COMPLETED** ✅
 - [x] **History export formats** (JSON with Node.js file system integration) - **COMPLETED** ✅
 
-**Use Cases:**
+**✅ PHASE 6.1 ACHIEVEMENTS - COMPLETE STATE EXECUTION HISTORY SYSTEM:**
 
-- **XML Configuration Debugging** - Track every step of state machine execution
-- **Performance Analysis** - Identify slow transitions and bottlenecks
-- **UI Visualization** - Enable Real-time state machine visualization
-- **Testing & Validation** - Verify expected execution paths
-- **Production Monitoring** - Track state machine behavior in production
+- ✅ **StateExecutionHistory class** extending EventEmitter with comprehensive tracking ✨
+- ✅ **9 distinct event types** (STATE_ENTRY, STATE_EXIT, TRANSITION, EVENT_PROCESSED, etc.) ✨
+- ✅ **Comprehensive HistoryEntry interface** with causality tracking and metadata ✨
+- ✅ **Real-time event emission** for external monitoring and visualization tools ✨
+- ✅ **Powerful query API** with filtering, sorting, pagination, and regex support ✨
+- ✅ **Memory management** with configurable retention policies and automatic cleanup ✨
+- ✅ **Serialization system** with JSON export/import and Node.js file system integration ✨
+- ✅ **StateChart integration** with automatic history tracking in all execution methods ✨
+- ✅ **Performance metrics** with precise timing and statistics collection ✨
+- ✅ **Comprehensive unit tests** (70 total tests: 34 core + 25 integration + 11 StateChart) ✨
+- ✅ **Complete documentation** with detailed API reference and usage examples ✨
+- ✅ **Production-ready implementation** with TypeScript strict mode compliance ✨
 
-**Deliverables:**
+**🎯 RESULT: Complete debugging and monitoring system for state machine execution!**
 
-- StateExecutionHistory class with comprehensive tracking
-- History event emission system with configurable listeners
-- Integration with existing StateChart execution flow
-- Comprehensive unit tests for history tracking
-- Documentation and examples for debugging workflows
+**Use Cases Enabled:**
+
+- ✅ **XML Configuration Debugging** - Track every step of state machine execution with causality
+- ✅ **Performance Analysis** - Identify slow transitions and bottlenecks with precise timing
+- ✅ **UI Visualization** - Real-time state machine visualization via event emission
+- ✅ **Testing & Validation** - Verify expected execution paths with comprehensive history
+- ✅ **Production Monitoring** - Track state machine behavior with configurable retention
 
 ## Phase 7: Extensible Parser Architecture 🔧
 
@@ -487,20 +502,23 @@ Complete state machines with parallel states, data model initialization, conditi
 - [ ] `<script>` arbitrary code execution
 - [ ] `<log>` debugging output
 
-### 8.3 External Communication
+### 8.3 External Communication ✅ **COMPLETED**
 
-- [ ] `<send>` element for external events
+- [x] `<send>` element for external events ✅
+- [x] `<param>` element for parameter passing ✅
+- [x] Event I/O processors (HTTP, SCXML) ✅
+- [x] Communication error handling ✅
 - [ ] `<invoke>` element for external services
-- [ ] Event I/O processors
-- [ ] Communication error handling
 
 **Deliverables:**
 
 - HistoryNode class with shallow and deep history support
 - Conditional execution nodes (`<if>`, `<elseif>`, `<else>`)
 - Iteration support with `<foreach>` element
-- External communication with `<send>` and `<invoke>` elements
-- Comprehensive test coverage for all advanced features
+- ✅ **External communication with `<send>` and `<param>` elements** - **COMPLETED**
+- ✅ **Event I/O Processor system with HTTP and SCXML processors** - **COMPLETED**
+- ✅ **Comprehensive test coverage for external communication** (80 tests) - **COMPLETED**
+- [ ] `<invoke>` element for external services (remaining)
 
 **Benefits:**
 
@@ -620,16 +638,45 @@ Complete state machines with parallel states, data model initialization, conditi
 - [x] **Data model initialization with expression evaluation** - **COMPLETED** ✅
 - [x] **Integration tests passing** (4 comprehensive parallel state tests) ✅
 
+### Phase 6 Complete ✅ **MAJOR MILESTONE ACHIEVED - STATE EXECUTION HISTORY TRACKING**
+
+- [x] **Complete history tracking system operational** - **COMPLETED** ✅
+- [x] **Real-time event emission for external monitoring** - **COMPLETED** ✅
+- [x] **Powerful query API with filtering and pagination** - **COMPLETED** ✅
+- [x] **Causality tracking with parent-child relationships** - **COMPLETED** ✅
+- [x] **Memory management with configurable retention** - **COMPLETED** ✅
+- [x] **Serialization system with Node.js file system integration** - **COMPLETED** ✅
+- [x] **StateChart integration with automatic tracking** - **COMPLETED** ✅
+- [x] **Comprehensive test coverage** (70 tests passing) ✅
+
+### Phase 8.3 Complete ✅ **MAJOR MILESTONE ACHIEVED - EXTERNAL COMMUNICATION SYSTEM**
+
+- [x] **EventIOProcessor interface** (pluggable communication architecture) ✅
+- [x] **EventIOProcessorRegistry** (centralized processor management with auto-detection) ✅
+- [x] **HTTPProcessor implementation** (complete HTTP request handling with timeouts) ✅
+- [x] **SCXMLProcessor implementation** (inter-state-machine communication) ✅
+- [x] **SendNode class** (`<send>` element with full SCXML compliance) ✅
+- [x] **ParamNode class** (`<param>` element for structured data passing) ✅
+- [x] **Parameter collection utilities** (namelist and param element processing) ✅
+- [x] **Delay processing** (setTimeout-based scheduling for timed events) ✅
+- [x] **Error handling** (SCXML-compliant error events and timeout management) ✅
+- [x] **Expression evaluation integration** (dynamic targets, delays, and parameters) ✅
+- [x] **Comprehensive test coverage** (80 unit tests across all components) ✅
+- [x] **Complete documentation** (usage guides and API reference for all components) ✅
+- [x] **Working examples** (practical HTTP request patterns and webhook systems) ✅
+
 ## Getting Started
 
-1. **Review Current Tests**: Run `npm test` to see current test coverage (248 passed, 28 skipped, 17 todo!)
+1. **Review Current Tests**: Run `npm test` to see current test coverage (328+ passed, 28 skipped, 17 todo!)
 2. **Phase 1 Complete**: ✅ Event system foundation is fully operational
 3. **Phase 2 Complete**: ✅ SCXML root element with full W3C compliance
 4. **Phase 3 Complete**: ✅ Expression evaluator with conditional logic and data manipulation
 5. **Phase 4 Complete**: ✅ Entry/exit actions (`<onentry>` and `<onexit>` elements)
 6. **Phase 5 Complete**: ✅ Parallel states (`<parallel>` elements) with data model initialization
-7. **Continue with Phase 7**: Extensible parser architecture (custom node registration)
-8. **Then Phase 8**: Advanced features (history states, conditional execution, external communication)
+7. **Phase 6.1 Complete**: ✅ State execution history tracking with debugging capabilities
+8. **Phase 8.3 Complete**: ✅ External communication system (`<send>` and `<param>` elements)
+9. **Continue with Phase 7**: Extensible parser architecture (custom node registration)
+10. **Then Phase 8.1-8.2**: Advanced features (history states, conditional execution)
 9. **Optional Phase 9**: Multi-environment support (browser compatibility)
 10. **Incremental Development**: Each phase builds on the previous
 11. **Test-Driven**: Write tests for each new feature
@@ -649,6 +696,8 @@ Complete state machines with parallel states, data model initialization, conditi
 - ✅ **Entry/exit actions** - `<onentry>` and `<onexit>` elements with executable content
 - ✅ **Parallel states** - `<parallel>` elements with simultaneous child state entry
 - ✅ **Data model initialization** - Expression evaluation during state machine startup
+- ✅ **State execution history** - Comprehensive debugging and monitoring system
+- ✅ **External communication** - `<send>` and `<param>` elements with HTTP processor support
 - 🎯 **Next: Extensible parser architecture** for custom node registration
 
 ## Resources

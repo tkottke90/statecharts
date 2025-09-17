@@ -1,11 +1,11 @@
 export type {
-  BaseExecutableNode,
-  BaseNode,
-  BaseStateNode,
   CreateFromJsonResponse,
   InternalState,
   SCXMLEvent,
+  EventIOProcessor
 } from './models';
+
+export { HTTPProcessor, BaseNode, BaseExecutableNode, BaseStateNode } from './models';
 
 export { StateChart } from './statechart';
 

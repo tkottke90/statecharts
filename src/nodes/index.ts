@@ -10,3 +10,5 @@ export * from './raise.node';
 export * from './scxml.node';
 export * from './state.node';
 export * from './transition.node';
+export * from './param.node';
+export * from './send.node';

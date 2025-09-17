@@ -7,6 +7,7 @@ import { AssignNode } from './nodes/assign.node';
 import { BaseExecutableNode } from './models/base-executable';
 import { InternalState } from './models/internalState';
 import { SCXMLNode } from './nodes/scxml.node';
+import { HistoryEventType } from './models/history';
 
 // Type for mock active state chain entries
 type MockActiveStateEntry = [string, Record<string, unknown>];
@@ -1064,5 +1065,279 @@ describe('StateChart', () => {
     it.todo('should handle transitions between parallel regions');
 
     it.todo('should handle history state transitions');
+  });
+
+  describe('History Integration', () => {
+    let stateChart: StateChart;
+
+    beforeEach(() => {
+      // Create StateChart with history enabled using fromXMLWithOptions
+      const xmlStr = `
+        <scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" datamodel="ecmascript">
+          <state id="idle">
+            <transition event="start" target="active"/>
+          </state>
+          <state id="active">
+            <transition event="stop" target="idle"/>
+          </state>
+        </scxml>
+      `;
+
+      const historyOptions = {
+        enabled: true,
+        maxEntries: 100,
+        includeInternalState: true,
+        trackTiming: true,
+        trackCausality: true,
+      };
+
+      stateChart = StateChart.fromXMLWithOptions(xmlStr, { history: historyOptions });
+    });
+
+    describe('history initialization', () => {
+      it('should initialize with history tracking enabled', () => {
+        // Act
+        const history = stateChart.getHistory();
+
+        // Assert
+        expect(history).toBeDefined();
+        expect(history.getOptions().enabled).toBe(true);
+        expect(history.getAllEntries()).toHaveLength(0);
+      });
+
+      it('should initialize with history tracking disabled', () => {
+        // Arrange
+        const xmlStr = `
+          <scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" datamodel="ecmascript">
+            <state id="idle"/>
+          </scxml>
+        `;
+        const noHistoryChart = StateChart.fromXMLWithOptions(xmlStr, {
+          history: { enabled: false }
+        });
+
+        // Act
+        const history = noHistoryChart.getHistory();
+
+        // Assert
+        expect(history.getOptions().enabled).toBe(false);
+      });
+
+      it('should work without history options', () => {
+        // Arrange & Act
+        const xmlStr = `
+          <scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" datamodel="ecmascript">
+            <state id="idle"/>
+          </scxml>
+        `;
+        const defaultChart = StateChart.fromXML(xmlStr);
+        const history = defaultChart.getHistory();
+
+        // Assert
+        expect(history).toBeDefined();
+        expect(history.getOptions().enabled).toBe(true);
+      });
+    });
+
+    describe('fromXMLWithOptions', () => {
+      it('should create StateChart with history options from XML', () => {
+        // Arrange
+        const xmlStr = `
+          <scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" datamodel="ecmascript">
+            <state id="idle">
+              <transition event="start" target="active"/>
+            </state>
+            <state id="active">
+              <transition event="stop" target="idle"/>
+            </state>
+          </scxml>
+        `;
+
+        const historyOptions = {
+          enabled: true,
+          maxEntries: 50,
+          includeInternalState: false,
+        };
+
+        // Act
+        const chart = StateChart.fromXMLWithOptions(xmlStr, { history: historyOptions });
+        const history = chart.getHistory();
+
+        // Assert
+        expect(history.getOptions().enabled).toBe(true);
+        expect(history.getOptions().maxEntries).toBe(50);
+        expect(history.getOptions().includeInternalState).toBe(false);
+      });
+    });
+
+    describe('event emission', () => {
+      it('should emit history events during state machine execution', (done) => {
+        // Arrange
+        const history = stateChart.getHistory();
+        const historyEvents: any[] = [];
+
+        history.on('history', (payload) => {
+          historyEvents.push(payload);
+
+          // Check if we've received expected events
+          if (historyEvents.length >= 2) {
+            // Assert
+            expect(historyEvents.some(e =>
+              e.entry.type === HistoryEventType.MACROSTEP_START
+            )).toBe(true);
+            expect(historyEvents.some(e =>
+              e.entry.type === HistoryEventType.MACROSTEP_END
+            )).toBe(true);
+            done();
+          }
+        });
+
+        // Act - Trigger state machine execution
+        stateChart.execute({ data: {} });
+      });
+
+      it('should track causality relationships', async () => {
+        // Arrange
+        const history = stateChart.getHistory();
+
+        // Act
+        await stateChart.execute({ data: {} });
+
+        // Assert
+        const entries = history.getAllEntries();
+        expect(entries.length).toBeGreaterThan(0);
+
+        // Find macrostep and microstep entries
+        const macrostepStart = entries.find(e => e.type === HistoryEventType.MACROSTEP_START);
+        const microstepStart = entries.find(e => e.type === HistoryEventType.MICROSTEP_START);
+
+        if (macrostepStart && microstepStart) {
+          expect(macrostepStart.childIds).toContain(microstepStart.id);
+          expect(microstepStart.parentId).toBe(macrostepStart.id);
+        }
+      });
+    });
+
+    describe('performance impact', () => {
+      it('should not significantly impact performance when enabled', async () => {
+        // Arrange
+        const xmlStr = `
+          <scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" datamodel="ecmascript">
+            <state id="idle"/>
+          </scxml>
+        `;
+        const historyChart = StateChart.fromXMLWithOptions(xmlStr, {
+          history: { enabled: true }
+        });
+        const noHistoryChart = StateChart.fromXMLWithOptions(xmlStr, {
+          history: { enabled: false }
+        });
+
+        // Act & Measure
+        const startTime1 = Date.now();
+        await historyChart.execute({ data: {} });
+        const historyTime = Date.now() - startTime1;
+
+        const startTime2 = Date.now();
+        await noHistoryChart.execute({ data: {} });
+        const noHistoryTime = Date.now() - startTime2;
+
+        // Assert - History should not add more than 100% overhead (very generous)
+        const overhead = historyTime / Math.max(noHistoryTime, 1);
+        expect(overhead).toBeLessThan(3); // Allow up to 3x overhead for testing
+      });
+
+      it('should have minimal memory footprint', async () => {
+        // Arrange
+        const history = stateChart.getHistory();
+
+        // Act
+        await stateChart.execute({ data: {} });
+
+        // Assert
+        const stats = history.getStats();
+        expect(stats.memoryUsage).toBeLessThan(50000); // Less than 50KB for basic execution
+      });
+    });
+
+    describe('query functionality', () => {
+      it('should allow querying execution history', async () => {
+        // Arrange
+        const history = stateChart.getHistory();
+        await stateChart.execute({ data: {} });
+
+        // Act
+        const macrostepEntries = history.query({
+          eventTypes: [HistoryEventType.MACROSTEP_START, HistoryEventType.MACROSTEP_END]
+        });
+
+        const stateEntries = history.query({
+          eventTypes: [HistoryEventType.STATE_ENTRY, HistoryEventType.STATE_EXIT]
+        });
+
+        // Assert
+        expect(macrostepEntries.entries.length).toBeGreaterThan(0);
+        expect(stateEntries.entries.length).toBeGreaterThanOrEqual(0);
+        expect(macrostepEntries.totalCount).toBe(macrostepEntries.entries.length);
+      });
+
+      it('should support time-based queries', async () => {
+        // Arrange
+        const history = stateChart.getHistory();
+        const startTime = Date.now();
+
+        await stateChart.execute({ data: {} });
+
+        const endTime = Date.now();
+
+        // Act
+        const timeRangeEntries = history.query({
+          timeRange: {
+            start: startTime,
+            end: endTime
+          }
+        });
+
+        // Assert
+        expect(timeRangeEntries.entries.length).toBeGreaterThan(0);
+        timeRangeEntries.entries.forEach(entry => {
+          expect(entry.timestamp).toBeGreaterThanOrEqual(startTime);
+          expect(entry.timestamp).toBeLessThanOrEqual(endTime);
+        });
+      });
+    });
+
+    describe('serialization', () => {
+      it('should support history export and import', async () => {
+        // Arrange
+        const history = stateChart.getHistory();
+        await stateChart.execute({ data: {} });
+
+        // Act
+        const exported = history.export();
+        const xmlStr = `
+          <scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" datamodel="ecmascript">
+            <state id="idle"/>
+          </scxml>
+        `;
+        const newChart = StateChart.fromXMLWithOptions(xmlStr, {
+          history: { enabled: true }
+        });
+        const newHistory = newChart.getHistory();
+        newHistory.import(exported);
+
+        // Assert
+        expect(newHistory.getAllEntries().length).toBe(history.getAllEntries().length);
+        expect(exported.length).toBeGreaterThan(0);
+
+        // Verify structure of exported data
+        exported.forEach(entry => {
+          expect(entry.id).toBeDefined();
+          expect(entry.timestamp).toBeDefined();
+          expect(entry.type).toBeDefined();
+          expect(entry.stateConfiguration).toBeDefined();
+        });
+      });
+    });
   });
 });

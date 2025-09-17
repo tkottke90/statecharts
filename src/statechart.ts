@@ -17,6 +17,11 @@ import {
   SCXMLEvent,
 } from './models/internalState';
 import { Queue } from './models/event-queue';
+import { StateExecutionHistory } from './models/state-execution-history';
+import {
+  HistoryTrackingOptions,
+  HistoryEventType,
+} from './models/history';
 import z from 'zod';
 
 type Tuple<T> = Array<[string, T]>;
@@ -24,6 +29,7 @@ type Tuple<T> = Array<[string, T]>;
 interface StateChartOptions {
   abort?: AbortController;
   timeout?: number;
+  history?: Partial<HistoryTrackingOptions>;
 }
 
 export class StateChart {
@@ -34,11 +40,18 @@ export class StateChart {
   private internalEventQueue = new Queue<SCXMLEvent>();
   private externalEventQueue = new Queue<SCXMLEvent>();
 
+  // History tracking system
+  private history: StateExecutionHistory;
+
   constructor(
     private initial: string,
     private readonly root: SCXMLNode,
     stateMap: Map<string, BaseNode>,
+    options: StateChartOptions = {},
   ) {
+    // Initialize history tracking
+    this.history = new StateExecutionHistory(options.history);
+
     // Collect all state notes so we can access them later
     stateMap.forEach((node, id) => {
       if (node instanceof BaseStateNode) {
@@ -308,6 +321,16 @@ export class StateChart {
   }
 
   async macrostep(state: InternalState): Promise<InternalState> {
+    const macrostepStartTime = Date.now();
+    const macrostepId = this.history.addEntry(
+      HistoryEventType.MACROSTEP_START,
+      this.getActiveStateConfiguration(),
+      state,
+      { metadata: { startTime: macrostepStartTime } }
+    );
+
+    this.history.startContext(macrostepId);
+
     // Process pending events from state into internal queue
     processPendingEvents(state, this.internalEventQueue);
 
@@ -327,6 +350,20 @@ export class StateChart {
       if (internalEvent) {
         const eventTransitions = this.selectTransitions(internalEvent, state);
         if (eventTransitions.length > 0) {
+          // Record event processing
+          this.history.addEntry(
+            HistoryEventType.EVENT_PROCESSED,
+            this.getActiveStateConfiguration(),
+            state,
+            {
+              event: internalEvent,
+              metadata: {
+                eventType: 'internal',
+                transitionCount: eventTransitions.length
+              }
+            }
+          );
+
           // Set event context for transition processing
           state._event = internalEvent;
           state = await this.microstep(state, eventTransitions);
@@ -342,6 +379,20 @@ export class StateChart {
       if (externalEvent) {
         const eventTransitions = this.selectTransitions(externalEvent, state);
         if (eventTransitions.length > 0) {
+          // Record event processing
+          this.history.addEntry(
+            HistoryEventType.EVENT_PROCESSED,
+            this.getActiveStateConfiguration(),
+            state,
+            {
+              event: externalEvent,
+              metadata: {
+                eventType: 'external',
+                transitionCount: eventTransitions.length
+              }
+            }
+          );
+
           // Set event context for transition processing
           state._event = externalEvent;
           state = await this.microstep(state, eventTransitions);
@@ -355,6 +406,23 @@ export class StateChart {
       macrostepDone = true;
     }
 
+    this.history.endContext();
+
+    // Record macrostep completion
+    const macrostepDuration = Date.now() - macrostepStartTime;
+    this.history.addEntry(
+      HistoryEventType.MACROSTEP_END,
+      this.getActiveStateConfiguration(),
+      state,
+      {
+        duration: macrostepDuration,
+        metadata: {
+          startTime: macrostepStartTime,
+          endTime: Date.now()
+        }
+      }
+    );
+
     // State Snapshot
     return state;
   }
@@ -363,6 +431,22 @@ export class StateChart {
     state: InternalState,
     transitions: TransitionNode[],
   ): Promise<InternalState> {
+    const microstepStartTime = Date.now();
+    const microstepId = this.history.addEntry(
+      HistoryEventType.MICROSTEP_START,
+      this.getActiveStateConfiguration(),
+      state,
+      {
+        metadata: {
+          startTime: microstepStartTime,
+          transitionCount: transitions.length,
+          transitions: transitions.map(t => ({ target: t.target, event: t.event }))
+        }
+      }
+    );
+
+    this.history.startContext(microstepId);
+
     let currentState = { ...state };
 
     // Exit states
@@ -376,6 +460,24 @@ export class StateChart {
 
     // Enter states
     currentState = await this.enterStates(transitions, currentState);
+
+    this.history.endContext();
+
+    // Record microstep completion
+    const microstepDuration = Date.now() - microstepStartTime;
+    this.history.addEntry(
+      HistoryEventType.MICROSTEP_END,
+      this.getActiveStateConfiguration(),
+      currentState,
+      {
+        duration: microstepDuration,
+        metadata: {
+          startTime: microstepStartTime,
+          endTime: Date.now(),
+          transitionCount: transitions.length
+        }
+      }
+    );
 
     return currentState;
   }
@@ -465,6 +567,8 @@ export class StateChart {
     // Sort states in exit order (deepest first) - already handled by computeExitSet
     // Execute onexit handlers and remove from active configuration
     for (const statePath of statesToExit) {
+      const exitStartTime = Date.now();
+
       // Find the state node in our active state chain
       const stateEntry = this.activeStateChain.find(
         ([path]) => path === statePath,
@@ -484,6 +588,22 @@ export class StateChart {
         // Remove state from active configuration
         this.activeStateChain = this.activeStateChain.filter(
           ([path]) => path !== statePath,
+        );
+
+        // Record state exit
+        const exitDuration = Date.now() - exitStartTime;
+        this.history.addEntry(
+          HistoryEventType.STATE_EXIT,
+          this.getActiveStateConfiguration(),
+          currentState,
+          {
+            duration: exitDuration,
+            metadata: {
+              exitedState: statePath,
+              startTime: exitStartTime,
+              endTime: Date.now()
+            }
+          }
         );
       }
     }
@@ -561,6 +681,8 @@ export class StateChart {
 
     // Enter each state with mount handlers (execute onentry actions)
     for (const statePath of statesToEnter) {
+      const entryStartTime = Date.now();
+
       const result = await this.addStateToActiveChain(
         statePath,
         true,
@@ -569,6 +691,22 @@ export class StateChart {
       if (result) {
         currentState = result;
       }
+
+      // Record state entry
+      const entryDuration = Date.now() - entryStartTime;
+      this.history.addEntry(
+        HistoryEventType.STATE_ENTRY,
+        this.getActiveStateConfiguration(),
+        currentState,
+        {
+          duration: entryDuration,
+          metadata: {
+            enteredState: statePath,
+            startTime: entryStartTime,
+            endTime: Date.now()
+          }
+        }
+      );
     }
 
     return currentState;
@@ -648,5 +786,46 @@ export class StateChart {
     }
 
     return new StateChart(root.initial, root, identifiableChildren);
+  }
+
+  static fromXMLWithOptions(xmlStr: string, options: StateChartOptions = {}) {
+    const parsedXML = SimpleXML.convertXML(xmlStr) as {
+      scxml: z.infer<typeof SCXMLNode.schema>;
+    };
+
+    // If the root node is not an scxml node, then we should not even try parsing
+    if (!parsedXML.scxml) {
+      throw new Error('Invalid Format: Root Element must be <scxml>');
+    }
+
+    const { root, identifiableChildren, error } = parse<SCXMLNode>(parsedXML);
+
+    // We should fail if we do not get a root node back
+    if (!root) {
+      throw new Error(
+        'Could not parse the provided XML into a valid StateChart',
+      );
+    }
+
+    // We should fail if there were any node errors
+    if (error.length > 0) {
+      throw error[0];
+    }
+
+    return new StateChart(root.initial, root, identifiableChildren, options);
+  }
+
+  /**
+   * Get the history tracking instance for external access
+   */
+  getHistory(): StateExecutionHistory {
+    return this.history;
+  }
+
+  /**
+   * Get current active state configuration as string array
+   */
+  private getActiveStateConfiguration(): string[] {
+    return this.activeStateChain.map(([path]) => path);
   }
 }

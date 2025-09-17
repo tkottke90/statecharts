@@ -4,3 +4,5 @@ export * from './event-queue';
 export * from './internalState';
 export * from './base-state';
 export * from './base-executable';
+export * from './history';
+export * from './state-execution-history';

@@ -15,6 +15,7 @@ import { ParallelNode } from '../nodes/parallel.node';
 import { OnExitNode } from '../nodes/onexit.node';
 import { OnEntryNode } from '../nodes/onentry.node';
 import { RaiseNode } from '../nodes/raise.node';
+import { LogNode } from '../nodes/log.node';
 
 type NodeInitMethod<T extends BaseNode = BaseNode> = (
   input: Record<string, unknown>,
@@ -34,6 +35,7 @@ const nodeMap: Record<string, NodeInitMethod> = {
   parallel: (input: Record<string, unknown>) =>
     ParallelNode.createFromJSON(input),
   raise: (input: Record<string, unknown>) => RaiseNode.createFromJSON(input),
+  log: (input: Record<string, unknown>) => LogNode.createFromJSON(input),
   scxml: (input: Record<string, unknown>) => SCXMLNode.createFromJSON(input),
   state: (input: Record<string, unknown>) => StateNode.createFromJSON(input),
   transition: (input: Record<string, unknown>) =>

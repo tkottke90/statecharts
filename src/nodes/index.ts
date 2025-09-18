@@ -12,3 +12,4 @@ export * from './state.node';
 export * from './transition.node';
 export * from './param.node';
 export * from './send.node';
+export * from './log.node';

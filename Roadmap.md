@@ -506,10 +506,10 @@ Complete state machines with parallel states, data model initialization, conditi
 
 ### 8.2 Additional Executable Content
 
-- [ ] `<if>`, `<elseif>`, `<else>` conditional execution
+- [x] `<if>`, `<elseif>`, `<else>` conditional execution ✅ **COMPLETED**
 - [ ] `<foreach>` iteration
-- [ ] `<script>` arbitrary code execution
-- [ ] `<log>` debugging output
+- [ ] `<script>` arbitrary code execution$$
+- [x] `<log>` debugging output
 
 ### 8.3 External Communication ✅ **COMPLETED**
 
@@ -521,9 +521,9 @@ Complete state machines with parallel states, data model initialization, conditi
 
 **Deliverables:**
 
-- HistoryNode class with shallow and deep history support
-- Conditional execution nodes (`<if>`, `<elseif>`, `<else>`)
-- Iteration support with `<foreach>` element
+- [ ] HistoryNode class with shallow and deep history support
+- ✅ **Conditional execution nodes (`<if>`, `<elseif>`, `<else>`)** - **COMPLETED**
+- [ ] Iteration support with `<foreach>` element
 - ✅ **External communication with `<send>` and `<param>` elements** - **COMPLETED**
 - ✅ **Event I/O Processor system with HTTP and SCXML processors** - **COMPLETED**
 - ✅ **Comprehensive test coverage for external communication** (80 tests) - **COMPLETED**
@@ -532,8 +532,8 @@ Complete state machines with parallel states, data model initialization, conditi
 **Benefits:**
 
 - ✅ **Complete SCXML Compliance** - Full W3C specification support
-- ✅ **Advanced State Management** - History states for complex workflows
-- ✅ **Conditional Logic** - Rich branching and iteration capabilities
+- [ ] **Advanced State Management** - History states for complex workflows
+- ✅ **Conditional Logic** - Rich branching capabilities with `<if>/<elseif>/<else>` support
 - ✅ **External Integration** - Communication with external systems
 - ✅ **Production-Ready** - Enterprise-grade state machine features
 
@@ -683,9 +683,10 @@ Complete state machines with parallel states, data model initialization, conditi
 5. **Phase 4 Complete**: ✅ Entry/exit actions (`<onentry>` and `<onexit>` elements)
 6. **Phase 5 Complete**: ✅ Parallel states (`<parallel>` elements) with data model initialization
 7. **Phase 6.1 Complete**: ✅ State execution history tracking with debugging capabilities
-8. **Phase 8.3 Complete**: ✅ External communication system (`<send>` and `<param>` elements)
-9. **Continue with Phase 7**: Extensible parser architecture (custom node registration)
-10. **Then Phase 8.1-8.2**: Advanced features (history states, conditional execution)
+8. **Phase 8.2 Partial Complete**: ✅ Conditional execution (`<if>`, `<elseif>`, `<else>` elements)
+9. **Phase 8.3 Complete**: ✅ External communication system (`<send>` and `<param>` elements)
+10. **Continue with Phase 7**: Extensible parser architecture (custom node registration)
+11. **Then Phase 8.1**: Advanced features (history states)
 9. **Optional Phase 9**: Multi-environment support (browser compatibility)
 10. **Incremental Development**: Each phase builds on the previous
 11. **Test-Driven**: Write tests for each new feature
@@ -707,6 +708,7 @@ Complete state machines with parallel states, data model initialization, conditi
 - ✅ **Data model initialization** - Expression evaluation during state machine startup
 - ✅ **State execution history** - Comprehensive debugging and monitoring system
 - ✅ **External communication** - `<send>` and `<param>` elements with HTTP processor support
+- ✅ **Conditional execution** - `<if>`, `<elseif>`, `<else>` elements with full W3C compliance
 - 🎯 **Next: Extensible parser architecture** for custom node registration
 
 ## Resources

@@ -16,6 +16,7 @@ import { OnExitNode } from '../nodes/onexit.node';
 import { OnEntryNode } from '../nodes/onentry.node';
 import { RaiseNode } from '../nodes/raise.node';
 import { LogNode } from '../nodes/log.node';
+import { IfNode, ElseIfNode, ElseNode } from '../nodes/conditional.node';
 
 type NodeInitMethod<T extends BaseNode = BaseNode> = (
   input: Record<string, unknown>,
@@ -40,6 +41,10 @@ const nodeMap: Record<string, NodeInitMethod> = {
   state: (input: Record<string, unknown>) => StateNode.createFromJSON(input),
   transition: (input: Record<string, unknown>) =>
     TransitionNode.createFromJSON(input),
+  // Conditional nodes
+  if: (input: Record<string, unknown>) => IfNode.createFromJSON(input),
+  elseif: (input: Record<string, unknown>) => ElseIfNode.createFromJSON(input),
+  else: (input: Record<string, unknown>) => ElseNode.createFromJSON(input),
 };
 
 export function mergeMaps(

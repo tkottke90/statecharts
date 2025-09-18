@@ -468,6 +468,14 @@ Complete state machines with parallel states, data model initialization, conditi
 - [ ] Plugin system for node packages
 - [ ] Runtime node registration and deregistration
 
+### 7.6 Configurable EventIOProcessor Dependency Injection
+
+- [ ] StateChartOptions extension for EventIOProcessorRegistry configuration
+- [ ] SendNode constructor parameter passing through parser system
+- [ ] Parser context for dependency injection during node creation
+- [ ] Multiple StateChart instances with different processor registries
+- [ ] Documentation for custom processor configuration patterns
+
 **Deliverables:**
 
 - NodeRegistry class with full registration API
@@ -483,6 +491,7 @@ Complete state machines with parallel states, data model initialization, conditi
 - ✅ **Future-Proof** - Easy addition of new SCXML features
 - ✅ **Community Growth** - Enable third-party node development
 - ✅ **Enterprise Ready** - Support for proprietary workflow extensions
+- ✅ **Configurable Communication** - Custom EventIOProcessor per StateChart instance
 
 ## Phase 8: Advanced Features 🚀
 
@@ -709,3 +718,4 @@ Complete state machines with parallel states, data model initialization, conditi
 - [Test Suite](./src/) - **248 passed, 28 skipped, 17 todo** ✨
 - [Error Event Naming Standard](./docs/error-event-naming-standard.md) - Structured error handling
 - [Error Documentation](./docs/Errors.md) - Comprehensive error reference
+- Realworld Test Example - `npm run test:statechart -- examples/basic-ollama.xml`

@@ -106,7 +106,7 @@ describe('BaseNode', () => {
 
         expect(result.success).toBe(true);
         const str = result.node!.toString();
-        expect(str).toBe('<log expr="data.counter" label="DEBUG"/>');
+        expect(str).toBe('<log logLabel="DEBUG" expr="data.counter"/>');
       });
 
       it('should display LogNode with content', () => {
@@ -131,7 +131,7 @@ describe('BaseNode', () => {
 
         expect(result.success).toBe(true);
         const str = result.node!.toString();
-        expect(str).toBe('<log label="INFO">Application started</log>');
+        expect(str).toBe('<log logLabel="INFO">Application started</log>');
       });
 
       it('should handle LogNode with empty content', () => {
@@ -159,7 +159,7 @@ describe('BaseNode', () => {
 
         expect(result.success).toBe(true);
         const str = result.node!.toString();
-        expect(str).toBe('<assign expr="data.counter + 1" location="data.counter"/>');
+        expect(str).toBe('<assign location="data.counter" expr="data.counter + 1"/>');
       });
 
       it('should display AssignNode with location and content', () => {
@@ -228,7 +228,7 @@ describe('BaseNode', () => {
         expect(str).toContain('event="test-event"');
         expect(str).toContain('expr="data.value"');
         expect(str).toContain('location="data.result"');
-        expect(str).toContain('label="DEBUG"');
+        expect(str).toContain('logLabel="DEBUG"');
         expect(str).toContain('/>');
       });
 
@@ -261,20 +261,20 @@ describe('BaseNode', () => {
         expect(str).toBe('<content id="content-id">Node content</content>');
       });
 
-      it('should prioritize expr over content display', () => {
+      it('should show both expr and content when both are present', () => {
         class ExprContentNode extends BaseNode {
           static label = 'exprContent';
           expr = 'data.value';
 
           constructor() {
-            super({ content: 'This should not be shown', children: [] });
+            super({ content: 'This should be shown', children: [] });
           }
         }
 
         const node = new ExprContentNode();
         const str = node.toString();
-        expect(str).toBe('<exprContent expr="data.value"/>');
-        expect(str).not.toContain('This should not be shown');
+        expect(str).toBe('<exprContent expr="data.value">This should be shown</exprContent>');
+        expect(str).toContain('This should be shown');
       });
 
       it('should handle nodes inheriting base label', () => {

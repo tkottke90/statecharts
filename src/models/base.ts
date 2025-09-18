@@ -110,7 +110,8 @@ export class BaseNode implements z.infer<typeof BaseNodeAttr> {
     const attributes = parts.concat(
       Object.entries(attr)
         .filter(([key]) => ![ 'isExecutable', 'allowChildren', 'children' ].includes(key))
-        .map(([key, value]) => `${key}=${value}`)
+        .filter(([,value]) => value !== undefined)
+        .map(([key, value]) => `${key}="${value}"`)
     );
 
     // We create an XML string from the attributes and content

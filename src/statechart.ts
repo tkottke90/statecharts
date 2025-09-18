@@ -23,6 +23,7 @@ import {
   HistoryEventType,
 } from './models/history';
 import z from 'zod';
+import { XMLParsingError } from './errors';
 
 type Tuple<T> = Array<[string, T]>;
 
@@ -761,7 +762,7 @@ export class StateChart {
     return await this.macrostep(currentState);
   }
 
-  static fromXML(xmlStr: string) {
+  static fromXML(xmlStr: string, options: StateChartOptions = {}) {
     const parsedXML = SimpleXML.convertXML(xmlStr) as {
       scxml: z.infer<typeof SCXMLNode.schema>;
     };
@@ -782,34 +783,9 @@ export class StateChart {
 
     // We should fail if there were any node errors
     if (error.length > 0) {
-      throw error[0];
-    }
-
-    return new StateChart(root.initial, root, identifiableChildren);
-  }
-
-  static fromXMLWithOptions(xmlStr: string, options: StateChartOptions = {}) {
-    const parsedXML = SimpleXML.convertXML(xmlStr) as {
-      scxml: z.infer<typeof SCXMLNode.schema>;
-    };
-
-    // If the root node is not an scxml node, then we should not even try parsing
-    if (!parsedXML.scxml) {
-      throw new Error('Invalid Format: Root Element must be <scxml>');
-    }
-
-    const { root, identifiableChildren, error } = parse<SCXMLNode>(parsedXML);
-
-    // We should fail if we do not get a root node back
-    if (!root) {
-      throw new Error(
-        'Could not parse the provided XML into a valid StateChart',
-      );
-    }
-
-    // We should fail if there were any node errors
-    if (error.length > 0) {
-      throw error[0];
+      throw new XMLParsingError({
+        errors: error
+      })
     }
 
     return new StateChart(root.initial, root, identifiableChildren, options);

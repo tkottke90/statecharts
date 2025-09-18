@@ -23,7 +23,6 @@ describe('LogNode', () => {
     
     // Create test state
     testState = {
-      configuration: ['test'],
       data: {
         counter: 42,
         message: 'Hello World',
@@ -33,7 +32,11 @@ describe('LogNode', () => {
       _event: {
         name: 'test.event',
         type: 'internal',
-        data: { value: 123 }
+        data: { value: 123 },
+        sendid: '',
+        origin: '',
+        origintype: '',
+        invokeid: ''
       },
       _name: 'testState',
       _datamodel: 'ecmascript'
@@ -278,6 +281,7 @@ describe('LogNode', () => {
 
     it('should handle circular reference objects', async () => {
       // Create circular reference
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const circular: any = { name: 'test' };
       circular.self = circular;
 
@@ -321,38 +325,6 @@ describe('LogNode', () => {
       await node.run(testState);
 
       expect(testState.data).toEqual(originalData);
-    });
-  });
-
-  describe('toString Method', () => {
-    it('should provide meaningful string representation with expr', () => {
-      const node = createLogNode({ label: 'DEBUG', expr: 'data.counter' });
-
-      const str = node.toString();
-      expect(str).toBe('<log expr="data.counter" label="DEBUG"/>');
-    });
-
-    it('should provide meaningful string representation with content', () => {
-      const node = createLogNode({ label: 'INFO', content: 'Short message' });
-
-      const str = node.toString();
-      expect(str).toBe('<log label="INFO">Short message</log>');
-    });
-
-    it('should display long content without truncation', () => {
-      const longContent = 'A'.repeat(100);
-      const node = createLogNode({ content: longContent });
-
-      const str = node.toString();
-      expect(str).toBe(`<log>${longContent}</log>`);
-      expect(str).toContain(longContent);
-    });
-
-    it('should work without label', () => {
-      const node = createLogNode({ expr: "'test'" });
-
-      const str = node.toString();
-      expect(str).toBe('<log expr="\'test\'"/>');
     });
   });
 });

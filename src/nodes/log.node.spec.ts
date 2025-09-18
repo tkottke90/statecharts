@@ -329,30 +329,30 @@ describe('LogNode', () => {
       const node = createLogNode({ label: 'DEBUG', expr: 'data.counter' });
 
       const str = node.toString();
-      expect(str).toBe('<LogNode label="DEBUG" expr="data.counter">');
+      expect(str).toBe('<log expr="data.counter" label="DEBUG"/>');
     });
 
     it('should provide meaningful string representation with content', () => {
       const node = createLogNode({ label: 'INFO', content: 'Short message' });
 
       const str = node.toString();
-      expect(str).toBe('<LogNode label="INFO" content="Short message">');
+      expect(str).toBe('<log label="INFO">Short message</log>');
     });
 
-    it('should truncate long content', () => {
+    it('should display long content without truncation', () => {
       const longContent = 'A'.repeat(100);
       const node = createLogNode({ content: longContent });
 
       const str = node.toString();
-      expect(str).toContain('...');
-      expect(str.length).toBeLessThan(longContent.length + 50);
+      expect(str).toBe(`<log>${longContent}</log>`);
+      expect(str).toContain(longContent);
     });
 
     it('should work without label', () => {
       const node = createLogNode({ expr: "'test'" });
 
       const str = node.toString();
-      expect(str).toBe('<LogNode expr="\'test\'">');
+      expect(str).toBe('<log expr="\'test\'"/>');
     });
   });
 });

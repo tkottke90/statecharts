@@ -64,7 +64,7 @@ export class BaseNode implements z.infer<typeof BaseNodeAttr> {
     return internalState;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   getChildrenOfType<T extends BaseNode>(
     typeCtor: new (...args: any[]) => T,
   ): T[] {
@@ -90,5 +90,30 @@ export class BaseNode implements z.infer<typeof BaseNodeAttr> {
     }
 
     return jsonInput;
+  }
+
+  /**
+   * Get a string representation of this node for debugging
+   * Subclasses can override this method to provide more specific information
+   */
+  toString(): string {
+    const className = (this.constructor as typeof BaseNode).label ?? 'node';
+    const parts = [className];
+
+    // We use destructuring here to extract all of the node class properties
+    // that would not show up in the XML.  These are either inferred (such as allowChildren)
+    // or show up inside of the XML tags (aka content)
+
+    const { content, ...attr } = this;
+
+    // We combine the attribute syntax with the tag/label
+    const attributes = parts.concat(
+      Object.entries(attr)
+        .filter(([key]) => ![ 'isExecutable', 'allowChildren', 'children' ].includes(key))
+        .map(([key, value]) => `${key}=${value}`)
+    );
+
+    // We create an XML string from the attributes and content
+    return `<${attributes.join(' ')}${content ? `>${content}</${className}>` : '/>'}`;
   }
 }

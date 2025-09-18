@@ -195,22 +195,5 @@ export class LogNode extends BaseExecutableNode {
     console.log(message);
   }
 
-  /**
-   * Get a string representation of this node for debugging
-   */
-  toString(): string {
-    const parts = ['LogNode'];
 
-    if (this.logLabel) {
-      parts.push(`label="${this.logLabel}"`);
-    }
-
-    if (this.expr) {
-      parts.push(`expr="${this.expr}"`);
-    } else if (this.content) {
-      parts.push(`content="${this.content.substring(0, 50)}${this.content.length > 50 ? '...' : ''}"`);
-    }
-
-    return `<${parts.join(' ')}>`;
-  }
 }

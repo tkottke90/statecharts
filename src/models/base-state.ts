@@ -5,6 +5,7 @@ import { InitialNode } from '../nodes/initial.node';
 import { InternalState } from './internalState';
 import { OnEntryNode } from '../nodes/onentry.node';
 import { OnExitNode } from '../nodes/onexit.node';
+import { DataModelNode } from '../nodes/datamodel.node';
 
 export const BaseStateNodeAttr = BaseNodeAttr.extend({
   id: z.string().min(1),
@@ -121,21 +122,41 @@ export class BaseStateNode extends BaseNode {
   }
 
   /**
-   * Triggers the onentry behavior for the state.
-   * Executes all OnEntryNode instances in document order.
+   * Utility function for getting all datamodel nodes for the state.
+   * These define local data variables that are initialized when the state is entered.
+   * @returns A list of all datamodel nodes
+   */
+  getDataModelNodes() {
+    return this.getChildrenOfType(DataModelNode);
+  }
+
+  /**
+   * Triggers the state entry behavior according to SCXML specification.
+   *
+   * Per SCXML spec, when a state is entered:
+   * 1. First, process any local <datamodel> elements (initialize local data)
+   * 2. Then, execute <onentry> actions (which can reference the local data)
+   * 3. Finally, determine initial child state (if compound state)
+   *
    * @param state The current state
-   * @returns The new state
+   * @returns The new state with mount response
    */
   async mount(state: InternalState): Promise<MountResponse> {
-    // Execute all onentry nodes in document order
     let currentState = { ...state };
-    const onEntryNodes = this.getOnEntryNodes();
 
+    // STEP 1: Process local datamodel nodes first (SCXML spec requirement)
+    const dataModelNodes = this.getDataModelNodes();
+    for (const dataModelNode of dataModelNodes) {
+      currentState = await dataModelNode.run(currentState);
+    }
+
+    // STEP 2: Execute onentry nodes in document order (can now reference local data)
+    const onEntryNodes = this.getOnEntryNodes();
     for (const onEntryNode of onEntryNodes) {
       currentState = await onEntryNode.run(currentState);
     }
 
-    // If we found an Atomic state, we do not need to look deeper
+    // STEP 3: Handle child state logic for compound states
     if (this.isAtomic) {
       return { state: currentState, node: this };
     }
@@ -149,6 +170,7 @@ export class BaseStateNode extends BaseNode {
       return { state: currentState, node: this, childPath: initialState };
     }
 
+    // If this is an atomic state, we are done
     return { state: currentState, node: this };
   }
 

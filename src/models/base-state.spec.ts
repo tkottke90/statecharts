@@ -7,6 +7,8 @@ import { OnEntryNode } from '../nodes/onentry.node';
 import { OnExitNode } from '../nodes/onexit.node';
 import { InternalState } from './internalState';
 import { AssignNode } from '../nodes/assign.node';
+import { DataModelNode } from '../nodes/datamodel.node';
+import { DataNode } from '../nodes/data.node';
 
 describe('BaseStateNode', () => {
   describe('constructor', () => {
@@ -459,6 +461,59 @@ describe('BaseStateNode', () => {
         // Test type filtering
       });
     });
+
+    describe('#getDataModelNodes', () => {
+      it('should return empty array when no datamodel nodes exist', () => {
+        // Arrange
+        const stateWithoutDataModel = new (class extends BaseStateNode {
+          constructor() {
+            super({ content: '', children: [] });
+            // @ts-expect-error - Setting readonly property for testing
+            this.id = 'noDataModelState';
+          }
+        })();
+
+        // Act
+        const result = stateWithoutDataModel.getDataModelNodes();
+
+        // Assert
+        expect(result).toEqual([]);
+      });
+
+      it('should return all DataModelNode children', () => {
+        // Arrange
+        const dataModelNode1 = new DataModelNode({
+          datamodel: { content: '', children: [] },
+        });
+
+        const dataModelNode2 = new DataModelNode({
+          datamodel: { content: '', children: [] },
+        });
+
+        const onEntryNode = new OnEntryNode({
+          onentry: { content: '', children: [] },
+        });
+
+        const stateWithDataModels = new (class extends BaseStateNode {
+          constructor() {
+            super({
+              content: '',
+              children: [dataModelNode1, onEntryNode, dataModelNode2]
+            });
+            // @ts-expect-error - Setting readonly property for testing
+            this.id = 'multiDataModelState';
+          }
+        })();
+
+        // Act
+        const result = stateWithDataModels.getDataModelNodes();
+
+        // Assert
+        expect(result).toHaveLength(2);
+        expect(result[0]).toBe(dataModelNode1);
+        expect(result[1]).toBe(dataModelNode2);
+      });
+    });
   });
 
   describe('#onEntry', () => {
@@ -570,6 +625,113 @@ describe('BaseStateNode', () => {
       // Assert
       expect(result.childPath).toBe('childState');
       expect(result.node).toBe(compoundState);
+    });
+
+    it('should process datamodel nodes before onentry nodes', async () => {
+      // Arrange
+      const dataNode = new DataNode({
+        data: {
+          id: 'localVar',
+          type: 'text',
+          expr: "'initialized'",
+          content: '',
+          children: [],
+        },
+      });
+
+      const dataModelNode = new DataModelNode({
+        datamodel: {
+          content: '',
+          children: [dataNode],
+        },
+      });
+
+      const onEntryNode = new OnEntryNode({
+        onentry: {
+          content: '',
+          children: [
+            new AssignNode({
+              assign: {
+                location: 'result',
+                expr: 'data.localVar + "_processed"',
+                content: '',
+                children: [],
+              },
+            }),
+          ],
+        },
+      });
+
+      const stateWithDataModel = new (class extends BaseStateNode {
+        constructor() {
+          super({ content: '', children: [dataModelNode, onEntryNode] });
+          // @ts-expect-error - Setting readonly property for testing
+          this.id = 'stateWithDataModel';
+        }
+      })();
+
+      const initialState: InternalState = { data: {} };
+
+      // Act
+      const result = await stateWithDataModel.mount(initialState);
+
+      // Assert
+      expect(result.state.data.localVar).toBe('initialized'); // From datamodel
+      expect(result.state.data.result).toBe('initialized_processed'); // From onentry using local data
+    });
+
+    it('should process multiple datamodel nodes in document order', async () => {
+      // Arrange
+      const dataNode1 = new DataNode({
+        data: {
+          id: 'var1',
+          type: 'text',
+          expr: "'first'",
+          content: '',
+          children: [],
+        },
+      });
+
+      const dataNode2 = new DataNode({
+        data: {
+          id: 'var2',
+          type: 'text',
+          expr: "'second'",
+          content: '',
+          children: [],
+        },
+      });
+
+      const dataModelNode1 = new DataModelNode({
+        datamodel: {
+          content: '',
+          children: [dataNode1],
+        },
+      });
+
+      const dataModelNode2 = new DataModelNode({
+        datamodel: {
+          content: '',
+          children: [dataNode2],
+        },
+      });
+
+      const stateWithMultipleDataModels = new (class extends BaseStateNode {
+        constructor() {
+          super({ content: '', children: [dataModelNode1, dataModelNode2] });
+          // @ts-expect-error - Setting readonly property for testing
+          this.id = 'multiDataModelState';
+        }
+      })();
+
+      const initialState: InternalState = { data: {} };
+
+      // Act
+      const result = await stateWithMultipleDataModels.mount(initialState);
+
+      // Assert
+      expect(result.state.data.var1).toBe('first');
+      expect(result.state.data.var2).toBe('second');
     });
   });
 

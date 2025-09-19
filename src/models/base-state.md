@@ -146,17 +146,31 @@ Returns all OnExit action nodes that have executable content.
 
 - Array of `OnExitNode` instances with executable children
 
+#### `getDataModelNodes(): DataModelNode[]`
+
+Returns all DataModel nodes that define local data variables for this state.
+
+**Returns:**
+
+- Array of `DataModelNode` instances that contain local data definitions
+
+**Usage:**
+
+Local datamodel nodes are processed during state entry (in the `mount()` method) before onentry actions are executed. This allows onentry actions to reference locally-defined data variables.
+
 ### Lifecycle Methods
 
 #### `async mount(state: InternalState): Promise<MountResponse>`
 
-Executes state entry behavior and determines next steps for state machine execution.
+Executes state entry behavior according to SCXML specification and determines next steps for state machine execution.
 
-**Process:**
+**Process (SCXML Compliant):**
 
-1. Execute all OnEntry actions in document order
-2. If atomic state: Return current state as final destination
-3. If compound state: Return with `childPath` indicating initial child
+1. **Process local datamodel nodes first** - Initialize local data variables that are scoped to this state
+2. **Execute all OnEntry actions in document order** - Can now reference local data from step 1
+3. **Determine next steps:**
+   - If atomic state: Return current state as final destination
+   - If compound state: Return with `childPath` indicating initial child state
 
 **Parameters:**
 
@@ -165,9 +179,13 @@ Executes state entry behavior and determines next steps for state machine execut
 **Returns:**
 
 - `MountResponse` object containing:
-  - `state`: Updated internal state after entry actions
+  - `state`: Updated internal state after datamodel initialization and entry actions
   - `node`: Reference to this state node
   - `childPath`: (Optional) Initial child state to enter next
+
+**SCXML Specification Compliance:**
+
+This method follows the SCXML specification for state entry, which requires that local datamodel elements be processed before onentry actions. This ensures that onentry actions can reference locally-defined data variables.
 
 #### `async unmount(state: InternalState): Promise<InternalState>`
 
@@ -366,6 +384,71 @@ console.log('Entry time set:', mountResult.state.data.entryTime);
 // Unmount (exit) the state
 const finalState = await lifecycleState.unmount(mountResult.state);
 console.log('Exit time set:', finalState.data.exitTime);
+```
+
+### Local Data Model Processing
+
+```typescript
+import {
+  BaseStateNode,
+  StateNode,
+  DataModelNode,
+  DataNode,
+  OnEntryNode,
+  AssignNode,
+} from '@your-library/statecharts';
+
+// Create local data definition
+const localDataNode = new DataNode({
+  data: {
+    id: 'localCounter',
+    type: 'text',
+    expr: '0',
+    content: '',
+    children: [],
+  },
+});
+
+// Create datamodel container
+const dataModelNode = new DataModelNode({
+  datamodel: {
+    content: '',
+    children: [localDataNode],
+  },
+});
+
+// Create onentry action that uses local data
+const entryAction = new OnEntryNode({
+  onentry: {
+    content: '',
+    children: [
+      new AssignNode({
+        assign: {
+          location: 'message',
+          expr: "'Local counter initialized to: ' + data.localCounter",
+          content: '',
+          children: [],
+        },
+      }),
+    ],
+  },
+});
+
+// Create state with local datamodel
+const stateWithLocalData = new StateNode({
+  state: {
+    id: 'dataState',
+    content: '',
+    children: [dataModelNode, entryAction], // datamodel processed first
+  },
+});
+
+// Execute state entry
+const initialState = { data: {} };
+const result = await stateWithLocalData.mount(initialState);
+
+console.log('Local data:', result.state.data.localCounter); // "0"
+console.log('Message:', result.state.data.message); // "Local counter initialized to: 0"
 ```
 
 ## State Hierarchy Patterns

@@ -1,14 +1,93 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <scxml xmlns="http://www.w3.org/2005/07/scxml"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xsi:schemaLocation="http://www.w3.org/2005/07/scxml ../schemas/scxml.xsd"
+       xsi:schemaLocation="../schemas/scxml.xsd"
        version="1.0"
        datamodel="ecmascript"
-       initial="idle">
+       initial="agents">
 
   <datamodel>
     <data id="ollamaUrl" expr="'http://10.0.0.6:11434/api/generate'"/>
-    <data id="prompt">
+    <data id="model" expr="'mistral:7b'"/>
+    <data id="sendId" expr="''"/>
+    <data id="response" expr="null"/>
+    <data id="evalCount" expr="0"/>
+    <data id="error" expr="null"/>
+  </datamodel>
+
+  <state id="callLLM">
+    <onentry>
+      <!-- Generate unique send ID for tracking this request -->
+      <assign location="sendId" expr="'ollama_' + Date.now()" />
+
+      <!-- Make HTTP POST request to Ollama API -->
+      <send type="http"
+            event="ollama"
+            targetexpr="data.ollamaUrl"
+            method="POST"
+            sendid="data.sendId">
+        <param name="model" expr="data.model" />
+        <param name="prompt" expr="data.llm.prompt" />
+        <param name="stream" expr="false" />
+        <param name="format" expr="'json'" />
+      </send>
+    </onentry>
+
+    <!-- Handle successful response -->
+    <transition event="http.response" cond="_event.sendid == data.sendId" target="processResponse">
+      <assign location="response" expr="_event.data" />
+    </transition>
+
+    <!-- Handle HTTP errors -->
+    <transition event="http.error" cond="_event.sendid == data.sendId" target="handleError">
+      <assign location="error" expr="_event.data" />
+    </transition>
+
+    <!-- Handle timeout or other failures -->
+    <transition event="error.communication" cond="_event.sendid == data.sendId" target="handleError">
+      <assign location="error" expr="_event.data" />
+    </transition>
+  </state>
+
+  <state id="processResponse">
+    <onentry>
+      <!-- Extract the response text from Ollama's response format -->
+      <if cond="data.response &amp;&amp; data.response.response">
+        <assign location="message" expr="data.response.response" />
+        <assign location="evalCount" expr="data.response.eval_count || 0" />
+      <else/>
+        <assign location="message" expr="'No response received'" />
+      </if>
+
+      <!-- Log the successful response -->
+      <log expr="'Ollama response received: ' + data.message.substring(0, 100) + '...'" />
+
+      <!-- Transition back to idle or next state -->
+      <raise event="response.processed" />
+    </onentry>
+
+    <transition event="response.processed" target="idle" />
+  </state>
+
+  <state id="handleError">
+    <onentry>
+      <!-- Log the error -->
+      <log expr="'Ollama API error: ' + JSON.stringify(data.error)" />
+
+      <!-- Set a default error message -->
+      <assign location="message" expr="'Error: Failed to get response from Ollama'" />
+
+      <!-- Transition back to idle -->
+      <raise event="error.handled" />
+    </onentry>
+
+    <transition event="error.handled" target="idle" />
+  </state>
+
+  <state id="agents" initial="archivist">
+    <state id="archivist">
+      <datamodel>
+        <data id="systemPrompt">
 # Role
 
 You are an AI Archivist Agent specialized in extracting, analyzing, and structuring long-term memories from conversational data. Your primary function is to identify meaningful information that should be preserved for future reference and format it for storage in a graph database with vector capabilities.
@@ -18,7 +97,9 @@ You are an AI Archivist Agent specialized in extracting, analyzing, and structur
 Analyze the provided conversation and extract three types of memories:
 
 1. **Named Entities**: Identify and classify people, places, organizations, concepts, objects, events, or any other significant entities mentioned in the conversation.
+
 2. **Factual Assertions**: Extract factual statements, claims, or propositions about entities. These should be structured as subject-predicate-object relationships that can be verified or referenced.
+
 3. **Relationships**: Identify connections, associations, or interactions between entities, including temporal, causal, hierarchical, or semantic relationships.
 
 ## Guidelines
@@ -109,129 +190,18 @@ Always respond with valid JSON following this exact schema:
 - When in doubt about classification, choose the most specific and accurate category
 - Ensure extracted memories are atomic and can stand alone as meaningful units of information
 - Consider the privacy and sensitivity of extracted information
-    </data>
-    <data id="model" expr="'mistral:7b'"/>
-    <data id="sendId" expr="''"/>
-    <data id="response" expr="null"/>
-    <data id="message" expr="''"/>
-    <data id="evalCount" expr="0"/>
-    <data id="error" expr="null"/>
-  </datamodel>
 
-  <state id="idle">
-    <transition event="askQuestion" target="callingAI">
-      <!-- Allow custom prompt to be passed in event data -->
-      <if cond="_event.data &amp;&amp; _event.data.prompt">
-        <assign location="prompt" expr="_event.data.prompt"/>
-      </if>
-      <if cond="_event.data &amp;&amp; _event.data.model">
-        <assign location="model" expr="_event.data.model"/>
-      </if>
-    </transition>
-  </state>
+## User Input
 
-  <state id="callingAI">
-    <onentry>
-      <!-- Send HTTP POST request to Ollama API -->
-      <send event="aiRequest"
-            targetexpr="ollamaUrl"
-            type="http"
-            idlocation="sendId">
-        <param name="method">POST</param>
-        <param name="headers" expr="{ 'Content-Type': 'application/json', 'User-Agent': 'SCXML-StateChart/1.0' }"/>
-        <param name="model" expr="model"/>
-        <param name="prompt" expr="prompt"/>
-        <param name="stream" expr="false"/>
-        <param name="format">json</param>
-      </send>
-    </onentry>
+        </data>
+      </datamodel>
+    
+      <onentry>
+        <assign location="llm.prompt" expr="data.systemPrompt + data.message" />
 
-    <transition event="http.success" target="processingResponse">
-      <assign location="response" expr="_event.data"/>
-    </transition>
-
-    <transition event="error.communication" target="failed">
-      <assign location="error" expr="_event.data"/>
-    </transition>
-  </state>
-
-  <state id="processingResponse">
-    <onentry>
-
-      <!-- Extract message and eval_count from response -->
-      <if cond="response &amp;&amp; response.response">
-        <assign location="message" expr="response.response"/>
-      <else/>
-        <assign location="message" expr="'No response received'"/>
-      </if>
-
-      <if cond="response &amp;&amp; response.eval_count">
-        <assign location="evalCount" expr="response.eval_count"/>
-      <else/>
-        <assign location="evalCount" expr="0"/>
-      </if>
-
-      <!-- Raise completion event with extracted data -->
-      <raise event="aiResponseProcessed"/>
-    </onentry>
-
-    <transition event="aiResponseProcessed" target="completed"/>
-  </state>
-
-  <state id="completed">
-
-    <transition event="askQuestion" target="callingAI">
-      <!-- Reset previous response data -->
-      <assign location="response" expr="null"/>
-      <assign location="message" expr="''"/>
-      <assign location="evalCount" expr="0"/>
-      <assign location="error" expr="null"/>
-
-      <!-- Allow new prompt -->
-      <if cond="_event.data &amp;&amp; _event.data.prompt">
-        <assign location="prompt" expr="_event.data.prompt"/>
-      </if>
-      <if cond="_event.data &amp;&amp; _event.data.model">
-        <assign location="model" expr="_event.data.model"/>
-      </if>
-    </transition>
-
-    <transition event="reset" target="idle">
-      <!-- Clear all data -->
-      <assign location="prompt" expr="'What is the capital of France?'"/>
-      <assign location="model" expr="'mistral:7b'"/>
-      <assign location="response" expr="null"/>
-      <assign location="message" expr="''"/>
-      <assign location="evalCount" expr="0"/>
-      <assign location="error" expr="null"/>
-    </transition>
-  </state>
-
-  <state id="failed">
-    <transition event="retry" target="callingAI" cond="error"></transition>
-
-    <transition event="askQuestion" target="callingAI">
-      <!-- Reset error and try with new question -->
-      <assign location="error" expr="null"/>
-      <assign location="response" expr="null"/>
-
-      <if cond="_event.data &amp;&amp; _event.data.prompt">
-        <assign location="prompt" expr="_event.data.prompt"/>
-      </if>
-      <if cond="_event.data &amp;&amp; _event.data.model">
-        <assign location="model" expr="_event.data.model"/>
-      </if>
-    </transition>
-
-    <transition event="reset" target="idle">
-      <!-- Clear all data including error -->
-      <assign location="prompt" expr="'What is the capital of France?'"/>
-      <assign location="model" expr="'mistral:7b'"/>
-      <assign location="response" expr="null"/>
-      <assign location="message" expr="''"/>
-      <assign location="evalCount" expr="0"/>
-      <assign location="error" expr="null"/>
-    </transition>
+        <raise event="callLLM" />
+      </onentry>
+    </state>
   </state>
 
 </scxml>

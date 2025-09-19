@@ -20,6 +20,8 @@
       <!-- Generate unique send ID for tracking this request -->
       <assign location="sendId" expr="'ollama_' + Date.now()" />
 
+      <log expr="'Sending HTTP request with send ID: ' + data.sendId" />
+
       <!-- Make HTTP POST request to Ollama API -->
       <send type="http"
             event="ollama"
@@ -35,16 +37,19 @@
 
     <!-- Handle successful response -->
     <transition event="http.response" cond="_event.sendid == data.sendId" target="processResponse">
+      <log expr="'Received HTTP response: ' + JSON.stringify(_event.data)" />
       <assign location="response" expr="_event.data" />
     </transition>
 
     <!-- Handle HTTP errors -->
     <transition event="http.error" cond="_event.sendid == data.sendId" target="handleError">
+      <log expr="'Received HTTP error: ' + JSON.stringify(_event.data)" />
       <assign location="error" expr="_event.data" />
     </transition>
 
     <!-- Handle timeout or other failures -->
     <transition event="error.communication" cond="_event.sendid == data.sendId" target="handleError">
+      <log expr="'Received communication error: ' + JSON.stringify(_event.data)" />
       <assign location="error" expr="_event.data" />
     </transition>
   </state>
@@ -199,9 +204,19 @@ Always respond with valid JSON following this exact schema:
       <onentry>
         <assign location="llm.prompt" expr="data.systemPrompt + data.message" />
 
-        <raise event="callLLM" />
+        <raise event="prompt.ready" />
       </onentry>
+      <onexit>
+        <assign location="systemPrompt" expr="''"></assign>
+      </onexit>
+
+      <!-- Add transition that responds to the raised event -->
+      <transition event="prompt.ready" target="callLLM"/>
     </state>
   </state>
 
+  <final id="done">
+
+  
+  </final>
 </scxml>

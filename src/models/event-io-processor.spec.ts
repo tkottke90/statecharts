@@ -271,18 +271,27 @@ describe('EventIOProcessor System', () => {
     });
 
     describe('#send', () => {
-      it('should make HTTP GET request by default', async () => {
-        const mockResponse = { ok: true, status: 200, statusText: 'OK' };
-        const fetchSpy = jest.spyOn(global, 'fetch').mockResolvedValue(mockResponse);
+      it('should make HTTP POST request by default', async () => {
+        const mockResponse = {
+          ok: true,
+          status: 200,
+          statusText: 'OK',
+          headers: { get: jest.fn().mockReturnValue('application/json') },
+          json: jest.fn().mockResolvedValue({ success: true })
+        };
+        const fetchSpy = jest.spyOn(global, 'fetch').mockResolvedValue(mockResponse as any);
 
         const result = await httpProcessor.send(testEvent, 'http://example.com/api');
 
         expect(result.success).toBe(true);
+        expect(result.events).toHaveLength(1);
+        expect(result.events![0].name).toBe('http.response');
         expect(fetchSpy).toHaveBeenCalledWith(
           'http://example.com/api',
           expect.objectContaining({
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' }
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: expect.stringContaining('"event":"testEvent"')
           })
         );
       });
@@ -300,13 +309,27 @@ describe('EventIOProcessor System', () => {
       });
 
       it('should handle HTTP error responses', async () => {
-        const mockResponse = { ok: false, status: 404, statusText: 'Not Found' };
+        const mockResponse = {
+          ok: false,
+          status: 404,
+          statusText: 'Not Found',
+          headers: { get: jest.fn().mockReturnValue('application/json') },
+          json: jest.fn().mockResolvedValue({ error: 'Resource not found' })
+        };
         (global.fetch as jest.Mock).mockResolvedValue(mockResponse);
 
         const result = await httpProcessor.send(testEvent, 'http://example.com/api');
 
         expect(result.success).toBe(false);
         expect(result.error?.message).toBe('HTTP 404: Not Found');
+        expect(result.events).toHaveLength(1);
+        expect(result.events![0].name).toBe('http.error');
+        expect(result.events![0].data).toEqual({
+          error: 'HTTP 404: Not Found',
+          status: 404,
+          statusText: 'Not Found',
+          response: { error: 'Resource not found' }
+        });
       });
 
       it('should handle network errors', async () => {
@@ -317,6 +340,12 @@ describe('EventIOProcessor System', () => {
 
         expect(result.success).toBe(false);
         expect(result.error).toBe(networkError);
+        expect(result.events).toHaveLength(1);
+        expect(result.events![0].name).toBe('error.communication');
+        expect(result.events![0].data).toEqual({
+          error: 'Network error',
+          source: 'http'
+        });
       });
     });
   });

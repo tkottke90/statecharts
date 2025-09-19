@@ -62,7 +62,8 @@ async function main() {
     console.log(' History:')
     console.table(statechart.getHistory().getAllEntries().map((entry, index) => {
       return {
-        type: entry.type
+        type: entry.type,
+        event: entry.stateConfiguration.at(-1)
       }
     }))
     

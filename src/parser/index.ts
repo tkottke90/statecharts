@@ -2,21 +2,25 @@ import z from 'zod';
 import { BaseNode, Node } from '../models/base';
 import { CreateFromJsonResponse } from '../models/methods';
 import {
-  DataNode,
-  DataModelNode,
-  FinalNode,
-  StateNode,
-  TransitionNode,
   AssignNode,
+  DataModelNode,
+  DataNode,
+  ElseIfNode,
+  ElseNode,
+  FinalNode,
+  IfNode,
+  InitialNode,
+  LogNode,
+  OnEntryNode,
+  OnExitNode,
+  ParallelNode,
+  ParamNode,
+  RaiseNode,
+  SCXMLNode,
+  SendNode,
+  StateNode,
+  TransitionNode
 } from '../nodes';
-import { InitialNode } from '../nodes/initial.node';
-import { SCXMLNode } from '../nodes/scxml.node';
-import { ParallelNode } from '../nodes/parallel.node';
-import { OnExitNode } from '../nodes/onexit.node';
-import { OnEntryNode } from '../nodes/onentry.node';
-import { RaiseNode } from '../nodes/raise.node';
-import { LogNode } from '../nodes/log.node';
-import { IfNode, ElseIfNode, ElseNode } from '../nodes/conditional.node';
 
 type NodeInitMethod<T extends BaseNode = BaseNode> = (
   input: Record<string, unknown>,
@@ -25,26 +29,22 @@ type NodeInitMethod<T extends BaseNode = BaseNode> = (
 const nodeMap: Record<string, NodeInitMethod> = {
   assign: (input: Record<string, unknown>) => AssignNode.createFromJSON(input),
   data: (input: Record<string, unknown>) => DataNode.createFromJSON(input),
-  datamodel: (input: Record<string, unknown>) =>
-    DataModelNode.createFromJSON(input),
-  final: (input: Record<string, unknown>) => FinalNode.createFromJSON(input),
-  initial: (input: Record<string, unknown>) =>
-    InitialNode.createFromJSON(input),
-  onentry: (input: Record<string, unknown>) =>
-    OnEntryNode.createFromJSON(input),
-  onexit: (input: Record<string, unknown>) => OnExitNode.createFromJSON(input),
-  parallel: (input: Record<string, unknown>) =>
-    ParallelNode.createFromJSON(input),
-  raise: (input: Record<string, unknown>) => RaiseNode.createFromJSON(input),
-  log: (input: Record<string, unknown>) => LogNode.createFromJSON(input),
-  scxml: (input: Record<string, unknown>) => SCXMLNode.createFromJSON(input),
-  state: (input: Record<string, unknown>) => StateNode.createFromJSON(input),
-  transition: (input: Record<string, unknown>) =>
-    TransitionNode.createFromJSON(input),
-  // Conditional nodes
-  if: (input: Record<string, unknown>) => IfNode.createFromJSON(input),
-  elseif: (input: Record<string, unknown>) => ElseIfNode.createFromJSON(input),
+  datamodel: (input: Record<string, unknown>) => DataModelNode.createFromJSON(input),
   else: (input: Record<string, unknown>) => ElseNode.createFromJSON(input),
+  elseif: (input: Record<string, unknown>) => ElseIfNode.createFromJSON(input),
+  final: (input: Record<string, unknown>) => FinalNode.createFromJSON(input),
+  if: (input: Record<string, unknown>) => IfNode.createFromJSON(input),
+  initial: (input: Record<string, unknown>) => InitialNode.createFromJSON(input),
+  log: (input: Record<string, unknown>) => LogNode.createFromJSON(input),
+  onentry: (input: Record<string, unknown>) =>  OnEntryNode.createFromJSON(input),
+  onexit: (input: Record<string, unknown>) => OnExitNode.createFromJSON(input),
+  parallel: (input: Record<string, unknown>) => ParallelNode.createFromJSON(input),
+  param: (input: Record<string, unknown>) => ParamNode.createFromJSON(input),
+  raise: (input: Record<string, unknown>) => RaiseNode.createFromJSON(input),
+  scxml: (input: Record<string, unknown>) => SCXMLNode.createFromJSON(input),
+  send: (input: Record<string, unknown>) => SendNode.createFromJSON(input),
+  state: (input: Record<string, unknown>) => StateNode.createFromJSON(input),
+  transition: (input: Record<string, unknown>) =>TransitionNode.createFromJSON(input),
 };
 
 export function mergeMaps(

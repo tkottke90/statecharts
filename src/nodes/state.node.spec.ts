@@ -1,3 +1,4 @@
+
 import { StateNode } from './state.node';
 import SimpleXML from 'simple-xml-to-json';
 

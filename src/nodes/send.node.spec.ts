@@ -1,8 +1,10 @@
 import { SendNode } from './send.node';
 import { ParamNode } from './param.node';
 import { EventIOProcessorRegistry, EventIOProcessor } from '../models/event-io-processor';
-import { InternalState, SCXMLEvent } from '../models/internalState';
+import { InternalState } from '../models/internalState';
 import SimpleXML from 'simple-xml-to-json';
+import { StateNode } from '../../dist/nodes';
+import { OnEntryNode } from '../nodes/onentry.node';
 
 // Mock setTimeout for delay testing
 jest.useFakeTimers();
@@ -148,6 +150,9 @@ describe('Node: <send>', () => {
 
   describe('#run', () => {
     it('should send event immediately when no delay is specified', async () => {
+      // Arrange
+      const currentState = { ...testState };
+    
       const sendNode = new SendNode({
         send: {
           event: 'testEvent',
@@ -158,9 +163,12 @@ describe('Node: <send>', () => {
         }
       }, mockRegistry);
 
-      const result = await sendNode.run(testState);
+      // Act
+      const result = await sendNode.run(currentState);
 
-      expect(result).toBe(testState);
+      // Assert
+
+      expect(result).toBe(currentState);
       expect(mockProcessor.send).toHaveBeenCalledWith(
         expect.objectContaining({
           name: 'testEvent',
@@ -468,6 +476,86 @@ describe('Node: <send>', () => {
       expect(result._pendingInternalEvents).toBeDefined();
       expect(result._pendingInternalEvents!.length).toBeGreaterThan(0);
       expect(result._pendingInternalEvents![0].name).toBe('error.communication');
+    });
+  });
+
+  describe('Integration with Default Processors', () => {
+    it('[HTTP] should trigger an http request', async () => {
+      // Arrange
+      const currentState = { ...testState }
+
+      const fetchSpy = jest.spyOn(global, 'fetch').mockResolvedValue({
+        ok: true,
+        status: 200,
+        statusText: 'Okay'
+      } as Response);
+
+      const sendNode = new SendNode({
+        send: {
+          content: '',
+          children: [],
+          event: 'test-api',
+          type: 'http',
+          target: 'http://example.com',
+          id: 'test-sendId'
+        }
+      })
+
+      // Act
+      const result = await sendNode.run(currentState);
+
+      // Assert
+      expect(fetchSpy).toHaveBeenCalled();
+      expect(result._pendingInternalEvents).toContainEqual(
+        expect.objectContaining({
+          name: 'http.response'
+        })
+      )
+    });
+
+    it('[HTTP] should trigger an http request onentry', async () => {
+      // Arrange
+      const currentState = { ...testState }
+
+      const fetchSpy = jest.spyOn(global, 'fetch').mockResolvedValue({
+        ok: true,
+        status: 200,
+        statusText: 'Okay'
+      } as Response);
+
+      const sendNode = new SendNode({
+        send: {
+          content: '',
+          children: [],
+          event: 'test-api',
+          type: 'http',
+          target: 'http://example.com',
+          id: 'test-sendId'
+        }
+      })
+
+      const apiOnEntry = new OnEntryNode({
+        onentry: {
+          children: [sendNode],
+          content: ''
+        }
+      })
+
+      const apiCallState = new StateNode({
+        state: {
+          children: [apiOnEntry],
+          content: '',
+          id: 'callAPI'
+        }
+      })
+
+      
+      // Act
+      const result = await apiCallState.mount(currentState);
+      
+      // Assert
+      expect(fetchSpy).toHaveBeenCalled();
+      expect(result.state._pendingInternalEvents?.length).toBe(1)
     });
   });
 

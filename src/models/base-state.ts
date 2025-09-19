@@ -101,6 +101,8 @@ export class BaseStateNode extends BaseNode {
    */
   getOnEntryNodes() {
     return this.children.filter(child => {
+      const temp_isEntryNode = child instanceof OnEntryNode;
+
       if (child instanceof OnEntryNode && child.hasExecutableChildren) {
         return true;
       }

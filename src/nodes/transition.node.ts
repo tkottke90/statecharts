@@ -5,7 +5,7 @@ import { addPendingEvent, InternalState } from '../models/internalState';
 import { evaluateExpression } from '../parser/expressions.nodejs';
 
 const TransitionNodeAttr = BaseNodeAttr.extend({
-  event: z.string().optional().default(''),
+  event: z.string().default('').optional(),
   target: z.string().min(1),
   cond: z.string().optional(),
 });

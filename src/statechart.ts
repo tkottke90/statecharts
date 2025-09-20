@@ -3,8 +3,6 @@ import SimpleXML from 'simple-xml-to-json';
 import { parse } from './parser';
 import { BaseStateNode } from './models/base-state';
 import { InitialNode, SCXMLNode, TransitionNode } from './nodes';
-import { DataModelNode } from './nodes/datamodel.node';
-import { ParallelNode } from './nodes/parallel.node';
 import {
   findLCCA,
   computeExitSet,
@@ -12,6 +10,7 @@ import {
   type ActiveStateEntry,
 } from './utils/transition-utils';
 import {
+  addPendingEvent,
   InternalState,
   processPendingEvents,
   SCXMLEvent,
@@ -24,6 +23,7 @@ import {
 } from './models/history';
 import z from 'zod';
 import { XMLParsingError } from './errors';
+import { InitializeDataModelMixin } from './models/mixins/initializeDataModel';
 
 type Tuple<T> = Array<[string, T]>;
 
@@ -33,7 +33,10 @@ interface StateChartOptions {
   history?: Partial<HistoryTrackingOptions>;
 }
 
-export class StateChart {
+// This base class is used to add mixins
+const StateChartBase = InitializeDataModelMixin(class BaseClass {});
+
+export class StateChart extends StateChartBase {
   // ============================================================================
   // PROPERTIES
   // ============================================================================
@@ -54,6 +57,8 @@ export class StateChart {
     stateMap: Map<string, BaseNode>,
     options: StateChartOptions = {},
   ) {
+    super();
+
     // Initialize history tracking
     this.history = new StateExecutionHistory(options.history);
 
@@ -63,10 +68,6 @@ export class StateChart {
         this.states.set(id, node);
       }
     });
-
-    // Initialize the state machine by entering the initial state configuration
-    // Note: This is synchronous initialization - no mount handlers are executed
-    this.initializeActiveStateChain();
   }
 
   // ============================================================================
@@ -117,7 +118,7 @@ export class StateChart {
     }
 
     // SCXML Specification: Initialize the data model before entering initial states
-    let currentState = await this.initializeDataModel(input);
+    let currentState = await this.initializeDataModel(this.root, input);
 
     // SCXML Specification: Enter the initial state configuration with onentry handlers
     currentState = await this.enterInitialStates(currentState);
@@ -143,6 +144,7 @@ export class StateChart {
     let macrostepDone = false;
     while (!macrostepDone) {
       // 1. Process eventless transitions first (highest priority)
+
       const eventlessTransitions = this.selectEventlessTransitions();
       if (eventlessTransitions.length > 0) {
         state = await this.microstep(state, eventlessTransitions);
@@ -237,6 +239,8 @@ export class StateChart {
     state: InternalState,
     transitions: TransitionNode[],
   ): Promise<InternalState> {
+    // Create a new microstep entry in the history
+    // and start a new context for this microstep
     const microstepStartTime = Date.now();
     const microstepId = this.history.addEntry(
       HistoryEventType.MICROSTEP_START,
@@ -253,20 +257,22 @@ export class StateChart {
 
     this.history.startContext(microstepId);
 
+    // Clone the state before any changes
     let currentState = { ...state };
 
-    // Exit states
+    // Exit out active states based on the current list of transactions
     currentState = await this.exitStates(transitions, currentState);
 
-    // Execute transition content
+    // Trigger any transitions
     currentState = await this.executeTransitionContent(
       transitions,
       currentState,
     );
 
-    // Enter states
+    // Enter states based on the current list of transactions
     currentState = await this.enterStates(transitions, currentState);
 
+    // Close the micro step history context window
     this.history.endContext();
 
     // Record microstep completion
@@ -319,84 +325,27 @@ export class StateChart {
    */
   private async addStateToActiveChain(
     statePath: string,
-    executeMountHandlers: boolean,
     currentState?: InternalState,
   ): Promise<InternalState | void> {
+    // Get state node
     const stateNode = this.states.get(statePath);
-    let updatedState = currentState;
 
     if (!stateNode) {
-      return updatedState;
+      return currentState;
     }
 
+    // Clone the current state without modifying its structure
+    let updatedState = { ...currentState };
+
     // Execute mount handler if requested
-    if (executeMountHandlers && updatedState) {
-      if (typeof stateNode.mount === 'function') {
-        const mountResponse = await stateNode.mount(updatedState);
-        updatedState = { ...updatedState, ...mountResponse.state };
-
-        // Handle parallel state entry using mount response
-        if (stateNode instanceof ParallelNode && mountResponse.childPath) {
-          const childStateIds = mountResponse.childPath
-            .split(',')
-            .filter(id => id.trim());
-
-          for (const childId of childStateIds) {
-            const childPath = `${statePath}.${childId.trim()}`;
-            const childResult = await this.addStateToActiveChain(
-              childPath,
-              true,
-              updatedState,
-            );
-            if (childResult) {
-              updatedState = childResult;
-            }
-
-            // Handle compound states within parallel regions
-            const childStateNode = this.states.get(childPath);
-            if (childStateNode && childResult) {
-              const grandChildMountResponse =
-                await childStateNode.mount(childResult);
-              updatedState = {
-                ...updatedState,
-                ...grandChildMountResponse.state,
-              };
-
-              if (grandChildMountResponse.childPath) {
-                const grandChildPath = `${childPath}.${grandChildMountResponse.childPath}`;
-                const grandChildResult = await this.addStateToActiveChain(
-                  grandChildPath,
-                  true,
-                  updatedState,
-                );
-                if (grandChildResult) {
-                  updatedState = grandChildResult;
-                }
-              }
-            }
-          }
-        }
-      }
-    } else {
-      // Handle parallel state entry without mount handlers (initialization)
-      if (stateNode instanceof ParallelNode) {
-        const childStates = stateNode.activeChildStates;
-
-        for (const childState of childStates) {
-          if (childState.id) {
-            const childPath = `${statePath}.${childState.id}`;
-            await this.addStateToActiveChain(childPath, false);
-          }
-        }
-      }
-      // Handle compound state entry without mount handlers
-      else if (!stateNode.isAtomic) {
-        const initialChildState = stateNode.initialState;
-        if (initialChildState) {
-          const childPath = `${statePath}.${initialChildState}`;
-          await this.addStateToActiveChain(childPath, false);
-        }
-      }
+    if (typeof stateNode.mount === 'function') {
+      const mountResponse = await stateNode.mount(updatedState);
+      // Merge the mount response state with the current state
+      // Later states override earlier ones (child overrides parent)
+      updatedState = {
+        ...updatedState,
+        ...mountResponse.state
+      };
     }
 
     // Add state to active configuration
@@ -406,53 +355,34 @@ export class StateChart {
   }
 
   /**
-   * Synchronous version of addStateToActiveChain for initialization.
-   * Does not execute mount handlers, only adds states to activeStateChain.
+   * Determine the initial state path according to SCXML specification
    */
-  private addStateToActiveChainSync(statePath: string): void {
-    const stateNode = this.states.get(statePath);
-
-    if (!stateNode) {
-      return;
+  private determineInitialStatePath(): string {
+    if (this.initial) {
+      return this.initial;
     }
 
-    // Add state to active configuration first
-    this.activeStateChain.push([statePath, stateNode]);
-
-    // Handle parallel state initialization - enter all child states simultaneously
-    if (stateNode instanceof ParallelNode) {
-      const childStates = stateNode.activeChildStates;
-
-      for (const childState of childStates) {
-        if (childState.id) {
-          const childPath = `${statePath}.${childState.id}`;
-          this.addStateToActiveChainSync(childPath);
-        }
-      }
+    // Check for <initial> node
+    const [initialNode] = this.root.getChildrenOfType(InitialNode);
+    if (initialNode) {
+      return initialNode.content;
     }
-    // Handle compound state initialization - enter the initial child state
-    else if (!stateNode.isAtomic) {
-      const initialChildState = stateNode.initialState;
-      if (initialChildState) {
-        const childPath = `${statePath}.${initialChildState}`;
-        this.addStateToActiveChainSync(childPath);
-      }
+
+    // Grab the first state element
+    const [firstStateNode] = this.root.getChildrenOfType(BaseStateNode);
+    if (firstStateNode) {
+      return firstStateNode.id;
     }
+
+    throw new Error('Could not identify an initial state from the provided configuration');
   }
 
-  /**
-   * Computes the entry set for a collection of transitions.
-   *
-   * This method processes multiple transitions and computes the union of all
-   * states that need to be entered, handling parallel transitions correctly.
-   *
-   * @param transitions - Array of transitions to process
-   * @returns Array of state paths to enter, sorted shallowest-first
-   */
-  private computeEntrySetFromTransitions(
+  private async enterStates(
     transitions: TransitionNode[],
-  ): string[] {
+    state: InternalState,
+  ): Promise<InternalState> {
     const allEntryStates = new Set<string>();
+    let currentState = { ...state }
 
     // For each transition, compute its entry set and add to the union
     for (const transition of transitions) {
@@ -461,99 +391,73 @@ export class StateChart {
         // and filter out states that are already active
         const targetParts = transition.target.split('.');
 
-        // Build all ancestor paths that need to be entered
+        // Loops over each of the parts of the path and make sure
+        // that the active state contains each part
+        //
+        // Example:
+        //   transition.target = 'gameRunning.gameSystems.healthSystem'
+        //   targetParts = [ 'gameRunning', 'gameSystems', 'healthSystem' ]
+        //
+        //   // Creates entries in state chain
+        //   'gameRunning'
+        //   'gameRunning.gameSystems'
+        //   'gameRunning.gameSystems.healthSystem'
         for (let i = 1; i <= targetParts.length; i++) {
           const pathToEnter = targetParts.slice(0, i).join('.');
-          if (!this.isActive(pathToEnter)) {
-            allEntryStates.add(pathToEnter);
+
+          // Load the node info from the state map
+          if (this.states.has(pathToEnter)) {
+            const node = this.states.get(pathToEnter);
+
+            // Capture if the node is missing, this is a problem
+            if (!node) {
+              currentState = addPendingEvent(
+                currentState,
+                {
+                  name: 'error.statechart.path-not-found',
+                  type: 'platform',
+                  sendid: '',
+                  origin: '',
+                  origintype: '',
+                  invokeid: '',
+                  data: {
+                    message: 'Unable to load state for path',
+                    path: pathToEnter
+                  }
+                }
+              )
+
+              break;
+            }
+
+            // Add the path itself to the entry set if not already active
+            if (!this.isActive(pathToEnter)) {
+              allEntryStates.add(pathToEnter);
+            }
+
+            // Add the initial states to the entry set. Each
+            // node that inherits from the BaseStateNode has a
+            // method for getting the list of child states that
+            // would be initialized
+            node?.getInitialStateList('').forEach(
+              statePath => {
+                if (!this.isActive(statePath)) {
+                  allEntryStates.add(statePath);
+                }
+              }
+            );
           }
         }
       }
     }
 
     // Convert to array and sort shallowest first (for proper entry order)
-    const entryArray = Array.from(allEntryStates);
-    return entryArray.sort((a, b) => a.split('.').length - b.split('.').length);
-  }
+    const statesToEnter = Array.from(allEntryStates).sort((a, b) => this.sortByPathDepth(a, b));
 
-  /**
-   * Computes the exit set for a collection of transitions.
-   *
-   * This method processes multiple transitions and computes the union of all
-   * states that need to be exited, handling parallel transitions correctly.
-   *
-   * @param transitions - Array of transitions to process
-   * @returns Array of state paths to exit, sorted deepest-first
-   */
-  private computeExitSetFromTransitions(
-    transitions: TransitionNode[],
-  ): string[] {
-    const allExitStates = new Set<string>();
-
-    // For each transition, compute its exit set and add to the union
-    for (const transition of transitions) {
-      // Extract source path from transition - we need to find the source state
-      const sourceState = this.findSourceStateForTransition(transition);
-      if (sourceState && transition.target) {
-        // Convert activeStateChain to the format expected by the utility function
-        const activeStateEntries: ActiveStateEntry[] =
-          this.activeStateChain.map(([path, node]) => [path, node]);
-
-        // Compute exit set for this transition
-        const exitStates = computeExitSet(
-          sourceState,
-          transition.target,
-          activeStateEntries,
-        );
-        exitStates.forEach(state => allExitStates.add(state));
-      }
-    }
-
-    // Convert to array and sort deepest first (already handled by computeExitSet)
-    const exitArray = Array.from(allExitStates);
-    return exitArray.sort((a, b) => b.split('.').length - a.split('.').length);
-  }
-
-  private async enterStates(
-    transitions: TransitionNode[],
-    state: InternalState,
-  ): Promise<InternalState> {
-    // Compute the complete entry set for all transitions
-    const statesToEnter = this.computeEntrySetFromTransitions(transitions);
-
-    let currentState = { ...state };
-
-    // Enter each state with mount handlers (execute onentry actions)
-    for (const statePath of statesToEnter) {
-      const entryStartTime = Date.now();
-
-      const result = await this.addStateToActiveChain(
-        statePath,
-        true,
-        currentState,
-      );
-      if (result) {
-        currentState = result;
-      }
-
-      // Record state entry
-      const entryDuration = Date.now() - entryStartTime;
-      this.history.addEntry(
-        HistoryEventType.STATE_ENTRY,
-        this.getActiveStateConfiguration(),
-        currentState,
-        {
-          duration: entryDuration,
-          metadata: {
-            enteredState: statePath,
-            startTime: entryStartTime,
-            endTime: Date.now()
-          }
-        }
-      );
-    }
-
-    return currentState;
+    return await this.updateStates(
+      currentState,
+      statesToEnter
+    )
   }
 
   /**
@@ -565,45 +469,25 @@ export class StateChart {
    * @returns Updated state after executing all initial state onentry handlers
    */
   private async enterInitialStates(state: InternalState): Promise<InternalState> {
-    let currentState = { ...state };
-
-    // Get all currently active states (added during initialization)
-    const activeStates = this.activeStateChain.map(([path]) => path);
-
-    // Clear the active state chain so we can re-enter with mount handlers
+    // 1. Clear the active state chain
     this.activeStateChain = [];
 
-    // Re-enter all states with mount handlers (onentry actions)
-    for (const statePath of activeStates) {
-      const entryStartTime = Date.now();
+    // 2. Determine the initial state path
+    const initialStatePath = this.determineInitialStatePath();
 
-      const result = await this.addStateToActiveChain(
-        statePath,
-        true, // Execute mount handlers
-        currentState,
-      );
-      if (result) {
-        currentState = result;
-      }
-
-      // Record state entry
-      const entryDuration = Date.now() - entryStartTime;
-      this.history.addEntry(
-        HistoryEventType.STATE_ENTRY,
-        this.getActiveStateConfiguration(),
-        currentState,
-        {
-          duration: entryDuration,
-          metadata: {
-            enteredState: statePath,
-            startTime: entryStartTime,
-            endTime: Date.now()
-          }
-        }
-      );
-    }
-
-    return currentState;
+    // 3. Create a fake transition node which instructs
+    // the system to transition to the initial state.  This unifies
+    // the state management logic 
+    return await this.enterStates(
+      [
+        new TransitionNode({ transition: {
+          content: '',
+          children: [],
+          target: initialStatePath
+        }})
+      ],
+      state
+    )
   }
 
   // Helper method for event matching (supports wildcards)
@@ -648,55 +532,35 @@ export class StateChart {
     state: InternalState,
   ): Promise<InternalState> {
     // Compute the complete exit set for all transitions
-    const statesToExit = this.computeExitSetFromTransitions(transitions);
+    const allExitStates = new Set<string>();
 
-    let currentState = { ...state };
+    // For each transition, compute its exit set and add to the union
+    for (const transition of transitions) {
+      // Extract source path from transition - we need to find the source state
+      const sourceState = this.findSourceStateForTransition(transition);
+      if (sourceState && transition.target) {
+        // Convert activeStateChain to the format expected by the utility function
+        const activeStateEntries: ActiveStateEntry[] =
+          this.activeStateChain.map(([path, node]) => [path, node]);
 
-    // Sort states in exit order (deepest first) - already handled by computeExitSet
-    // Execute onexit handlers and remove from active configuration
-    for (const statePath of statesToExit) {
-      const exitStartTime = Date.now();
-
-      // Find the state node in our active state chain
-      const stateEntry = this.activeStateChain.find(
-        ([path]) => path === statePath,
-      );
-
-      if (stateEntry) {
-        const [, stateNode] = stateEntry;
-
-        // Execute onexit handler by calling unmount method
-        if (typeof stateNode.unmount === 'function') {
-          currentState = {
-            ...currentState,
-            ...(await stateNode.unmount(currentState)),
-          };
-        }
-
-        // Remove state from active configuration
-        this.activeStateChain = this.activeStateChain.filter(
-          ([path]) => path !== statePath,
+        // Compute exit set for this transition
+        const exitStates = computeExitSet(
+          sourceState,
+          transition.target,
+          activeStateEntries,
         );
-
-        // Record state exit
-        const exitDuration = Date.now() - exitStartTime;
-        this.history.addEntry(
-          HistoryEventType.STATE_EXIT,
-          this.getActiveStateConfiguration(),
-          currentState,
-          {
-            duration: exitDuration,
-            metadata: {
-              exitedState: statePath,
-              startTime: exitStartTime,
-              endTime: Date.now()
-            }
-          }
-        );
+        exitStates.forEach(state => allExitStates.add(state));
       }
     }
 
-    return currentState;
+    // Convert to array and sort deepest first (already handled by computeExitSet)
+    const statesToExit = Array.from(allExitStates).sort((a, b) => this.sortByPathDepth(a, b));
+
+    return await this.updateStates(
+      state,
+      statesToExit,
+      'remove'
+    )
   }
 
   /**
@@ -729,79 +593,6 @@ export class StateChart {
     return this.activeStateChain.map(([path]) => path);
   }
 
-  /**
-   * Initializes the activeStateChain by entering the initial state configuration.
-   * This method handles the initial state entry according to SCXML specification,
-   * including entering parallel states and their child states.
-   */
-  private initializeActiveStateChain(): void {
-    if (!this.initial) {
-      // Check for <initial> node
-      const [initialNode] = this.root.getChildrenOfType(InitialNode);
-
-      if (initialNode) {
-        this.initial = initialNode.content;
-      }
-    }
-
-    // We do not have an initial attribute OR an <initial> node
-    // then grab the first state element
-    if (!this.initial) {
-      const [firstStateNode] = this.root.getChildrenOfType(BaseStateNode);
-
-      if (firstStateNode) {
-        this.initial = firstStateNode.id;
-      }
-    }
-
-    if (!this.initial) {
-      const err = new Error(
-        'Could not identify an initial state from the provided configuration',
-      );
-      err.name = 'StateChart.InitializationError';
-
-      throw err;
-    }
-
-    // Build the path to the initial state and all its ancestors
-    const initialStateParts = this.initial.split('.');
-    const statesToEnter: string[] = [];
-
-    // Build all ancestor paths that need to be entered (shallowest first)
-    for (let i = 1; i <= initialStateParts.length; i++) {
-      const pathToEnter = initialStateParts.slice(0, i).join('.');
-      statesToEnter.push(pathToEnter);
-    }
-
-    // Enter each state in the path without executing mount handlers (initialization only)
-    for (const statePath of statesToEnter) {
-      this.addStateToActiveChainSync(statePath);
-    }
-  }
-
-  /**
-   * Initialize the data model according to SCXML specification.
-   * This should be called before entering the initial state configuration.
-   *
-   * @param state - The initial state to populate with data model values
-   * @returns Updated state with initialized data model
-   */
-  private async initializeDataModel(
-    state: InternalState,
-  ): Promise<InternalState> {
-    // Find all datamodel nodes in the root SCXML node
-    const dataModelNodes = this.root.getChildrenOfType(DataModelNode);
-
-    let currentState = { ...state };
-
-    // Execute each datamodel node to initialize the data
-    for (const dataModelNode of dataModelNodes) {
-      currentState = await dataModelNode.run(currentState);
-    }
-
-    return currentState;
-  }
-
   private isActive(path: string): boolean {
     return this.activeStateChain.some(([activePath]) => activePath === path);
   }
@@ -820,6 +611,10 @@ export class StateChart {
     return this.activeStateChain
       .map(([, node]) => node.getEventlessTransitions())
       .flat();
+  }
+
+  private sortByPathDepth(pathA: string, pathB: string) {
+    return pathA.split('.').length - pathB.split('.').length;
   }
 
   // Helper method to select transitions that match an event
@@ -843,6 +638,78 @@ export class StateChart {
     }
 
     return this.removeConflictingTransitions(enabledTransitions);
+  }
+
+  private async updateStates(state: InternalState, statesToUpdate: string[], updateMethod: 'add' | 'remove' = 'add') {
+    let currentState = { ...state };
+
+    const historyEvent: HistoryEventType = updateMethod === 'add' ? HistoryEventType.STATE_ENTRY : HistoryEventType.STATE_EXIT;
+    const descriptionProperty = updateMethod === 'add' ? 'enteredState' : 'exitedState'
+
+    for (const statePath of statesToUpdate) {
+      const startTime = Date.now();
+
+      switch(updateMethod) {
+        case 'add': {
+          const result = await this.addStateToActiveChain(
+            statePath,
+            currentState,
+          );
+
+          if (result) {
+            currentState = result;
+          }
+          break;
+        }
+        case 'remove': {
+          // Find the state node in our active state chain
+          const stateEntry = this.activeStateChain.find(
+            ([path]) => path === statePath,
+          );
+
+          if (!stateEntry) {
+            // Skip the state if path is not in the active chain
+            // to avoid creating a new history entry
+            continue;
+          }
+
+          // Extract the node so we can call it's methods
+          const [, stateNode] = stateEntry;
+
+          // Execute onexit handler by calling unmount method
+          if (typeof stateNode.unmount === 'function') {
+            currentState = {
+              ...currentState,
+              ...(await stateNode.unmount(currentState)),
+            };
+          }
+
+          // Remove state from active configuration
+          this.activeStateChain = this.activeStateChain.filter(
+            ([path]) => path !== statePath,
+          );
+
+          break;
+        }
+      }
+
+      const duration = Date.now() - startTime;
+      this.history.addEntry(
+        historyEvent,
+        this.getActiveStateConfiguration(),
+        currentState,
+        {
+          duration: duration,
+          metadata: {
+            [descriptionProperty]: statePath,
+            startTime: startTime,
+            endTime: Date.now()
+          }
+        }
+      );
+    }
+
+    return currentState;
   }
 
   // ============================================================================

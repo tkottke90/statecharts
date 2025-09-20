@@ -119,9 +119,18 @@ describe('BaseStateNode', () => {
     describe('#initialState', () => {
       it('should return the initial attribute value when set', () => {
         // Arrange
-        const stateWithInitial = new (class extends BaseStateNode {
+        // Create a child state to make the parent compound (not atomic)
+        const childState = new (class extends BaseStateNode {
           constructor() {
             super({ content: '', children: [] });
+            // @ts-expect-error - Setting readonly property for testing
+            this.id = 'specificInitialState';
+          }
+        })();
+
+        const stateWithInitial = new (class extends BaseStateNode {
+          constructor() {
+            super({ content: '', children: [childState] });
             // @ts-expect-error - Setting readonly property for testing
             this.id = 'stateWithInitial';
             // @ts-expect-error - Setting readonly property for testing
@@ -142,9 +151,18 @@ describe('BaseStateNode', () => {
           initial: { content: 'initialFromElement', children: [] },
         });
 
+        // Create a child state to make the parent compound (not atomic)
+        const childState = new (class extends BaseStateNode {
+          constructor() {
+            super({ content: '', children: [] });
+            // @ts-expect-error - Setting readonly property for testing
+            this.id = 'initialFromElement';
+          }
+        })();
+
         const stateWithInitialElement = new (class extends BaseStateNode {
           constructor() {
-            super({ content: '', children: [initialNode] });
+            super({ content: '', children: [initialNode, childState] });
             // @ts-expect-error - Setting readonly property for testing
             this.id = 'stateWithInitialElement';
           }

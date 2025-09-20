@@ -7,6 +7,7 @@ import {
 import { InternalState } from '../models/internalState';
 import { CreateFromJsonResponse } from '../models';
 import { FinalNode } from './final.node';
+import { createStatePath } from '../utils/state-path.utils';
 
 const ParallelNodeAttr = BaseStateNodeAttr;
 export type ParallelNodeType = {
@@ -52,7 +53,35 @@ export class ParallelNode
     return ''; // All children are "initial" states
   }
 
-  // New method: Get all child states (all are active simultaneously)
+  /**
+   * Returns an array of initial state paths.  This will
+   * look at all state paths and return a list to every
+   * initial path within the parallel node
+   * 
+   * @param prefix The prefix to use for the initial state path
+   * @returns The list of initial state paths
+   */
+  getInitialStateList(prefix: string) {
+    const localPrefix = createStatePath(prefix, this.id);
+    const initialActiveStateList = [ localPrefix ]
+
+    const childStates = this.buildParallelChildPath()
+
+    // Loop over each child state and initialize
+    for (const child of childStates) {
+      // Grab the child node out of the child array
+      const [ childNode ] = this.getChildState(child);
+
+      // If the child state exists, concat the childs
+      if (childNode) {
+        initialActiveStateList.push(...childNode.getInitialStateList(localPrefix))
+      }
+    }
+
+    return initialActiveStateList;
+  }
+
+  // Get all child states (all are active simultaneously)
   get activeChildStates(): BaseStateNode[] {
     return this.getChildrenOfType<BaseStateNode>(BaseStateNode);
   }
@@ -76,7 +105,7 @@ export class ParallelNode
     return {
       state: currentState,
       node: this,
-      childPath: this.buildParallelChildPath(),
+      childPath: this.buildParallelChildPath().join(','),
     };
   }
 
@@ -85,15 +114,15 @@ export class ParallelNode
    * This signals to the StateChart that all child states should be entered.
    * Returns a comma-separated list of all child state IDs.
    */
-  private buildParallelChildPath(): string {
+private buildParallelChildPath() {
     const childStates = this.activeChildStates;
     if (childStates.length === 0) {
-      return '';
+      return [];
     }
 
     // Return all child state IDs separated by commas
     // This signals to StateChart that all children should be entered
-    return childStates.map(child => child.id).join(',');
+    return childStates.map(child => child.id);
   }
 
   /**

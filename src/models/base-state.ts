@@ -6,6 +6,8 @@ import { InternalState } from './internalState';
 import { OnEntryNode } from '../nodes/onentry.node';
 import { OnExitNode } from '../nodes/onexit.node';
 import { DataModelNode } from '../nodes/datamodel.node';
+import { InitializeDataModelMixin } from './mixins/initializeDataModel';
+import { createStatePath } from '../utils/state-path.utils';
 
 export const BaseStateNodeAttr = BaseNodeAttr.extend({
   id: z.string().min(1),
@@ -22,7 +24,7 @@ export interface MountResponse {
   childPath?: string;
 }
 
-export class BaseStateNode extends BaseNode {
+export class BaseStateNode extends InitializeDataModelMixin(BaseNode) {
   allowChildren = true;
   readonly id: string = '';
   readonly initial: string | undefined;
@@ -38,23 +40,59 @@ export class BaseStateNode extends BaseNode {
    * Identifies the initial child state for the state node.
    */
   get initialState() {
+    // Atomic states do not have an initial
+    if (this.isAtomic) return '';
+
+    // If the initial property is set we are g2g
     if (this.initial) {
       return this.initial;
     }
 
+    // Load the first initial child
     const [initialChild] = this.getChildrenOfType(InitialNode);
 
+    // If we have an initial child, return it
     if (initialChild) {
       return initialChild.content;
     }
 
+    // Load the first child state
     const [firstChild] = this.getChildrenOfType<BaseStateNode>(BaseStateNode);
 
-    if (firstChild) {
+    // If we have a first child, return it
+    if (firstChild?.id) {
       return firstChild.id;
     }
 
+    // No initial state found
     return '';
+  }
+
+  /**
+   * Returns an array of initial state paths  This will 
+   * handle looking up and providing the nested list
+   * paths that would be initialized when this node is
+   * mounted in the StateChart.  This will only mount one
+   * initial state.  If you are calling this on the <parallel>
+   * node it will return all the initial states for all the
+   * child states.
+   * 
+   * @param prefix The prefix to use for the initial state path
+   * @returns The list of initial state paths
+   */
+  getInitialStateList(prefix: string) {
+    const localPrefix = createStatePath(prefix, this.id);
+    const initialActiveStateList = [ localPrefix ]
+
+    if (this.initialState) {
+      const [ node ] = this.getChildState(this.initialState);
+      
+      if (node) {
+        initialActiveStateList.push(...node.getInitialStateList(localPrefix));
+      }
+    }
+
+    return initialActiveStateList;
   }
 
   /**
@@ -89,7 +127,7 @@ export class BaseStateNode extends BaseNode {
     const childStates = this.getChildrenOfType<BaseStateNode>(BaseStateNode);
 
     if (id) {
-      return childStates.find(child => child.id === id);
+      return childStates.filter(child => child.id === id);
     }
 
     return childStates;
@@ -101,8 +139,6 @@ export class BaseStateNode extends BaseNode {
    */
   getOnEntryNodes() {
     return this.children.filter(child => {
-      const temp_isEntryNode = child instanceof OnEntryNode;
-
       if (child instanceof OnEntryNode && child.hasExecutableChildren) {
         return true;
       }
@@ -147,10 +183,7 @@ export class BaseStateNode extends BaseNode {
     let currentState = { ...state };
 
     // STEP 1: Process local datamodel nodes first (SCXML spec requirement)
-    const dataModelNodes = this.getDataModelNodes();
-    for (const dataModelNode of dataModelNodes) {
-      currentState = await dataModelNode.run(currentState);
-    }
+    currentState = await this.initializeDataModel(this, currentState);
 
     // STEP 2: Execute onentry nodes in document order (can now reference local data)
     const onEntryNodes = this.getOnEntryNodes();
@@ -193,4 +226,6 @@ export class BaseStateNode extends BaseNode {
 
     return currentState;
   }
+
 }
+

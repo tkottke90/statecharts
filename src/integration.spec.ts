@@ -3,6 +3,7 @@ import { readFileSync } from 'fs';
 import path from 'path';
 import { InternalState } from './models/internalState';
 import { BaseStateNode } from './models/base-state';
+import { StateNode } from './nodes';
 
 describe('Integration Tests', () => {
   describe('Parallel State Integration', () => {
@@ -15,16 +16,15 @@ describe('Integration Tests', () => {
       'utf8',
     );
 
-    let stateChart: StateChart;
-
-    beforeEach(() => {
-      stateChart = StateChart.fromXML(xmlStr);
-    });
-
     describe('Simultaneous System Entry Test', () => {
       it('should create StateChart and have initial state set', async () => {
-        // Arrange + Act
+        // Arrange
         const stateChart = StateChart.fromXML(xmlStr);
+
+        // Act
+        await stateChart.execute({
+          data: {}
+        });
 
         // Assert
         // Check if initial state is set correctly
@@ -50,6 +50,8 @@ describe('Integration Tests', () => {
           _datamodel: 'ecmascript',
           data: {},
         };
+        
+        const stateChart = StateChart.fromXML(xmlStr);
 
         // Act - Execute the state chart (this will enter initial states)
         await stateChart.execute(initialState);
@@ -62,6 +64,15 @@ describe('Integration Tests', () => {
           }
         ).activeStateChain;
         const activePaths = activeStateChain.map(([path]) => path);
+
+        console.table(
+          stateChart.getHistory().getAllEntries().map((entry) => {
+            return {
+              type: entry.type,
+              event: entry.stateConfiguration.at(-1)
+            }
+          })
+        )
 
         // All parallel regions should be active simultaneously
         expect(activePaths).toContain('gameRunning');
@@ -93,7 +104,9 @@ describe('Integration Tests', () => {
           data: {},
         };
 
-        // Act
+        const stateChart = StateChart.fromXML(xmlStr);
+
+        // Act - Execute the state chart (this will enter initial states)
         const resultState = await stateChart.execute(initialState);
 
         // Assert - Initial data values should be set correctly
@@ -110,10 +123,21 @@ describe('Integration Tests', () => {
           data: {},
         };
 
-        // Act
+        const stateChart = StateChart.fromXML(xmlStr);
+
+        const gameRunningState = (stateChart as any).states.get('gameRunning') as StateNode;
+        const gameRunningMountSpy = jest.spyOn(gameRunningState, 'mount')
+
+        // Act - Execute the state chart (this will enter initial states)
         await stateChart.execute(initialState);
 
-        // Assert - activeStateChain should contain paths for all parallel regions
+        // Assert
+        
+        // We should have mounted the `gameRunning` state once
+        expect(gameRunningMountSpy).toHaveBeenCalledTimes(1);
+        
+        
+        // activeStateChain should contain paths for all parallel regions
         // This tests our flattened multi-path approach
         const activeStateChain = (
           stateChart as unknown as {

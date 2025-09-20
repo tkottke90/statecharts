@@ -3,8 +3,8 @@ import { ParamNode } from './param.node';
 import { EventIOProcessorRegistry, EventIOProcessor } from '../models/event-io-processor';
 import { InternalState } from '../models/internalState';
 import SimpleXML from 'simple-xml-to-json';
-import { StateNode } from '../../dist/nodes';
-import { OnEntryNode } from '../nodes/onentry.node';
+import { StateNode } from './state.node';
+import { OnEntryNode } from './onentry.node';
 
 // Mock setTimeout for delay testing
 jest.useFakeTimers();
@@ -549,10 +549,9 @@ describe('Node: <send>', () => {
         }
       })
 
-      
       // Act
       const result = await apiCallState.mount(currentState);
-      
+
       // Assert
       expect(fetchSpy).toHaveBeenCalled();
       expect(result.state._pendingInternalEvents?.length).toBe(1)

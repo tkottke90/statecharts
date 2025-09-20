@@ -7,7 +7,7 @@ import { AssignNode } from './nodes/assign.node';
 import { BaseExecutableNode } from './models/base-executable';
 import { InternalState } from './models/internalState';
 import { SCXMLNode } from './nodes/scxml.node';
-import { HistoryEventType } from './models/history';
+import { OnEntryNode } from './nodes';
 
 // Type for mock active state chain entries
 type MockActiveStateEntry = [string, Record<string, unknown>];
@@ -315,6 +315,10 @@ describe('StateChart', () => {
         stateChart as unknown as { activeStateChain: ActiveStateEntry[] }
       ).activeStateChain = activeStateChain;
 
+      // Mock the findSourceStateForTransition method to return the source state
+      jest.spyOn(stateChart as any, 'findSourceStateForTransition')
+        .mockReturnValue('playing.healthSystem.healthy');
+
       const initialState = { currentData: 'initial' };
 
       // Act
@@ -339,6 +343,105 @@ describe('StateChart', () => {
           ([path]) => path === 'playing.healthSystem.healthy',
         ),
       ).toBeUndefined();
+    });
+
+    it('should handle multiple transitions with different exit sets', async () => {
+      // Arrange
+      const transition1 = new TransitionNode({
+        transition: {
+          target: 'playing.scoreSystem.scoring',
+          event: '',
+          content: '',
+          children: [],
+        },
+      });
+
+      const transition2 = new TransitionNode({
+        transition: {
+          target: 'playing.powerUpSystem.active',
+          event: '',
+          content: '',
+          children: [],
+        },
+      });
+
+      // Create StateNode instances
+      const healthyStateNode = new StateNode({
+        state: { id: 'healthy', content: '', children: [] },
+      });
+      const criticalStateNode = new StateNode({
+        state: { id: 'critical', content: '', children: [] },
+      });
+
+      // Mock unmount methods
+      jest.spyOn(healthyStateNode, 'unmount').mockResolvedValue({ data: { healthy: 'exited' } });
+      jest.spyOn(criticalStateNode, 'unmount').mockResolvedValue({ data: { critical: 'exited' } });
+
+      // Set up active state chain
+      const activeStateChain: ActiveStateEntry[] = [
+        ['playing', new StateNode({ state: { id: 'playing', content: '', children: [] } })],
+        ['playing.healthSystem', new StateNode({ state: { id: 'healthSystem', content: '', children: [] } })],
+        ['playing.healthSystem.healthy', healthyStateNode],
+        ['playing.healthSystem.critical', criticalStateNode],
+      ];
+      (stateChart as unknown as { activeStateChain: ActiveStateEntry[] }).activeStateChain = activeStateChain;
+
+      // Mock the findSourceStateForTransition method
+      jest.spyOn(stateChart as any, 'findSourceStateForTransition')
+        .mockImplementation((transition) => {
+          if (transition === transition1) return 'playing.healthSystem.healthy';
+          if (transition === transition2) return 'playing.healthSystem.critical';
+          return null;
+        });
+
+      const initialState = { baseData: 'base' };
+
+      // Act
+      const result = await (stateChart as any).exitStates([transition1, transition2], initialState);
+
+      // Assert
+      expect(result).toEqual({
+        baseData: 'base',
+        data: { critical: 'exited' },
+      });
+
+      // Verify states were removed from active chain
+      const updatedActiveChain = (
+        stateChart as unknown as { activeStateChain: ActiveStateEntry[] }
+      ).activeStateChain;
+      const chainPaths = updatedActiveChain.map(([path]) => path);
+      expect(chainPaths).not.toContain('playing.healthSystem.healthy');
+      expect(chainPaths).not.toContain('playing.healthSystem.critical');
+    });
+
+    it('should handle transitions with no source state gracefully', async () => {
+      // Arrange
+      const transition = new TransitionNode({
+        transition: {
+          target: 'playing.healthSystem.critical',
+          event: '',
+          content: '',
+          children: [],
+        },
+      });
+
+      // Mock findSourceStateForTransition to return null (no source found)
+      jest.spyOn(stateChart as any, 'findSourceStateForTransition')
+        .mockReturnValue(null);
+
+      const initialState = { baseData: 'base' };
+
+      // Act
+      const result = await (stateChart as any).exitStates([transition], initialState);
+
+      // Assert
+      expect(result).toEqual({ baseData: 'base' });
+
+      // Verify no changes to active chain
+      const updatedActiveChain = (
+        stateChart as unknown as { activeStateChain: ActiveStateEntry[] }
+      ).activeStateChain;
+      expect(updatedActiveChain).toHaveLength(0);
     });
   });
 
@@ -453,6 +556,81 @@ describe('StateChart', () => {
       expect(updatedActiveChain[0][0]).toBe('playing');
       expect(updatedActiveChain[1][0]).toBe('playing.healthSystem');
       expect(updatedActiveChain[2][0]).toBe('playing.healthSystem.healthy');
+    });
+
+    it('should only enter states that are not already active', async () => {
+      // Arrange
+      const transition = new TransitionNode({
+        transition: {
+          target: 'playing.healthSystem.critical',
+          event: '',
+          content: '',
+          children: [],
+        },
+      });
+
+      // Create StateNode instances
+      const playingStateNode = new StateNode({
+        state: { id: 'playing', content: '', children: [] },
+      });
+      const healthSystemStateNode = new StateNode({
+        state: { id: 'healthSystem', content: '', children: [] },
+      });
+      const criticalStateNode = new StateNode({
+        state: { id: 'critical', content: '', children: [] },
+      });
+
+      // Mock mount methods
+      const playingMountSpy = jest.spyOn(playingStateNode, 'mount').mockResolvedValue({
+        node: playingStateNode,
+        state: { data: { playing: true } },
+      });
+      const healthSystemMountSpy = jest.spyOn(healthSystemStateNode, 'mount').mockResolvedValue({
+        node: healthSystemStateNode,
+        state: { data: { health: 100 } },
+      });
+      const criticalMountSpy = jest.spyOn(criticalStateNode, 'mount').mockResolvedValue({
+        node: criticalStateNode,
+        state: { data: { status: 'critical' } },
+      });
+
+      // Set up states map
+      const statesMap = new Map([
+        ['playing', playingStateNode],
+        ['playing.healthSystem', healthSystemStateNode],
+        ['playing.healthSystem.critical', criticalStateNode],
+      ]);
+      (stateChart as unknown as { states: Map<string, BaseStateNode> }).states = statesMap;
+
+      // Set up active state chain with some states already active
+      const activeStateChain: ActiveStateEntry[] = [
+        ['playing', playingStateNode],
+        ['playing.healthSystem', healthSystemStateNode],
+      ];
+      (stateChart as unknown as { activeStateChain: ActiveStateEntry[] }).activeStateChain = activeStateChain;
+
+      const initialState = { baseData: 'base' };
+
+      // Act
+      const result = await (stateChart as any).enterStates([transition], initialState);
+
+      // Assert
+      // Only the critical state should be entered (playing and healthSystem are already active)
+      expect(playingMountSpy).not.toHaveBeenCalled();
+      expect(healthSystemMountSpy).not.toHaveBeenCalled();
+      expect(criticalMountSpy).toHaveBeenCalledWith(initialState);
+
+      expect(result).toEqual({
+        baseData: 'base',
+        data: { status: 'critical' },
+      });
+
+      // Verify only the new state was added to active chain
+      const updatedActiveChain = (
+        stateChart as unknown as { activeStateChain: ActiveStateEntry[] }
+      ).activeStateChain;
+      expect(updatedActiveChain).toHaveLength(3);
+      expect(updatedActiveChain[2][0]).toBe('playing.healthSystem.critical');
     });
 
     it('should handle multiple transitions with different targets', async () => {
@@ -690,6 +868,168 @@ describe('StateChart', () => {
       ).activeStateChain;
       const chainPaths = updatedActiveChain.map(([path]) => path);
       expect(chainPaths).toEqual(['a', 'a.b', 'a.b.c', 'a.b.c.d']);
+    });
+  });
+
+  describe('updateStates', () => {
+    let stateChart: StateChart;
+
+    beforeEach(() => {
+      stateChart = new StateChart(
+        'gameStart',
+        createMockSCXMLNode(),
+        new Map(),
+      );
+    });
+
+    it('should add states to active chain when updateMethod is "add"', async () => {
+      // Arrange
+      const assignNode = new AssignNode({
+        assign: {
+          children: [],
+          content: 'added',
+          location: 'test'
+        }
+      })
+      
+      const onEntryNode = new OnEntryNode({
+        onentry: { content: '', children: [assignNode] }
+      })
+
+      const stateNode = new StateNode({
+        state: { id: 'testState', content: '', children: [onEntryNode] },
+      });
+
+      const mountSpy = jest.spyOn(stateNode, 'mount');
+
+      const stateChart = new StateChart(
+        'testState',
+        new SCXMLNode({
+          scxml: { content: '', children: [stateNode], version: '1.0', datamodel: 'ecmascript' }
+        }),
+        new Map([[stateNode.id, stateNode]])
+      )
+
+      const initialState: InternalState = {
+        data: {}
+      };
+
+      // Act
+      const result = await (stateChart as any).updateStates(
+        initialState,
+        ['testState'],
+        'add'
+      );
+
+      // Assert
+      expect(mountSpy).toHaveBeenCalledWith(initialState);
+
+      expect(result).toEqual({
+        data: { test: 'added' }
+      });
+
+      // Verify state was added to active chain
+      const updatedActiveChain = (
+        stateChart as unknown as { activeStateChain: ActiveStateEntry[] }
+      ).activeStateChain;
+      expect(updatedActiveChain).toHaveLength(1);
+      expect(updatedActiveChain[0][0]).toBe('testState');
+    });
+
+    it('should remove states from active chain when updateMethod is "remove"', async () => {
+      // Arrange
+      const stateNode = new StateNode({
+        state: { id: 'testState', content: '', children: [] },
+      });
+
+      const unmountSpy = jest.spyOn(stateNode, 'unmount').mockResolvedValue({
+        data: { test: 'removed' },
+      });
+
+      // Set up active state chain with the state to remove
+      const activeStateChain: ActiveStateEntry[] = [['testState', stateNode]];
+      (stateChart as unknown as { activeStateChain: ActiveStateEntry[] }).activeStateChain = activeStateChain;
+
+      const initialState = { baseData: 'base' };
+
+      // Act
+      const result = await (stateChart as any).updateStates(
+        initialState,
+        ['testState'],
+        'remove'
+      );
+
+      // Assert
+      expect(unmountSpy).toHaveBeenCalledWith(initialState);
+      expect(result).toEqual({
+        baseData: 'base',
+        data: { test: 'removed' },
+      });
+
+      // Verify state was removed from active chain
+      const updatedActiveChain = (
+        stateChart as unknown as { activeStateChain: ActiveStateEntry[] }
+      ).activeStateChain;
+      expect(updatedActiveChain).toHaveLength(0);
+    });
+
+    it('should skip states not in active chain when removing', async () => {
+      // Arrange
+      const initialState = { baseData: 'base' };
+      (stateChart as unknown as { activeStateChain: ActiveStateEntry[] }).activeStateChain = [];
+
+      // Act
+      const result = await (stateChart as any).updateStates(
+        initialState,
+        ['nonexistentState'],
+        'remove'
+      );
+
+      // Assert
+      expect(result).toEqual({ baseData: 'base' });
+
+      // Verify active chain remains empty
+      const updatedActiveChain = (
+        stateChart as unknown as { activeStateChain: ActiveStateEntry[] }
+      ).activeStateChain;
+      expect(updatedActiveChain).toHaveLength(0);
+    });
+
+    it('should handle multiple states in correct order', async () => {
+      // Arrange
+      const stateA = new StateNode({ state: { id: 'a', content: '', children: [] } });
+      const stateB = new StateNode({ state: { id: 'b', content: '', children: [] } });
+
+      const mountOrder: string[] = [];
+      jest.spyOn(stateA, 'mount').mockImplementation(async () => {
+        mountOrder.push('a');
+        return { node: stateA, state: { data: { a: true } } };
+      });
+      jest.spyOn(stateB, 'mount').mockImplementation(async () => {
+        mountOrder.push('b');
+        return { node: stateB, state: { data: { b: true } } };
+      });
+
+      // Set up states map
+      const statesMap = new Map([['a', stateA], ['b', stateB]]);
+      (stateChart as unknown as { states: Map<string, BaseStateNode> }).states = statesMap;
+      (stateChart as unknown as { activeStateChain: ActiveStateEntry[] }).activeStateChain = [];
+
+      const initialState = {};
+
+      // Act
+      await (stateChart as any).updateStates(initialState, ['a', 'b'], 'add');
+
+      // Assert
+      expect(mountOrder).toEqual(['a', 'b']);
+
+      // Verify states were added in correct order
+      const updatedActiveChain = (
+        stateChart as unknown as { activeStateChain: ActiveStateEntry[] }
+      ).activeStateChain;
+      expect(updatedActiveChain).toHaveLength(2);
+      expect(updatedActiveChain[0][0]).toBe('a');
+      expect(updatedActiveChain[1][0]).toBe('b');
     });
   });
 

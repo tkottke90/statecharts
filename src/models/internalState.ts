@@ -68,10 +68,23 @@ export function processPendingEvents(
  */
 export function addPendingEvent(
   state: InternalState,
-  event: SCXMLEvent,
+  event: Partial<SCXMLEvent>,
 ): InternalState {
+  const newEvent: SCXMLEvent = {
+    name: '',
+    type: 'platform',
+    sendid: '',
+    origin: '',
+    origintype: '',
+    invokeid: '',
+    data: {},
+    ...event
+  }
+
+  const existingEvents = state._pendingInternalEvents ?? [];
+
   return {
     ...state,
-    _pendingInternalEvents: [...(state._pendingInternalEvents || []), event],
+    _pendingInternalEvents: [...existingEvents, newEvent],
   };
 }

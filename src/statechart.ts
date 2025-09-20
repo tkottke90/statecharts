@@ -335,7 +335,7 @@ export class StateChart extends StateChartBase {
     }
 
     // Clone the current state without modifying its structure
-    let updatedState = { ...currentState };
+    let updatedState = { data: {}, ...currentState };
 
     // Execute mount handler if requested
     if (typeof stateNode.mount === 'function') {

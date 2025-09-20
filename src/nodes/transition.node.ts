@@ -23,7 +23,7 @@ export class TransitionNode
   extends BaseNode
   implements z.infer<typeof TransitionNodeAttr>
 {
-  readonly event: string;
+  readonly event: string | undefined;
   readonly target: string;
   readonly cond: string | undefined;
 

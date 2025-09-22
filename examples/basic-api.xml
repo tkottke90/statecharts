@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scxml xmlns="http://www.w3.org/2005/07/scxml"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="../schemas/scxml.xsd"
+       version="1.0"
+       datamodel="ecmascript"
+       initial="callAPI">
+
+  <datamodel>
+    <data id="sendId" expr="''"/>
+    <data id="response" expr="null"/>
+    <data id="error" expr="null"/>
+  </datamodel>
+
+  <state id="callAPI">
+    <onentry>
+      <!-- Generate unique send ID for tracking this request -->
+      <assign location="sendId" expr="'api_' + Date.now()" />
+
+      <log expr="'Sending HTTP request with send ID: ' + data.sendId" />
+
+      <!-- Make HTTP GET request to JSON Placeholder API-->
+      <send type="http"
+            event="api"
+            target="https://jsonplaceholder.typicode.com/posts/1"
+            sendid="data.sendId"
+      >
+        <param name="method">GET</param>
+      </send>
+    </onentry>
+
+    <!-- Handle successful response -->
+    <transition event="http.response" cond="_event.sendid == data.sendId" target="processResponse">
+      <log expr="`Received HTTP response: [${_event.data.status} : ${_event.data.statusText}]`" />
+      <assign location="response" expr="_event.data" />
+    </transition>
+
+    <!-- Handle HTTP errors -->
+    <transition event="http.error" cond="_event.sendid == data.sendId" target="handleError">
+      <log expr="`Received HTTP Error: [${_event.data.status} : ${_event.data.statusText}]`" />
+      <assign location="error" expr="_event.data" />
+    </transition>
+
+    <!-- Handle timeout or other failures -->
+    <transition event="error.communication" cond="_event.sendid == data.sendId" target="handleError">
+      <log expr="'Received communication error: ' + JSON.stringify(_event.data)" />
+      <assign location="error" expr="_event.data" />
+    </transition>
+  </state>
+
+  <state id="processResponse">
+    <onentry>
+      <assign location="title" expr="data.response.body.title" />
+
+      <!-- Transition back to idle or next state -->
+      <raise event="response.processed" />
+    </onentry>
+
+    <transition event="response.processed" target="done" />
+  </state>
+
+  <state id="handleError">
+    <onentry>
+      <!-- Log the error -->
+      <log expr="'API error: ' + JSON.stringify(data.error)" />
+
+      <!-- Set a default error message -->
+      <assign location="message" expr="'Error: Failed to get response from API'" />
+
+      <!-- Transition back to idle -->
+      <raise event="error.handled" />
+    </onentry>
+
+    <transition event="error.handled" target="done" />
+  </state>
+
+  <final id="done">
+
+  
+  </final>
+</scxml>

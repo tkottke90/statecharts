@@ -276,20 +276,13 @@ export class HTTPProcessor implements EventIOProcessor {
         method = 'POST',  // Default to POST for SCXML send operations
         headers = { 'Content-Type': 'application/json' },
         timeout = undefined,
+        ...bodyParams
       } = config || {};
 
       const abortCtrl = new AbortController();
 
       // Prepare request body
-      const body = JSON.stringify({
-        event: event.name,
-        type: event.type,
-        data: event.data,
-        sendid: event.sendid,
-        origin: event.origin,
-        origintype: event.origintype,
-        invokeid: event.invokeid
-      });
+      const body = JSON.stringify(bodyParams);
 
       let timerId: NodeJS.Timeout | undefined;
 
@@ -324,6 +317,8 @@ export class HTTPProcessor implements EventIOProcessor {
           responseData = null;
         }
 
+        debugger;
+
         if (!response.ok) {
           // Generate http.error event for HTTP error responses
           const errorEvent: SCXMLEvent = {
@@ -341,6 +336,8 @@ export class HTTPProcessor implements EventIOProcessor {
             }
           };
 
+          debugger;
+
           return {
             success: false,
             error: new Error(`HTTP ${response.status}: ${response.statusText}`),
@@ -357,7 +354,11 @@ export class HTTPProcessor implements EventIOProcessor {
           origin: target,
           origintype: 'http',
           invokeid: event.invokeid,
-          data: responseData as Record<string, unknown> || {}
+          data: {
+            status: response.status,
+            statusText: response.statusText,
+            body: responseData
+          }
         };
 
         return {

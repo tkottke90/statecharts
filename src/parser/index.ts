@@ -75,6 +75,7 @@ export function parseType(
 
   if (key && key in nodeMap) {
     const nodeInitMethod = nodeMap[key];
+
     if (nodeInitMethod) {
       return nodeInitMethod(input);
     }

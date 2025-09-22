@@ -51,6 +51,9 @@ async function main() {
   }
 
   console.log('-- Triggering Statechart --')
+  console.log('');
+
+  console.log('> Logs:')
   try {
     const result = await statechart.execute({ 
       data: {
@@ -58,6 +61,7 @@ async function main() {
       }
     });
 
+    console.log('')
     console.log('  ✅ Statechart Stable\n');
     console.log(' History:')
     console.table(statechart.getHistory().getAllEntries().map((entry, index) => {

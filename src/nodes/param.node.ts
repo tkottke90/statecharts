@@ -1,8 +1,8 @@
 import z from 'zod';
-import { BaseExecutableNode } from '../models/base-executable';
 import { CreateFromJsonResponse } from '../models/methods';
 import { InternalState } from '../models/internalState';
 import { evaluateExpression } from '../parser/expressions.nodejs';
+import { BaseNode, BaseNodeAttr } from '../models';
 
 /**
  * Zod schema for ParamNode attributes
@@ -11,7 +11,7 @@ import { evaluateExpression } from '../parser/expressions.nodejs';
  * or other state machine instances. It can specify a parameter name
  * and either an expression to evaluate or literal content.
  */
-const ParamNodeAttr = BaseExecutableNode.schema.extend({
+const ParamNodeAttr = BaseNodeAttr.extend({
   name: z.string().min(1), // Required parameter name
   expr: z.string().optional(), // Optional expression to evaluate
   location: z.string().optional(), // Optional location expression (alternative to expr)
@@ -43,7 +43,7 @@ export type ParamNodeType = {
  * 
  * @see https://www.w3.org/TR/scxml/#param
  */
-export class ParamNode extends BaseExecutableNode implements z.infer<typeof ParamNodeAttr> {
+export class ParamNode extends BaseNode implements z.infer<typeof ParamNodeAttr> {
   readonly name: string;
   readonly expr: string | undefined;
   readonly location: string | undefined;
@@ -59,23 +59,6 @@ export class ParamNode extends BaseExecutableNode implements z.infer<typeof Para
     this.expr = param.expr;
     this.location = param.location;
     this.content = param.content ?? '';
-  }
-
-  /**
-   * Execute the param node to evaluate its value.
-   * 
-   * This method evaluates the parameter value based on the specified
-   * expression, location, or content, and returns it as part of the
-   * state's parameter collection.
-   * 
-   * Note: Unlike other executable nodes, ParamNode doesn't modify the
-   * main state data. Instead, it's typically used by parent nodes
-   * (like SendNode) to collect parameter values.
-   */
-  async run(state: InternalState): Promise<InternalState> {
-    // ParamNode execution is typically handled by parent nodes
-    // This method is provided for consistency with BaseExecutableNode
-    return state;
   }
 
   /**

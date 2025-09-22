@@ -59,7 +59,7 @@ export class TransitionNode
     if (!this.cond) return true;
 
     try {
-      return evaluateExpression(this.cond, state) === 'true';
+      return evaluateExpression(this.cond, state) === true;
     } catch (err) {
       state = addPendingEvent(state, {
         name: 'error.transition.condition-failed',

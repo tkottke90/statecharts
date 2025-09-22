@@ -622,21 +622,27 @@ export class StateChart extends StateChartBase {
     event: SCXMLEvent,
     state: InternalState,
   ): TransitionNode[] {
+    // Create an empty array to hold the enabled transitions
     const enabledTransitions: TransitionNode[] = [];
 
+    // For each state node we need to get all the transactions
     for (const [, stateNode] of this.activeStateChain) {
+      // Get all the transactions for the state node
       const transitions = stateNode.getTransitions();
 
+      // Loop over all the transaction nodes in the state node
+      // and collect the ones which match the event (and optionally condition)
       for (const transition of transitions) {
         if (
           this.eventMatches(event, transition.event) &&
-          transition.checkCondition(state)
+          transition.checkCondition({ ...state, _event: event })
         ) {
           enabledTransitions.push(transition);
         }
       }
     }
 
+    // Remove any conflicting transitions
     return this.removeConflictingTransitions(enabledTransitions);
   }
 

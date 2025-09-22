@@ -56,9 +56,7 @@ async function main() {
   console.log('> Logs:')
   try {
     const result = await statechart.execute({ 
-      data: {
-        message: 'Hey hows it going?'
-      }
+      data: {}
     });
 
     console.log('')

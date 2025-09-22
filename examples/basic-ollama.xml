@@ -7,8 +7,9 @@
        initial="agents">
 
   <datamodel>
-    <data id="ollamaUrl" expr="'http://10.0.0.6:11434/api/generate'"/>
+    <data id="ollamaUrl" expr="'http://localhost:11434/api/generate'"/>
     <data id="model" expr="'mistral:7b'"/>
+    <data id="message">User: Good morning, how are you today?</data>
     <data id="sendId" expr="''"/>
     <data id="response" expr="null"/>
     <data id="evalCount" expr="0"/>

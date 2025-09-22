@@ -74,8 +74,5 @@
     <transition event="error.handled" target="done" />
   </state>
 
-  <final id="done">
-
-  
-  </final>
+  <final id="done" />
 </scxml>

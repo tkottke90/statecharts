@@ -215,9 +215,4 @@ Always respond with valid JSON following this exact schema:
       <transition event="prompt.ready" target="callLLM"/>
     </state>
   </state>
-
-  <final id="done">
-
-  
-  </final>
 </scxml>

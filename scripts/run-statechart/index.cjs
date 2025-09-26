@@ -70,9 +70,14 @@ async function main() {
         event: entry.event?.name ?? undefined
       }
     }))
+
+    debugger;
     
     console.log('\n Current State:')
-    console.dir(result.data);
+    console.log('===============\n')
+    console.dir(
+      JSON.stringify(result, null, 2)
+    );
 
 
     console.log('');

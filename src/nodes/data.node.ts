@@ -99,12 +99,32 @@ export class DataNode
       });
     } else {
       // Use child content as the value
-      value = this.content;
+      value = this.convertToType(this.content);
     }
 
     _.set(nextState.data, this.id, value)
 
     return nextState;
+  }
+
+  protected convertToType(value: unknown) {
+    switch(this.type) {
+      case 'json': {
+        try {
+          return JSON.parse(value as string)
+        } catch {
+          return {
+            json: value
+          }
+        }
+      }
+
+      case 'text':
+        return `${value}`
+
+      default:
+        return value;
+    }
   }
 
   static createFromJSON(

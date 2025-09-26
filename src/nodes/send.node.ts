@@ -150,7 +150,6 @@ export class SendNode extends BaseExecutableNode implements z.infer<typeof SendN
       const namelistData = await this.collectNamelistData(state);
 
       // Create SCXML event
-      debugger;
       const scxmlEvent: SCXMLEvent = {
         name: eventName,
         type: 'external',

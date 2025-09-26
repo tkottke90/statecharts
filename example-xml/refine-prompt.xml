@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scxml xmlns="http://www.w3.org/2005/07/scxml"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="../schemas/scxml.xsd"
+       version="1.0"
+       datamodel="ecmascript"
+       initial="agents">
+
+  <datamodel>
+    <data id="ollamaUrl" expr="'http://10.0.0.6:11434'"/>
+    <data id="callLLM.model" expr="'mistral:7b'"/>
+    <data id="message">I would like an LLM prompt which will instruct the LLM to summarize a youtube transcript for me</data>
+    <data id="evalCount" expr="0"/>
+    <data id="maxEvalCount" expr="500" />
+    <data id="versions" type="json" >[]</data>
+    <data id="messages" type="json" >[]</data>
+    <data id="error" expr="null"/>
+    <data id="model_json" type="json">
+      {
+          "type": "object",
+          "properties": {
+              "prompt": {
+                  "type": "string",
+                  "description": "An LLM Prompt based on the users initial idea, prompts you have previously generated, and suggested additions and feedback."
+              },
+              "confidence": {
+                  "type": "integer",
+                  "description": "Your confidence that the prompt will produce the outcome the user is expecting. A 1 means you have no confidence and a 10 means you have complete confidence",
+                  "minimum": 1,
+                  "maximum": 10
+              },
+              "improvements": {
+                  "type": "string",
+                  "description": "A list of suggestions or additions which you believe would further improve the prompt,  If you have no suggestions, provide an empty list"
+              }
+          },
+          "required": [
+              "prompt",
+              "confidence",
+              "improvements"
+          ]
+      }
+    </data>
+  </datamodel>
+
+  <state id="callLLM" initial="httpRequest">
+    <datamodel>
+      <!-- Generate unique send ID for tracking this request -->
+      <data id="sendId" expr="'ollama_' + Date.now()" />
+    </datamodel>
+
+    <state id="httpRequest">
+      <onentry>
+
+        <log expr="'Generating Version ' + data.versions.length + 1" />
+        <log expr="'Sending HTTP request with send ID: ' + data.sendId" />
+
+        <!-- Make HTTP POST request to Ollama API -->
+        <send 
+          type="http"
+          event="ollama"
+          targetexpr="data.ollamaUrl + '/api/chat'"
+          method="POST"
+        >
+          <param name="model" expr="data.callLLM.model" />
+          <param name="format" expr="data.model_json ?? false" />
+          <param name="messages" expr="data.messages" />
+          <param name="options.temperature" expr="data.model_temp ?? 0.5" />
+          <param name="options.top_k" expr="data.model_top_k ?? undefined" />
+          <param name="options.top_p" expr="data.model_top_p ?? undefined" />
+          <param name="options.seed" expr="data.model_seed ?? undefined" />
+          <param name="stream" expr="false" />
+        </send>
+
+        <log expr="`HTTP Request Complete - ${data.sendId}`"></log>
+      </onentry>
+    </state>
+
+    <state id="onSuccess">
+      <onentry>
+        <!-- <log expr="'Received HTTP response: ' + JSON.stringify(_event.data, null, 2)" /> -->
+      
+        <if cond="_event.sendid == data.sendId">
+          <!-- Parse Response Body -->
+          <assign location="data.current.json" expr="JSON.parse(_event.data.body.message.content)" />
+          <assign location="data.evalCount" expr="data.evalCount + _event.data.body.eval_count" />
+          <assign location="data.versions" expr="data.versions.concat(data.current.json)" />
+
+          <!-- Extract Body Components -->
+          <assign location="data.current.confidence" expr="data?.current?.json?.confidence ?? 1" />
+          <assign location="data.current.improvements" expr="data?.current?.json?.improvements ?? []" />
+          <assign location="data.current.prompt" expr="data?.current?.json?.prompt ?? ''" />
+
+          <log expr="'LLM Confidence in Version (' + data.versions.length + ') is: ' + data.current.confidence" />
+
+          <!-- Handle Prompt -->
+
+          <if cond="data.current.prompt">
+            <assign location="data.current.message" expr="'Continue improving the prompt. Here is version ' + data.versions.length + 'of our prompt:\n\n' + data.current.prompt + '\n\n## Improvements\n\nHere are some suggestions on how to further refine the prompt:\n\n' + data.current.improvements" />
+            
+            <else>
+              <!-- Handle Missing Prompts -->
+              <assign 
+                location="data.current.message" 
+                expr="'Your response was missing an updated prompt field.  Please review the conversation and try again'"
+              />
+            </else>
+          </if>
+
+          <!-- Append Message and Eval Count -->
+          <assign location="data.messages" expr="data.messages.concat({ role: _event.data.body.message.role, content: data.current.message })" />
+
+        
+          <else>
+            <log>Error: Send ID mismatch</log>
+            <raise event="error.send_id_mismatch" />
+          </else>
+        </if>
+
+        <if cond="data.evalCount >= data.maxEvalCount">
+          <log>Error: Maximum eval count reached</log>
+          <assign location="data.final_prompt" expr="data.current.prompt" />
+          <raise event="threshold.max_eval_count_reached" />
+        </if>
+
+         <if cond="parseInt(data.current.confidence, 10) >= 8" >
+          <log>Confidence high enough for human review, exiting</log>
+          <assign location="data.final_prompt" expr="data.current.prompt" />
+          <raise event="prompt_done" />
+
+          <else>
+            <raise event="prompt_next_version" />  
+          </else>
+        </if>
+
+      </onentry>
+
+      <onexit>
+        <assign location="data.current" clear="true" />
+      </onexit>
+
+      <transition event="prompt_done" target="done" />
+      <transition event="prompt_next_version" target="callLLM.httpRequest" />
+    </state>
+
+    <onexit>
+      <!-- Cleanup variables created by state -->
+      <assign location="data.callLLM" clear="true" />
+      <assign location="data.sendId" clear="true" />
+    </onexit>
+
+    <!-- Handle successful response & Append Message and Eval Count -->
+    <transition event="http.response" target="callLLM.onSuccess" />
+
+    <!-- Handle HTTP errors -->
+    <transition event="http.error" target="handleError">
+      <log expr="'Received HTTP error: ' + JSON.stringify(_event.data)" />
+      <assign location="data.error" expr="_event.data" />
+    </transition>
+
+    <!-- Handle timeout or other failures -->
+    <transition event="error.communication" target="handleError">
+      <log expr="'Received communication error: ' + JSON.stringify(_event.data)" />
+      <assign location="data.error" expr="_event.data" />
+    </transition>
+
+
+    <transition event="max_eval_count_reached" target="done" />
+    <transition event="threshold.*" target="done" />
+    <transition event="error.*" target="error" />
+    <transition event="SCXMLError" target="error" />
+  </state>
+
+  <state id="handleError">
+    <onentry>
+      <!-- Log the error -->
+      <log expr="'Ollama API error: ' + JSON.stringify(data.error)" />
+
+      <!-- Set a default error message -->
+      <assign location="data.message" expr="'Error: Failed to get response from Ollama'" />
+
+      <!-- Transition back to idle -->
+      <raise event="error.handled" />
+    </onentry>
+
+    <transition event="error.handled" target="done" />
+  </state>
+
+  <state id="agents" initial="promptAuthor">
+    <state id="promptAuthor">
+      <datamodel>
+        <data id="systemPrompt">
+         ## Role
+
+         You are an AI Prompt Author.  Your task is to refine a users idea into an LLM Prompt
+
+         ## Guidelines
+         
+         - Analyze the following prompt idea: [insert prompt idea]
+         - Rewrite the prompt for clarity and effectiveness
+         - Identify potential improvements or additions
+         - Refine the prompt based on identified improvements
+         - Present the final optimized prompt
+         - Output your response using JSON
+        </data>
+      </datamodel>
+    
+      <onentry>
+        <if cond="data.message?.length === 0">
+          <log>No message provided</log>
+          <raise event="error.no_message" />
+        </if>
+
+        <if cond="data.messages.length === 0">
+          <log>Adding System Message</log>
+          <assign location="data.messages" expr="data.messages.concat([ { role: 'system', content: data.systemPrompt } ])" />
+          <assign location="data.messages" expr="data.messages.concat([ { role: 'user', content: data.message } ])" />
+        </if>
+
+        <raise event="prompt.ready" />
+      </onentry>
+
+      <onexit>
+        <assign location="data.systemPrompt" clear="true"></assign>
+      </onexit>
+
+      <!-- Add transition that responds to the raised event -->
+      <transition event="prompt.ready" target="callLLM"/>
+    </state>
+  </state>
+
+  <final id="done" />
+
+  <final id="error">
+    <debug />
+  </final>
+</scxml>

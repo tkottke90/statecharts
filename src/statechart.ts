@@ -158,9 +158,14 @@ export class StateChart extends StateChartBase {
       }
 
       // 2. Process internal events (second priority)
-      debugger;
       const internalEvent = this.internalEventQueue.dequeue();
       if (internalEvent) {
+
+        // Record error events to the data object
+        if (internalEvent.name.startsWith('error')) {
+          state.data.error = internalEvent.data;
+        }
+
         const eventTransitions = this.selectTransitions(internalEvent, state);
         
         if (eventTransitions.length > 0) {

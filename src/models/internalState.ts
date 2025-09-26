@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { BaseNode } from './base';
 import { Queue } from './event-queue';
 
@@ -11,17 +13,33 @@ export interface SCXMLEvent {
   data: Record<string, unknown>;
 }
 
-export function fromJsError(err: unknown): SCXMLEvent {
+const errorMap: Record<string, (node: string) => string> = {
+  'TypeError': (node: string) => `error.${node}.typeerror`
+}
+/**
+ * Converts a JS Error into an SCXML Error
+ * @param err 
+ * @returns 
+ */
+export function fromJsError(err: any, node: string = 'scxml'): SCXMLEvent {
   let message = 'Unknown Error';
-  let name = 'SCXMLError'
+  let name = 'error.scxml.unknown_error'
+  let stack = ''
 
-  if (err instanceof Error) {
-    
-    if ('name' in err) {
-      name = err.name
-    }
-    
+  if (err instanceof Error || 'name' in err) {
+    const nameProp = err!.name as string;
+
+    name = nameProp in errorMap
+      ? errorMap[nameProp]!(node)
+      : err.name;
+  }
+
+  if (err instanceof Error || 'message' in err) {
     message = err.message;
+  }
+
+  if (err instanceof Error || 'stack' in err) {
+    stack = err.stack;
   }
 
   return {
@@ -32,7 +50,8 @@ export function fromJsError(err: unknown): SCXMLEvent {
     origintype: '',
     invokeid: '',
     data: {
-      error: message,
+      message,
+      stack
     },
   };
 }

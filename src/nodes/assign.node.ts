@@ -12,7 +12,7 @@ import { evaluateExpression } from '../parser/expressions.nodejs';
 
 const AssignNodeAttr = BaseExecutableNode.schema
   .extend({
-    location: z.string().min(1), // Required location expression
+    location: z.string().min(1, 'A location is required for the <assign> node'), // Required location expression
     expr: z.string().optional(), // Optional expression (mutually exclusive with content)
     clear: z.union([
       z.coerce.boolean(),
@@ -113,6 +113,12 @@ export class AssignNode extends BaseExecutableNode {
     } catch (err) {
       // Create a new error event and push it to the state queue
       const error = fromJsError(err);
+      error.name = 'error.assign.parsing_error';
+      error.data = {
+        ...error.data,
+        node: this.toString(),
+        state: structuredClone(nextState)
+      }
 
       return addPendingEvent(
         state,

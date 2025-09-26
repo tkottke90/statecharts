@@ -47,6 +47,9 @@ export class StateChart extends StateChartBase {
   private internalEventQueue = new Queue<SCXMLEvent>();
   private states: Map<string, BaseStateNode> = new Map();
 
+  private macroStepCount = 0;
+  private microStepCount = 0;
+
   // ============================================================================
   // CONSTRUCTOR
   // ============================================================================
@@ -133,7 +136,7 @@ export class StateChart extends StateChartBase {
       HistoryEventType.MACROSTEP_START,
       this.getActiveStateConfiguration(),
       state,
-      { metadata: { startTime: macrostepStartTime } }
+      { metadata: { startTime: macrostepStartTime, index: this.macroStepCount } }
     );
 
     this.history.startContext(macrostepId);
@@ -144,6 +147,7 @@ export class StateChart extends StateChartBase {
     let macrostepDone = false;
     while (!macrostepDone) {
       // 1. Process eventless transitions first (highest priority)
+      this.macroStepCount++;
 
       const eventlessTransitions = this.selectEventlessTransitions();
       if (eventlessTransitions.length > 0) {
@@ -154,9 +158,11 @@ export class StateChart extends StateChartBase {
       }
 
       // 2. Process internal events (second priority)
+      debugger;
       const internalEvent = this.internalEventQueue.dequeue();
       if (internalEvent) {
         const eventTransitions = this.selectTransitions(internalEvent, state);
+        
         if (eventTransitions.length > 0) {
           // Record event processing
           this.history.addEntry(
@@ -178,6 +184,21 @@ export class StateChart extends StateChartBase {
           // Clear event context and process any new pending events
           delete state._event;
           processPendingEvents(state, this.internalEventQueue);
+          continue;
+        } else {
+          this.history.addEntry(
+            HistoryEventType.EVENT_SKIPPED,
+            this.getActiveStateConfiguration(),
+            state,
+            {
+              event: internalEvent,
+              metadata: {
+                eventType: 'internal',
+                message: 'No matching transitions found'
+              }
+            }
+          )
+          
           continue;
         }
       }
@@ -241,6 +262,8 @@ export class StateChart extends StateChartBase {
   ): Promise<InternalState> {
     // Create a new microstep entry in the history
     // and start a new context for this microstep
+    this.microStepCount++;
+
     const microstepStartTime = Date.now();
     const microstepId = this.history.addEntry(
       HistoryEventType.MICROSTEP_START,
@@ -250,6 +273,7 @@ export class StateChart extends StateChartBase {
         metadata: {
           startTime: microstepStartTime,
           transitionCount: transitions.length,
+          index: this.microStepCount,
           transitions: transitions.map(t => ({ target: t.target, event: t.event }))
         }
       }
@@ -430,22 +454,26 @@ export class StateChart extends StateChartBase {
               break;
             }
 
-            // Add the path itself to the entry set if not already active
-            if (!this.isActive(pathToEnter)) {
+            // Check to see if the path has already been activated,
+            // we can skip already active states
+            const pathIsActive = this.isActive(pathToEnter)
+
+            if (!pathIsActive) {
+              // Add the path itself to the entry set if not already active
               allEntryStates.add(pathToEnter);
+
+
+              // Activating/Mounting a node also actives any initial
+              // or inner states as well
+              node?.getInitialStateList().forEach(
+                statePath => {
+                  if (!this.isActive(statePath)) {
+                    allEntryStates.add(statePath);
+                  }
+                }
+              );
             }
 
-            // Add the initial states to the entry set. Each
-            // node that inherits from the BaseStateNode has a
-            // method for getting the list of child states that
-            // would be initialized
-            node?.getInitialStateList('').forEach(
-              statePath => {
-                if (!this.isActive(statePath)) {
-                  allEntryStates.add(statePath);
-                }
-              }
-            );
           }
         }
       }
@@ -474,6 +502,17 @@ export class StateChart extends StateChartBase {
 
     // 2. Determine the initial state path
     const initialStatePath = this.determineInitialStatePath();
+
+    this.history.addEntry(
+      HistoryEventType.INITIAL_STATE,
+      this.getActiveStateConfiguration(),
+      {
+        data: {}
+      },
+      {
+        metadata: {}
+      }
+    )
 
     // 3. Create a fake transition node which instructs
     // the system to transition to the initial state.  This unifies
@@ -554,7 +593,7 @@ export class StateChart extends StateChartBase {
     }
 
     // Convert to array and sort deepest first (already handled by computeExitSet)
-    const statesToExit = Array.from(allExitStates).sort((a, b) => this.sortByPathDepth(a, b));
+    const statesToExit = Array.from(allExitStates).sort((a, b) => this.sortByPathDepth(a, b)).toReversed();
 
     return await this.updateStates(
       state,
@@ -576,10 +615,7 @@ export class StateChart extends StateChartBase {
     // Look through active state chain to find which state contains this transition
     for (const [statePath, stateNode] of this.activeStateChain) {
       // Check if this state node contains the transition
-      if (
-        stateNode.getEventlessTransitions &&
-        stateNode.getEventlessTransitions().includes(transition)
-      ) {
+      if (stateNode.containsTransaction(transition)) {
         return statePath;
       }
     }
@@ -646,16 +682,20 @@ export class StateChart extends StateChartBase {
     return this.removeConflictingTransitions(enabledTransitions);
   }
 
-  private async updateStates(state: InternalState, statesToUpdate: string[], updateMethod: 'add' | 'remove' = 'add') {
+  private async updateStates(state: InternalState, statesToUpdate: string[], updateMethod: 'add' | 'initialize' | 'remove' = 'add') {
     let currentState = { ...state };
 
-    const historyEvent: HistoryEventType = updateMethod === 'add' ? HistoryEventType.STATE_ENTRY : HistoryEventType.STATE_EXIT;
-    const descriptionProperty = updateMethod === 'add' ? 'enteredState' : 'exitedState'
+    let historyEvent: HistoryEventType = updateMethod === 'add' ? HistoryEventType.STATE_ENTRY : HistoryEventType.STATE_EXIT;
+    const descriptionProperty = updateMethod === 'add' ? 'enteredState' : 'exitedState';
 
     for (const statePath of statesToUpdate) {
       const startTime = Date.now();
 
       switch(updateMethod) {
+        case 'initialize':
+            historyEvent = HistoryEventType.INITIAL_STATE;
+
+            // Fall through to add step
         case 'add': {
           const result = await this.addStateToActiveChain(
             statePath,
@@ -667,6 +707,7 @@ export class StateChart extends StateChartBase {
           }
           break;
         }
+        
         case 'remove': {
           // Find the state node in our active state chain
           const stateEntry = this.activeStateChain.find(

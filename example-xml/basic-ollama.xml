@@ -7,72 +7,89 @@
        initial="agents">
 
   <datamodel>
-    <data id="ollamaUrl" expr="'http://localhost:11434/api/generate'"/>
-    <data id="model" expr="'mistral:7b'"/>
-    <data id="message">User: Good morning, how are you today?</data>
-    <data id="sendId" expr="''"/>
-    <data id="response" expr="null"/>
+    <data id="ollamaUrl" expr="'http://localhost:11434'"/>
+    <data id="callLLM.model" expr="'mistral:7b'"/>
+    <data id="message">I would like an LLM to summarize a youtube transcript for me</data>
     <data id="evalCount" expr="0"/>
     <data id="error" expr="null"/>
+    <data id="messages" expr="[]"/>
   </datamodel>
 
-  <state id="callLLM">
-    <onentry>
+  <state id="callLLM" initial="httpRequest">
+    <datamodel>
       <!-- Generate unique send ID for tracking this request -->
-      <assign location="sendId" expr="'ollama_' + Date.now()" />
+      <data id="sendId" expr="'ollama_' + Date.now()" />
+    </datamodel>
 
-      <log expr="'Sending HTTP request with send ID: ' + data.sendId" />
+    <state id="httpRequest">
+      <onentry>
 
-      <!-- Make HTTP POST request to Ollama API -->
-      <send type="http"
-            event="ollama"
-            targetexpr="data.ollamaUrl"
-            method="POST"
-            sendid="data.sendId">
-        <param name="model" expr="data.model" />
-        <param name="prompt" expr="data.llm.prompt" />
-        <param name="stream" expr="false" />
-        <param name="format" expr="'json'" />
-      </send>
-    </onentry>
+        <log expr="'Sending HTTP request with send ID: ' + data.sendId" />
 
-    <!-- Handle successful response -->
-    <transition event="http.response" cond="_event.sendid == data.sendId" target="processResponse">
-      <log expr="'Received HTTP response: ' + JSON.stringify(_event.data)" />
-      <assign location="response" expr="_event.data" />
-    </transition>
+        <!-- Make HTTP POST request to Ollama API -->
+        <send 
+          type="http"
+          event="ollama"
+          targetexpr="data.ollamaUrl + '/api/chat'"
+          method="POST"
+        >
+          <param name="model" expr="data.callLLM.model" />
+          <param name="json" expr="data.model_json ?? false" />
+          <param name="messages" expr="data.messages" />
+          <param name="options.temperature" expr="data.model_temp ?? 0.5" />
+          <param name="options.top_k" expr="data.model_top_k ?? undefined" />
+          <param name="options.top_p" expr="data.model_top_p ?? undefined" />
+          <param name="options.seed" expr="data.model_seed ?? undefined" />
+          <param name="stream" expr="false" />
+        </send>
+
+        <log expr="`HTTP Request Complete - ${data.sendId}`"></log>
+      </onentry>
+    </state>
+
+    <state id="onSuccess">
+      <onentry>
+        <log expr="'Event SendId ' + JSON.stringify(_event)" />
+        <!-- <log expr="'Received HTTP response: ' + JSON.stringify(_event.data, null, 2)" /> -->
+      
+        <if cond="_event.sendid == data.sendId">
+          <assign location="data.llmResponse.isJSON" expr="false" />
+          <assign location="data.messages" expr="data.messages.concat({ role: _event.data.body.message.role, content: _event.data.body.message.content })" />
+          <assign location="data.evalCount" expr="data.evalCount + _event.data.body.eval_count" />
+        
+          <else>
+            <log>Send ID mismatch</log>
+          </else>
+        </if>
+
+        <raise event="onSuccess.done" />
+      </onentry>
+
+      <transition event="onSuccess.done" target="done" />
+    </state>
+
+    <onexit>
+      <!-- Cleanup variables created by state -->
+      <assign location="data.callLLM" clear="true" />
+      <assign location="data.sendId" clear="true" />
+    </onexit>
+
+    <!-- Handle successful response & Append Message and Eval Count -->
+    <transition event="http.response" target="callLLM.onSuccess" />
 
     <!-- Handle HTTP errors -->
-    <transition event="http.error" cond="_event.sendid == data.sendId" target="handleError">
+    <transition event="http.error" target="handleError">
       <log expr="'Received HTTP error: ' + JSON.stringify(_event.data)" />
-      <assign location="error" expr="_event.data" />
+      <assign location="data.error" expr="_event.data" />
     </transition>
 
     <!-- Handle timeout or other failures -->
-    <transition event="error.communication" cond="_event.sendid == data.sendId" target="handleError">
+    <transition event="error.communication" target="handleError">
       <log expr="'Received communication error: ' + JSON.stringify(_event.data)" />
-      <assign location="error" expr="_event.data" />
+      <assign location="data.error" expr="_event.data" />
     </transition>
-  </state>
 
-  <state id="processResponse">
-    <onentry>
-      <!-- Extract the response text from Ollama's response format -->
-      <if cond="data.response &amp;&amp; data.response.response">
-        <assign location="message" expr="data.response.response" />
-        <assign location="evalCount" expr="data.response.eval_count || 0" />
-      <else/>
-        <assign location="message" expr="'No response received'" />
-      </if>
-
-      <!-- Log the successful response -->
-      <log expr="'Ollama response received: ' + data.message.substring(0, 100) + '...'" />
-
-      <!-- Transition back to idle or next state -->
-      <raise event="response.processed" />
-    </onentry>
-
-    <transition event="response.processed" target="idle" />
+    <transition event="error.*" target="error" />
   </state>
 
   <state id="handleError">
@@ -81,138 +98,60 @@
       <log expr="'Ollama API error: ' + JSON.stringify(data.error)" />
 
       <!-- Set a default error message -->
-      <assign location="message" expr="'Error: Failed to get response from Ollama'" />
+      <assign location="data.message" expr="'Error: Failed to get response from Ollama'" />
 
       <!-- Transition back to idle -->
       <raise event="error.handled" />
     </onentry>
 
-    <transition event="error.handled" target="idle" />
+    <transition event="error.handled" target="done" />
   </state>
 
-  <state id="agents" initial="archivist">
-    <state id="archivist">
+  <state id="agents" initial="promptAuthor">
+    <state id="promptAuthor">
       <datamodel>
         <data id="systemPrompt">
-# Role
+         ## Role
 
-You are an AI Archivist Agent specialized in extracting, analyzing, and structuring long-term memories from conversational data. Your primary function is to identify meaningful information that should be preserved for future reference and format it for storage in a graph database with vector capabilities.
+         You are an AI Prompt Author.  Your task is to refine a users idea into an LLM Prompt
 
-## Task
-
-Analyze the provided conversation and extract three types of memories:
-
-1. **Named Entities**: Identify and classify people, places, organizations, concepts, objects, events, or any other significant entities mentioned in the conversation.
-
-2. **Factual Assertions**: Extract factual statements, claims, or propositions about entities. These should be structured as subject-predicate-object relationships that can be verified or referenced.
-
-3. **Relationships**: Identify connections, associations, or interactions between entities, including temporal, causal, hierarchical, or semantic relationships.
-
-## Guidelines
-
-### Entity Extraction
-- Identify all significant named entities in the conversation
-- Classify each entity by type (person, place, organization, concept, event, object, etc.)
-- Capture the exact name/identifier as mentioned in the conversation
-- Include relevant context or descriptive information
-- Avoid extracting overly generic or common entities unless they have specific significance
-
-### Assertion Extraction
-- Extract factual statements as clear, atomic propositions
-- Structure each assertion with a clear subject, predicate, and object
-- Focus on statements that provide new information or insights
-- Avoid opinions, speculation, or uncertain claims unless explicitly marked as such
-- Include temporal context when relevant (when did this happen/become true?)
-
-### Relationship Extraction
-- Identify meaningful connections between entities
-- Specify the type and nature of each relationship
-- Include directionality when relevant (A influences B vs. mutual relationship)
-- Capture relationship strength or confidence when apparent
-- Consider temporal aspects of relationships (past, present, ongoing)
-
-### Quality Standards
-- Prioritize accuracy over completeness
-- Ensure extracted information is contextually meaningful
-- Avoid redundant or trivial information
-- Maintain consistency in naming and classification
-- Include confidence levels for uncertain extractions
-
-### Output Requirements
-- Use the specified JSON schema format exactly
-- Ensure all extracted memories are properly categorized
-- Include sufficient detail for future retrieval and understanding
-- Maintain referential integrity between related memories
-- Add metadata such as timestamps, confidence scores, or source references when available
-
-## Response Format
-
-Always respond with valid JSON following this exact schema:
-
-\```json
-{
-  "memories": [
-    {
-      "type": "entity",
-      "data": {
-        "name": "entity_name",
-        "type": "entity_type",
-        "description": "brief_description",
-        "context": "conversational_context",
-        "confidence": 0.95
-      }
-    },
-    {
-      "type": "assertion",
-      "data": {
-        "subject": "subject_entity",
-        "predicate": "relationship_or_action",
-        "object": "object_entity_or_value",
-        "context": "conversational_context",
-        "temporal": "time_reference_if_applicable",
-        "confidence": 0.90
-      }
-    },
-    {
-      "type": "relationship",
-      "data": {
-        "source": "source_entity",
-        "target": "target_entity",
-        "relationship_type": "type_of_relationship",
-        "direction": "bidirectional|source_to_target|target_to_source",
-        "strength": "weak|moderate|strong",
-        "context": "conversational_context",
-        "confidence": 0.85
-      }
-    }
-  ]
-}
-\```
-
-## Important Notes
-
-- Only extract information that would be valuable for long-term memory and future conversations
-- Maintain objectivity and avoid inserting interpretations not present in the source material
-- When in doubt about classification, choose the most specific and accurate category
-- Ensure extracted memories are atomic and can stand alone as meaningful units of information
-- Consider the privacy and sensitivity of extracted information
-
-## User Input
-
+         ## Guidelines
+         
+         - Analyze the following prompt idea: [insert prompt idea]
+         - Rewrite the prompt for clarity and effectiveness
+         - Identify potential improvements or additions
+         - Refine the prompt based on identified improvements
+         - Present the final optimized prompt
         </data>
       </datamodel>
     
       <onentry>
-        <assign location="llm.prompt" expr="data.systemPrompt + data.message" />
+        <if cond="data.message?.length === 0">
+          <log>No message provided</log>
+          <raise event="error.no_message" />
+        </if>
+
+        <if cond="data.messages.length === 0">
+          <log>Adding System Message</log>
+          <assign location="data.messages" expr="data.messages.concat([ { role: 'system', content: data.systemPrompt } ])" />
+          <assign location="data.messages" expr="data.messages.concat( { role: 'user', content: data.message } )" />
+        </if>
 
         <raise event="prompt.ready" />
       </onentry>
+
       <onexit>
-        <assign location="systemPrompt" expr="''"></assign>
+        <assign location="data.systemPrompt" clear="true"></assign>
       </onexit>
 
       <!-- Add transition that responds to the raised event -->
       <transition event="prompt.ready" target="callLLM"/>
     </state>
   </state>
+
+  <final id="done" />
+
+  <final id="error">
+    <log expr="'Error: ' + _event.name" />
+  </final>
 </scxml>

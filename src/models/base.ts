@@ -20,6 +20,8 @@ export const BaseTransitionAttr = BaseNodeAttr.extend({
 });
 
 export class BaseNode implements z.infer<typeof BaseNodeAttr> {
+  readonly uuid;
+
   isExecutable = false;
   allowChildren: boolean = false;
 
@@ -30,7 +32,8 @@ export class BaseNode implements z.infer<typeof BaseNodeAttr> {
   static schema = BaseNodeAttr;
 
   constructor({ content, children }: z.infer<typeof BaseNodeAttr>) {
-    this.content = content;
+    this.uuid = crypto.randomUUID();
+    this.content = this.cleanUpContent(content);
     this.children = children;
   }
 
@@ -78,6 +81,12 @@ export class BaseNode implements z.infer<typeof BaseNodeAttr> {
    */
   async run(state: InternalState): Promise<InternalState> {
     return state;
+  }
+
+  protected cleanUpContent(content: string) {
+    return content.split('\n')
+                  .map(line => line.trim())
+                  .join('\n')
   }
 
   static get name() {

@@ -1,3 +1,4 @@
+import { BaseNode } from './base';
 import { Queue } from './event-queue';
 
 export interface SCXMLEvent {
@@ -12,13 +13,19 @@ export interface SCXMLEvent {
 
 export function fromJsError(err: unknown): SCXMLEvent {
   let message = 'Unknown Error';
+  let name = 'SCXMLError'
 
   if (err instanceof Error) {
+    
+    if ('name' in err) {
+      name = err.name
+    }
+    
     message = err.message;
   }
 
   return {
-    name: '',
+    name: name,
     type: 'platform',
     sendid: '',
     origin: '',
@@ -28,6 +35,16 @@ export function fromJsError(err: unknown): SCXMLEvent {
       error: message,
     },
   };
+}
+
+export function addNodeDetails(event: SCXMLEvent, node: BaseNode) {
+  event.data = {
+    ...event.data,
+    nodeId: node.uuid,
+    nodeType: node.label
+  }
+
+  return event;
 }
 
 /**

@@ -3,7 +3,7 @@
   initial="main"
 >
   <datamodel>
-    <data id="message">This is a test message</data>
+    <data id="message" clear="true" >This is a test message</data>
     <data id="tokens" type="number"></data>
   </datamodel>
 

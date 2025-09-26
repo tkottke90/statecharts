@@ -1,0 +1,129 @@
+
+> statecharts@1.0.0 test:statechart
+> npm run build && node scripts/run-statechart/index.cjs ./example-xml/basic-ollama.xml
+
+
+> statecharts@1.0.0 build
+> tsc
+
+== Statechart Tester ==
+
+
+-- Loading XML --
+  File: ./example-xml/basic-ollama.xml
+
+-- Loading Statechart --
+  ✅ Statechart Loaded Successfully
+
+-- Triggering Statechart --
+
+> Logs:
+[2025-09-26T01:19:18.374Z] Adding System Message
+[2025-09-26T01:19:20.964Z] Sending HTTP request with send ID: ollama_1758849560962
+[2025-09-26T01:19:27.742Z] HTTP Request Complete - ollama_1758849560962
+[2025-09-26T01:19:41.611Z] Event SendId {"name":"http.response","type":"external","sendid":"ollama_1758849560962","origin":"http://localhost:11434/api/chat","origintype":"http","invokeid":"","data":{"status":200,"statusText":"OK","headers":{"content-length":"1469","content-type":"application/json; charset=utf-8","date":"Fri, 26 Sep 2025 01:19:27 GMT"},"body":{"model":"mistral:7b","created_at":"2025-09-26T01:19:27.726392Z","message":{"role":"assistant","content":" ## Original Prompt Idea:\n   Write an LLM (Large Language Model) prompt that requests a summary of a YouTube video transcript.\n\n   ## Analysis and Rewrite:\n   The original prompt idea is clear, but it could be more specific to improve its effectiveness. Here's a refined version:\n\n   ## Final Optimized Prompt:\n   Request an LLM (Large Language Model) to generate a concise summary of the key points covered in a given YouTube video transcript, focusing on main ideas, arguments, and conclusions. The model should avoid reiterating the exact words used in the original transcript and instead present the information in its own words, while maintaining the essence and context of the source material.\n\n   ## Potential Improvements or Additions:\n   To further refine the prompt, consider specifying a maximum word count for the summary to ensure brevity, as well as providing examples of YouTube video transcripts that the model should be able to summarize. Additionally, you may want to clarify whether the model should include quotes from the source material when they contribute significantly to understanding the key points or arguments presented in the video."},"done":true,"done_reason":"stop","total_duration":5615518125,"load_duration":664111750,"prompt_eval_count":121,"prompt_eval_duration":494209208,"eval_count":249,"eval_duration":4455180875}}}
+[2025-09-26T01:19:41.612Z] Received HTTP response: {
+  "status": 200,
+  "statusText": "OK",
+  "headers": {
+    "content-length": "1469",
+    "content-type": "application/json; charset=utf-8",
+    "date": "Fri, 26 Sep 2025 01:19:27 GMT"
+  },
+  "body": {
+    "model": "mistral:7b",
+    "created_at": "2025-09-26T01:19:27.726392Z",
+    "message": {
+      "role": "assistant",
+      "content": " ## Original Prompt Idea:\n   Write an LLM (Large Language Model) prompt that requests a summary of a YouTube video transcript.\n\n   ## Analysis and Rewrite:\n   The original prompt idea is clear, but it could be more specific to improve its effectiveness. Here's a refined version:\n\n   ## Final Optimized Prompt:\n   Request an LLM (Large Language Model) to generate a concise summary of the key points covered in a given YouTube video transcript, focusing on main ideas, arguments, and conclusions. The model should avoid reiterating the exact words used in the original transcript and instead present the information in its own words, while maintaining the essence and context of the source material.\n\n   ## Potential Improvements or Additions:\n   To further refine the prompt, consider specifying a maximum word count for the summary to ensure brevity, as well as providing examples of YouTube video transcripts that the model should be able to summarize. Additionally, you may want to clarify whether the model should include quotes from the source material when they contribute significantly to understanding the key points or arguments presented in the video."
+    },
+    "done": true,
+    "done_reason": "stop",
+    "total_duration": 5615518125,
+    "load_duration": 664111750,
+    "prompt_eval_count": 121,
+    "prompt_eval_duration": 494209208,
+    "eval_count": 249,
+    "eval_duration": 4455180875
+  }
+}
+
+  ✅ Statechart Stable
+
+ History:
+┌─────────┬────────────────────────────────┬───────────────────┬───────────────────────────────┬──────────────────┐
+│ (index) │ id                             │ type              │ state                         │ event            │
+├─────────┼────────────────────────────────┼───────────────────┼───────────────────────────────┼──────────────────┤
+│ 0       │ 'hist_1758849551835_hbv5q3l0s' │ 'initial_state'   │ ''                            │ undefined        │
+│ 1       │ 'hist_1758849558373_ed4yhjt11' │ 'state_entry'     │ 'agents'                      │ undefined        │
+│ 2       │ 'hist_1758849558376_wdilgqgi6' │ 'state_entry'     │ 'agents,agents.promptAuthor'  │ undefined        │
+│ 3       │ 'hist_1758849558376_t4x6wflbw' │ 'macrostep_start' │ 'agents,agents.promptAuthor'  │ undefined        │
+│ 4       │ 'hist_1758849559703_ohejh8cg0' │ 'event_processed' │ 'agents,agents.promptAuthor'  │ 'prompt.ready'   │
+│ 5       │ 'hist_1758849559704_u59ei0jj5' │ 'microstep_start' │ 'agents,agents.promptAuthor'  │ undefined        │
+│ 6       │ 'hist_1758849560960_wpokkchzz' │ 'state_exit'      │ 'agents'                      │ undefined        │
+│ 7       │ 'hist_1758849560960_lr7gkbppa' │ 'state_exit'      │ ''                            │ undefined        │
+│ 8       │ 'hist_1758849560962_oo6dg2qzn' │ 'state_entry'     │ 'callLLM'                     │ undefined        │
+│ 9       │ 'hist_1758849567744_zn5hdkilp' │ 'state_entry'     │ 'callLLM,callLLM.httpRequest' │ undefined        │
+│ 10      │ 'hist_1758849567744_i1kaum0kc' │ 'microstep_end'   │ 'callLLM,callLLM.httpRequest' │ undefined        │
+│ 11      │ 'hist_1758849574997_rkuim9ckt' │ 'event_skipped'   │ 'callLLM,callLLM.httpRequest' │ 'http.request'   │
+│ 12      │ 'hist_1758849575618_zcqwrdof4' │ 'event_processed' │ 'callLLM,callLLM.httpRequest' │ 'http.response'  │
+│ 13      │ 'hist_1758849575618_c0s9wb9as' │ 'microstep_start' │ 'callLLM,callLLM.httpRequest' │ undefined        │
+│ 14      │ 'hist_1758849581609_zxuaiaz56' │ 'state_exit'      │ 'callLLM'                     │ undefined        │
+│ 15      │ 'hist_1758849581610_zmgv37fj0' │ 'state_entry'     │ 'callLLM'                     │ undefined        │
+│ 16      │ 'hist_1758849581615_tcmigoyxl' │ 'state_entry'     │ 'callLLM,callLLM.onSuccess'   │ undefined        │
+│ 17      │ 'hist_1758849581615_z7uct6v9w' │ 'microstep_end'   │ 'callLLM,callLLM.onSuccess'   │ undefined        │
+│ 18      │ 'hist_1758849583731_o8sr3lcgv' │ 'event_processed' │ 'callLLM,callLLM.onSuccess'   │ 'onSuccess.done' │
+│ 19      │ 'hist_1758849583731_armj0vk0p' │ 'microstep_start' │ 'callLLM,callLLM.onSuccess'   │ undefined        │
+│ 20      │ 'hist_1758849583731_gzz29b276' │ 'state_exit'      │ 'callLLM'                     │ undefined        │
+│ 21      │ 'hist_1758849583731_sii29ketl' │ 'state_exit'      │ ''                            │ undefined        │
+│ 22      │ 'hist_1758849583732_406ihmi17' │ 'state_entry'     │ 'done'                        │ undefined        │
+│ 23      │ 'hist_1758849583732_z4axi6ssc' │ 'microstep_end'   │ 'done'                        │ undefined        │
+│ 24      │ 'hist_1758849585171_ircxv8eli' │ 'macrostep_end'   │ 'done'                        │ undefined        │
+└─────────┴────────────────────────────────┴───────────────────┴───────────────────────────────┴──────────────────┘
+
+ Current State:
+{
+  ollamaUrl: 'http://localhost:11434',
+  callLLM: { model: 'mistral:7b' },
+  message: 'I would like an LLM to summarize a youtube transcript for me',
+  evalCount: 249,
+  error: null,
+  messages: [
+    {
+      role: 'system',
+      content: '## Role\n' +
+        '\n' +
+        '         You are an AI Prompt Author.  Your task is to refine a users idea into an LLM Prompt\n' +
+        '\n' +
+        '         ## Guidelines\n' +
+        '         \n' +
+        '         - Analyze the following prompt idea: [insert prompt idea]\n' +
+        '         - Rewrite the prompt for clarity and effectiveness\n' +
+        '         - Identify potential improvements or additions\n' +
+        '         - Refine the prompt based on identified improvements\n' +
+        '         - Present the final optimized prompt\n' +
+        '        '
+    },
+    {
+      role: 'user',
+      content: 'I would like an LLM to summarize a youtube transcript for me'
+    },
+    {
+      role: 'assistant',
+      content: ' ## Original Prompt Idea:\n' +
+        '   Write an LLM (Large Language Model) prompt that requests a summary of a YouTube video transcript.\n' +
+        '\n' +
+        '   ## Analysis and Rewrite:\n' +
+        "   The original prompt idea is clear, but it could be more specific to improve its effectiveness. Here's a refined version:\n" +
+        '\n' +
+        '   ## Final Optimized Prompt:\n' +
+        '   Request an LLM (Large Language Model) to generate a concise summary of the key points covered in a given YouTube video transcript, focusing on main ideas, arguments, and conclusions. The model should avoid reiterating the exact words used in the original transcript and instead present the information in its own words, while maintaining the essence and context of the source material.\n' +
+        '\n' +
+        '   ## Potential Improvements or Additions:\n' +
+        '   To further refine the prompt, consider specifying a maximum word count for the summary to ensure brevity, as well as providing examples of YouTube video transcripts that the model should be able to summarize. Additionally, you may want to clarify whether the model should include quotes from the source material when they contribute significantly to understanding the key points or arguments presented in the video.'
+    }
+  ],
+  sendId: 'ollama_1758849560962',
+  llmResponse: { isJSON: false }
+}
+

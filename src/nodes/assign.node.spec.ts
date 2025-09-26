@@ -62,7 +62,76 @@ describe('AssignNode', () => {
       // Assert
       expect(assignNode.location).toBe('user.name');
       expect(assignNode.expr).toBeUndefined();
+      expect(assignNode.clear).toBeUndefined();
       expect(assignNode.children).toHaveLength(1);
+    });
+
+    it('should create AssignNode with clear property set to true', () => {
+      // Arrange & Act
+      const assignNode = new AssignNode({
+        assign: {
+          location: 'user.name',
+          clear: true,
+          content: '',
+          children: [],
+        },
+      });
+
+      // Assert
+      expect(assignNode.location).toBe('user.name');
+      expect(assignNode.clear).toBe(true);
+      expect(assignNode.expr).toBeUndefined();
+    });
+
+    it('should create AssignNode with clear property set to null', () => {
+      // Arrange & Act
+      const assignNode = new AssignNode({
+        assign: {
+          location: 'user.name',
+          clear: null,
+          content: '',
+          children: [],
+        },
+      });
+
+      // Assert
+      expect(assignNode.location).toBe('user.name');
+      expect(assignNode.clear).toBe(null);
+      expect(assignNode.expr).toBeUndefined();
+    });
+
+    it('should create AssignNode with clear property set to undefined', () => {
+      // Arrange & Act
+      const assignNode = new AssignNode({
+        assign: {
+          location: 'user.name',
+          clear: undefined,
+          content: '',
+          children: [],
+        },
+      });
+
+      // Assert
+      expect(assignNode.location).toBe('user.name');
+      expect(assignNode.clear).toBe(undefined);
+      expect(assignNode.expr).toBeUndefined();
+    });
+
+    it('should create AssignNode without clear property (defaults to undefined)', () => {
+      // Arrange & Act
+      const assignNode = new AssignNode({
+        assign: {
+          location: 'user.name',
+          expr: '"test"',
+          content: '',
+          children: [],
+        },
+      });
+
+      // Assert
+      expect(assignNode.location).toBe('user.name');
+      expect(assignNode.clear).toBeUndefined();
+      expect(assignNode.expr).toBe('"test"');
     });
 
     it('should have correct static properties', () => {
@@ -220,6 +289,148 @@ describe('AssignNode', () => {
         message: 'Hello World',
       });
     });
+
+    it('should delete property when clear is set to true', async () => {
+      // Arrange
+      const assignNode = new AssignNode({
+        assign: {
+          location: 'user.name',
+          clear: true,
+          content: '',
+          children: [],
+        },
+      });
+
+      const initialState = createTestEventState({
+        user: { name: 'John Doe', id: 1 },
+      });
+
+      // Act
+      const result = await assignNode.run(initialState);
+
+      // Assert
+      expect(result.data).toEqual({
+        user: { id: 1 },
+      });
+      expect(result.data.user).not.toHaveProperty('name');
+    });
+
+    it('should set property to null when clear is set to null', async () => {
+      // Arrange
+      const assignNode = new AssignNode({
+        assign: {
+          location: 'user.name',
+          clear: null,
+          content: '',
+          children: [],
+        },
+      });
+
+      const initialState = createTestEventState({
+        user: { name: 'John Doe', id: 1 },
+      });
+
+      // Act
+      const result = await assignNode.run(initialState);
+
+      // Assert
+      expect(result.data).toEqual({
+        user: { name: null, id: 1 },
+      });
+      expect((result.data as any).user.name).toBe(null);
+    });
+
+    it('should not clear when clear property is not provided', async () => {
+      // Arrange - Note: when clear is not provided, it should behave normally
+      const assignNode = new AssignNode({
+        assign: {
+          location: 'user.name',
+          expr: '"Updated Name"',
+          content: '',
+          children: [],
+        },
+      });
+
+      const initialState = createTestEventState({
+        user: { name: 'John Doe', id: 1 },
+      });
+
+      // Act
+      const result = await assignNode.run(initialState);
+
+      // Assert
+      expect(result.data).toEqual({
+        user: { name: 'Updated Name', id: 1 },
+      });
+    });
+
+    it('should handle clear on nested property paths', async () => {
+      // Arrange
+      const assignNode = new AssignNode({
+        assign: {
+          location: 'app.config.database.host',
+          clear: true,
+          content: '',
+          children: [],
+        },
+      });
+
+      const initialState = createTestEventState({
+        app: {
+          config: {
+            database: { host: 'localhost', port: 5432 },
+            logging: true,
+          },
+        },
+      });
+
+      // Act
+      const result = await assignNode.run(initialState);
+
+      // Assert
+      expect(result.data).toEqual({
+        app: {
+          config: {
+            database: { port: 5432 },
+            logging: true,
+          },
+        },
+      });
+      expect((result.data as any).app.config.database).not.toHaveProperty('host');
+    });
+
+    it('should handle clear on array elements', async () => {
+      // Arrange
+      const assignNode = new AssignNode({
+        assign: {
+          location: 'items[1].name',
+          clear: true,
+          content: '',
+          children: [],
+        },
+      });
+
+      const initialState = createTestEventState({
+        items: [
+          { id: 1, name: 'First' },
+          { id: 2, name: 'Second' },
+          { id: 3, name: 'Third' },
+        ],
+      });
+
+      // Act
+      const result = await assignNode.run(initialState);
+
+      // Assert
+      expect(result.data).toEqual({
+        items: [
+          { id: 1, name: 'First' },
+          { id: 2 },
+          { id: 3, name: 'Third' },
+        ],
+      });
+      expect((result.data as any).items[1]).not.toHaveProperty('name');
+    });
   });
 
   describe('schema validation', () => {
@@ -302,6 +513,94 @@ describe('AssignNode', () => {
       // This may need to be addressed in the schema logic if strict SCXML compliance is required
       expect(result.success).toBe(true);
     });
+
+    it('should validate successfully with clear property set to true', () => {
+      // Arrange & Act
+      const result = AssignNode.schema.safeParse({
+        location: 'user.name',
+        clear: true,
+        content: '',
+        children: [],
+      });
+
+      // Assert
+      expect(result.success).toBe(true);
+      expect(result.data?.clear).toBe(true);
+    });
+
+    it('should validate successfully with clear property set to null', () => {
+      // Arrange & Act
+      const result = AssignNode.schema.safeParse({
+        location: 'user.name',
+        clear: null,
+        content: '',
+        children: [],
+      });
+
+      // Assert
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.clear).toBe(null);
+      }
+    });
+
+    it('should validate successfully with clear property set to undefined', () => {
+      // Arrange & Act
+      const result = AssignNode.schema.safeParse({
+        location: 'user.name',
+        clear: undefined,
+        content: '',
+        children: [],
+      });
+
+      // Assert
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.clear).toBe(undefined);
+      }
+    });
+
+    it('should validate successfully with clear property as string "null"', () => {
+      // Arrange & Act
+      const result = AssignNode.schema.safeParse({
+        location: 'user.name',
+        clear: 'null',
+        content: '',
+        children: [],
+      });
+
+      // Assert
+      expect(result.success).toBe(true);
+      expect(result.data?.clear).toBe(null);
+    });
+
+    it('should validate successfully with clear property as string "undefined"', () => {
+      // Arrange & Act
+      const result = AssignNode.schema.safeParse({
+        location: 'user.name',
+        clear: 'undefined',
+        content: '',
+        children: [],
+      });
+
+      // Assert
+      expect(result.success).toBe(true);
+      expect(result.data?.clear).toBe(undefined);
+    });
+
+    it('should fail validation with invalid clear property value', () => {
+      // Arrange & Act
+      const result = AssignNode.schema.safeParse({
+        location: 'user.name',
+        clear: 'invalid',
+        content: '',
+        children: [],
+      });
+
+      // Assert
+      expect(result.success).toBe(false);
+      expect(result.error?.issues[0].path).toContain('clear');
+    });
   });
 
   describe('createFromJSON', () => {
@@ -360,6 +659,88 @@ describe('AssignNode', () => {
       expect(result.node).toBeInstanceOf(AssignNode);
       expect(result.node?.location).toBe('user.name');
       expect(result.node?.expr).toBeUndefined();
+    });
+
+    it('should create AssignNode from JSON with clear property set to true', () => {
+      // Arrange
+      const jsonInput = {
+        assign: {
+          location: 'user.name',
+          clear: true,
+        },
+      };
+
+      // Act
+      const result = AssignNode.createFromJSON(jsonInput);
+
+      // Assert
+      expect(result.success).toBe(true);
+      expect(result.node).toBeInstanceOf(AssignNode);
+      expect(result.node?.location).toBe('user.name');
+      expect(result.node?.clear).toBe(true);
+      expect(result.error).toBeUndefined();
+    });
+
+    it('should create AssignNode from JSON with clear property set to null', () => {
+      // Arrange
+      const jsonInput = {
+        assign: {
+          location: 'user.name',
+          clear: null,
+        },
+      };
+
+      // Act
+      const result = AssignNode.createFromJSON(jsonInput);
+
+      // Assert
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.node).toBeInstanceOf(AssignNode);
+        expect(result.node.location).toBe('user.name');
+        expect(result.node.clear).toBe(null);
+      }
+      expect(result.error).toBeUndefined();
+    });
+
+    it('should create AssignNode from JSON with clear property as string "null"', () => {
+      // Arrange
+      const jsonInput = {
+        assign: {
+          location: 'user.name',
+          clear: 'null',
+        },
+      };
+
+      // Act
+      const result = AssignNode.createFromJSON(jsonInput);
+
+      // Assert
+      expect(result.success).toBe(true);
+      expect(result.node).toBeInstanceOf(AssignNode);
+      expect(result.node?.location).toBe('user.name');
+      expect(result.node?.clear).toBe(null);
+      expect(result.error).toBeUndefined();
+    });
+
+    it('should create AssignNode from JSON with clear property as string "undefined"', () => {
+      // Arrange
+      const jsonInput = {
+        assign: {
+          location: 'user.name',
+          clear: 'undefined',
+        },
+      };
+
+      // Act
+      const result = AssignNode.createFromJSON(jsonInput);
+
+      // Assert
+      expect(result.success).toBe(true);
+      expect(result.node).toBeInstanceOf(AssignNode);
+      expect(result.node?.location).toBe('user.name');
+      expect(result.node?.clear).toBe(undefined);
+      expect(result.error).toBeUndefined();
     });
   });
 
@@ -558,6 +939,110 @@ describe('AssignNode', () => {
 
       // Assert
       expect(result.data).toEqual({ count: 0, status: 'ready' });
+    });
+
+    it('should handle clear on non-existent property gracefully', async () => {
+      // Arrange
+      const assignNode = new AssignNode({
+        assign: {
+          location: 'nonExistent.property',
+          clear: true,
+          content: '',
+          children: [],
+        },
+      });
+
+      const initialState = createTestEventState({ existing: 'value' });
+
+      // Act
+      const result = await assignNode.run(initialState);
+
+      // Assert
+      expect(result.data).toEqual({ existing: 'value' });
+    });
+
+    it('should handle clear on root level property', async () => {
+      // Arrange
+      const assignNode = new AssignNode({
+        assign: {
+          location: 'status',
+          clear: true,
+          content: '',
+          children: [],
+        },
+      });
+
+      const initialState = createTestEventState({ status: 'active', count: 5 });
+
+      // Act
+      const result = await assignNode.run(initialState);
+
+      // Assert
+      expect(result.data).toEqual({ count: 5 });
+      expect(result.data).not.toHaveProperty('status');
+    });
+
+    it('should prioritize clear over expr when both are provided', async () => {
+      // Arrange
+      const assignNode = new AssignNode({
+        assign: {
+          location: 'user.name',
+          clear: true,
+          expr: '"Should not be used"',
+          content: '',
+          children: [],
+        },
+      });
+
+      const initialState = createTestEventState({
+        user: { name: 'John Doe', id: 1 },
+      });
+
+      // Act
+      const result = await assignNode.run(initialState);
+
+      // Assert
+      expect(result.data).toEqual({
+        user: { id: 1 },
+      });
+      expect(result.data.user).not.toHaveProperty('name');
+    });
+
+    it('should handle clear with null value on deeply nested path', async () => {
+      // Arrange
+      const assignNode = new AssignNode({
+        assign: {
+          location: 'app.config.database.connection.timeout',
+          clear: null,
+          content: '',
+          children: [],
+        },
+      });
+
+      const initialState = createTestEventState({
+        app: {
+          config: {
+            database: {
+              connection: { host: 'localhost', timeout: 5000 },
+            },
+          },
+        },
+      });
+
+      // Act
+      const result = await assignNode.run(initialState);
+
+      // Assert
+      expect(result.data).toEqual({
+        app: {
+          config: {
+            database: {
+              connection: { host: 'localhost', timeout: null },
+            },
+          },
+        },
+      });
+      expect((result.data as any).app.config.database.connection.timeout).toBe(null);
     });
   });
 });

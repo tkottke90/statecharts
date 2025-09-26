@@ -136,7 +136,12 @@ export class LogNode extends BaseExecutableNode {
     } catch (error) {
       // Log the error but don't throw - logging failures shouldn't break execution
       const errorMessage = error instanceof Error ? error.message : String(error);
-      this.outputLog(`[LOG ERROR] Failed to log: ${errorMessage}`);
+      this.outputLog(
+        this.formatLogMessage(`[LOG ERROR] Failed to log: ${errorMessage}`)
+      );
+      this.outputLog(
+        this.formatLogMessage(this.toString())
+      );
       return state;
     }
   }

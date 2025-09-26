@@ -5,6 +5,7 @@ import { addPendingEvent, fromJsError, InternalState, SCXMLEvent } from '../mode
 import { evaluateExpression } from '../parser/expressions.nodejs';
 import { defaultProcessorRegistry, EventIOProcessorRegistry } from '../models/event-io-processor';
 import { ParamNode, collectParamValues } from './param.node';
+import _ from 'lodash';
 
 /**
  * Zod schema for SendNode attributes
@@ -149,6 +150,7 @@ export class SendNode extends BaseExecutableNode implements z.infer<typeof SendN
       const namelistData = await this.collectNamelistData(state);
 
       // Create SCXML event
+      debugger;
       const scxmlEvent: SCXMLEvent = {
         name: eventName,
         type: 'external',
@@ -177,30 +179,10 @@ export class SendNode extends BaseExecutableNode implements z.infer<typeof SendN
 
       // Store send ID in idlocation if specified
       if (this.idlocation && sendId) {
-        const updatedState = { ...state };
-        // Use lodash-style path setting (similar to AssignNode)
-        const pathParts = this.idlocation.split('.');
-        let current: Record<string, unknown> = updatedState.data;
-
-        for (let i = 0; i < pathParts.length - 1; i++) {
-          const part = pathParts[i];
-          if (!part) continue; // Skip empty parts
-
-          if (!(part in current)) {
-            current[part] = {};
-          }
-          current = current[part] as Record<string, unknown>;
-        }
-
-        const lastPart = pathParts[pathParts.length - 1];
-        if (lastPart) {
-          current[lastPart] = sendId;
-        }
-        return updatedState;
+        _.set(state.data, this.idlocation, sendId);
       }
 
       return state;
-
     } catch (error) {
       // Create error event and add to pending events
       const errorEvent = fromJsError(error);

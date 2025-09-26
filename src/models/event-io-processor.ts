@@ -302,7 +302,23 @@ export class HTTPProcessor implements EventIOProcessor {
           fetchOptions.body = body;
         }
 
+        const requestEvent: SCXMLEvent = {
+          name: 'http.request',
+          type: 'external',
+          sendid: event.sendid,
+          origin: target,
+          origintype: 'http',
+          invokeid: event.invokeid,
+          data: {
+            ...fetchOptions
+          }
+        }
+
         const response = await fetch(target, fetchOptions);
+
+        // Create Header map
+        const responseHeaders: Record<string, string> = {};
+        response.headers.forEach((value, key) => responseHeaders[key] = value);
 
         // Parse response data
         let responseData: unknown;
@@ -317,8 +333,6 @@ export class HTTPProcessor implements EventIOProcessor {
           responseData = null;
         }
 
-        debugger;
-
         if (!response.ok) {
           // Generate http.error event for HTTP error responses
           const errorEvent: SCXMLEvent = {
@@ -332,17 +346,16 @@ export class HTTPProcessor implements EventIOProcessor {
               error: `HTTP ${response.status}: ${response.statusText}`,
               status: response.status,
               statusText: response.statusText,
+              headers: responseHeaders,
               response: responseData
             }
           };
-
-          debugger;
 
           return {
             success: false,
             error: new Error(`HTTP ${response.status}: ${response.statusText}`),
             sendid: event.sendid,
-            events: [errorEvent]
+            events: [requestEvent, errorEvent]
           };
         }
 
@@ -357,6 +370,7 @@ export class HTTPProcessor implements EventIOProcessor {
           data: {
             status: response.status,
             statusText: response.statusText,
+            headers: responseHeaders,
             body: responseData
           }
         };
@@ -364,7 +378,7 @@ export class HTTPProcessor implements EventIOProcessor {
         return {
           success: true,
           sendid: event.sendid,
-          events: [responseEvent]
+          events: [requestEvent, responseEvent]
         };
 
       } catch (fetchError) {

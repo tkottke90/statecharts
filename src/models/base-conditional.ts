@@ -14,6 +14,7 @@ import { BaseNode } from './base';
  */
 export abstract class BaseConditionalNode extends BaseExecutableNode {
   condition?: string;
+  allowChildren = true;
 
   /**
    * Evaluate this node's condition (if it has one)

@@ -9,15 +9,18 @@ export type HistoryId = string;
  * Types of history events that can be tracked
  */
 export enum HistoryEventType {
+  ERROR = 'error',
+  EVENT_PROCESSED = 'event_processed',
+  EVENT_SKIPPED = 'event_skipped',
+  INITIAL_STATE = 'initial_state',
+  MACROSTEP_END = 'macrostep_end',
+  MACROSTEP_START = 'macrostep_start',
+  MACROSTEP_EVENTLESS_COMPLETE = 'macrostep_eventless_complete',
+  MICROSTEP_END = 'microstep_end',
+  MICROSTEP_START = 'microstep_start',
   STATE_ENTRY = 'state_entry',
   STATE_EXIT = 'state_exit',
   TRANSITION = 'transition',
-  EVENT_PROCESSED = 'event_processed',
-  MICROSTEP_START = 'microstep_start',
-  MICROSTEP_END = 'microstep_end',
-  MACROSTEP_START = 'macrostep_start',
-  MACROSTEP_END = 'macrostep_end',
-  ERROR = 'error',
 }
 
 /**

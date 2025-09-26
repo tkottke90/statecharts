@@ -3,6 +3,7 @@ import { BaseExecutableNode } from '../models/base-executable';
 import { CreateFromJsonResponse } from '../models/methods';
 import { addPendingEvent, InternalState } from '../models/internalState';
 import { evaluateExpression } from '../parser/expressions.nodejs';
+import _ from 'lodash';
 
 const DataNodeAttr = BaseExecutableNode.schema
   .extend({
@@ -76,6 +77,7 @@ export class DataNode
    * This is called during data model initialization.
    */
   async run(state: InternalState): Promise<InternalState> {
+    const nextState = { ...state }
     let value: unknown;
 
     if (this.expr) {
@@ -100,13 +102,9 @@ export class DataNode
       value = this.content;
     }
 
-    return {
-      ...state,
-      data: {
-        ...state.data,
-        [this.id]: value,
-      },
-    };
+    _.set(nextState.data, this.id, value)
+
+    return nextState;
   }
 
   static createFromJSON(

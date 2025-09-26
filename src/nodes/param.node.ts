@@ -3,6 +3,7 @@ import { CreateFromJsonResponse } from '../models/methods';
 import { InternalState } from '../models/internalState';
 import { evaluateExpression } from '../parser/expressions.nodejs';
 import { BaseNode, BaseNodeAttr } from '../models';
+import _ from 'lodash';
 
 /**
  * Zod schema for ParamNode attributes
@@ -147,7 +148,7 @@ export async function collectParamValues(
   for (const paramNode of paramNodes) {
     try {
       const [name, value] = await paramNode.getNameValuePair(state);
-      params[name] = value;
+      _.set(params, name, value);
     } catch (error) {
       // Re-throw with additional context
       throw new Error(`Failed to collect parameter '${paramNode.name}': ${error instanceof Error ? error.message : String(error)}`);

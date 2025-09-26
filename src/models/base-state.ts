@@ -68,6 +68,10 @@ export class BaseStateNode extends InitializeDataModelMixin(BaseNode) {
     return '';
   }
 
+  containsTransaction(node: TransitionNode) {
+    return this.getTransitions().some(transaction => transaction.uuid === node.uuid);
+  }
+
   /**
    * Returns an array of initial state paths  This will 
    * handle looking up and providing the nested list
@@ -80,7 +84,7 @@ export class BaseStateNode extends InitializeDataModelMixin(BaseNode) {
    * @param prefix The prefix to use for the initial state path
    * @returns The list of initial state paths
    */
-  getInitialStateList(prefix: string) {
+  getInitialStateList(prefix: string = '') {
     const localPrefix = createStatePath(prefix, this.id);
     const initialActiveStateList = [ localPrefix ]
 

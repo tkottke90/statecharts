@@ -10,13 +10,14 @@ The Assign node extends BaseExecutableNode, making it executable within transiti
 
 ## Attributes
 
-| Attribute  | Type     | Required | Default | Description                                         |
-| ---------- | -------- | -------- | ------- | --------------------------------------------------- |
-| `location` | `string` | Yes      | -       | The data model location to assign to                |
-| `expr`     | `string` | No\*     | -       | JavaScript expression to evaluate for the value     |
-| `content`  | `string` | No\*     | `""`    | Literal content to assign (inherited from BaseNode) |
+| Attribute  | Type                                    | Required | Default | Description                                         |
+| ---------- | --------------------------------------- | -------- | ------- | --------------------------------------------------- |
+| `location` | `string`                                | Yes      | -       | The data model location to assign to                |
+| `expr`     | `string`                                | No\*     | -       | JavaScript expression to evaluate for the value     |
+| `content`  | `string`                                | No\*     | `""`    | Literal content to assign (inherited from BaseNode) |
+| `clear`    | `boolean \| null \| undefined \| string` | No       | -       | Clear operation: `true` deletes property, `null` sets to null, `undefined` sets to undefined, `"null"`/`"undefined"` string equivalents |
 
-\*Either `expr` or content must be specified, but not both.
+\*Either `expr` or content must be specified, but not both (unless using `clear`).
 
 ### Location
 
@@ -27,14 +28,41 @@ The `location` attribute specifies where in the data model to assign the value. 
 - Array indexing: `"items[0].name"`
 - Complex paths: `"app.config.database.connection.host"`
 
+### Clear Operations
+
+The `clear` attribute provides special operations for property management:
+
+- **`clear="true"`** or **`clear={true}`**: Deletes the property entirely using `_.unset()`
+- **`clear="null"`** or **`clear={null}`**: Sets the property value to `null`
+- **`clear="undefined"`** or **`clear={undefined}`**: Sets the property value to `undefined`
+
+When `clear` is specified, it takes precedence over `expr` and `content` attributes.
+
 ### Expression vs Content
 
-The Assign node supports two mutually exclusive ways to specify the value:
+The Assign node supports two mutually exclusive ways to specify the value (when not using `clear`):
 
 1. **Expression (`expr`)**: Expression to evaluate based on the the configured `datamodel` on the root `<scxml>` node
 2. **Content**: Literal string value or child element content
 
 ## Usage Examples
+
+### Clear Operations
+
+```xml
+<!-- Delete a property entirely -->
+<assign location="user.temporaryData" clear="true"/>
+
+<!-- Set a property to null -->
+<assign location="user.lastLogin" clear="null"/>
+
+<!-- Set a property to undefined -->
+<assign location="user.optionalField" clear="undefined"/>
+
+<!-- Clear operations work with nested paths -->
+<assign location="app.cache.userPreferences" clear="true"/>
+<assign location="session.data[0].temp" clear="null"/>
+```
 
 ### Basic Assignment with Expression
 
@@ -110,6 +138,29 @@ The Assign node supports two mutually exclusive ways to specify the value:
     <assign location="playerHealth" expr="playerHealth - 25"/>
     <assign location="lastDamageTime" expr="Date.now()"/>
   </transition>
+
+  <!-- Clear temporary power-up when it expires -->
+  <transition event="powerUpExpired" target="playing">
+    <assign location="activePowerUp" clear="true"/>
+    <assign location="powerUpEndTime" clear="null"/>
+  </transition>
+</state>
+```
+
+### Session and Cache Management
+
+```xml
+<state id="userLogout">
+  <onentry>
+    <!-- Clear sensitive user data -->
+    <assign location="user.authToken" clear="true"/>
+    <assign location="user.permissions" clear="true"/>
+    <assign location="session.data" clear="null"/>
+
+    <!-- Reset optional fields to undefined -->
+    <assign location="user.lastActivity" clear="undefined"/>
+    <assign location="cache.userPreferences" clear="true"/>
+  </onentry>
 </state>
 ```
 
@@ -148,6 +199,34 @@ const contentAssignNode = new AssignNode({
   assign: {
     location: 'status',
     content: 'active',
+    children: [],
+  },
+});
+
+// Clear operations
+const clearPropertyNode = new AssignNode({
+  assign: {
+    location: 'user.temporaryData',
+    clear: true,
+    content: '',
+    children: [],
+  },
+});
+
+const setToNullNode = new AssignNode({
+  assign: {
+    location: 'user.lastLogin',
+    clear: null,
+    content: '',
+    children: [],
+  },
+});
+
+const setToUndefinedNode = new AssignNode({
+  assign: {
+    location: 'user.optionalField',
+    clear: undefined,
+    content: '',
     children: [],
   },
 });
@@ -211,6 +290,7 @@ The AssignNode class exposes the following readonly properties:
 
 - `location: string` - The data model location to assign to
 - `expr: string | undefined` - The JavaScript expression (if specified)
+- `clear: boolean | null | undefined` - The clear operation type (if specified)
 - `isExecutable: boolean` - Always `true` (inherited from BaseExecutableNode)
 
 ## Expression Evaluation
@@ -271,7 +351,8 @@ Invalid location paths are handled gracefully using Lodash's `set` function, whi
 The Assign node performs strict validation:
 
 - **Location**: Required, must be non-empty string
-- **Expression XOR Content**: Must specify either `expr` OR content, but not both
+- **Expression XOR Content**: Must specify either `expr` OR content, but not both (unless using `clear`)
+- **Clear Operations**: When `clear` is specified, it takes precedence over `expr` and `content`
 - **Schema validation**: Full Zod schema validation on creation
 
 ### Validation Examples
@@ -283,14 +364,27 @@ The Assign node performs strict validation:
 // Valid: Content only
 { location: 'message', content: 'Hello' }
 
-// Invalid: Both expression and content
+// Valid: Clear operations
+{ location: 'user.data', clear: true }
+{ location: 'user.lastLogin', clear: null }
+{ location: 'user.optional', clear: undefined }
+{ location: 'cache.temp', clear: 'null' }
+{ location: 'session.data', clear: 'undefined' }
+
+// Valid: Clear takes precedence (expr is ignored)
+{ location: 'value', clear: true, expr: '"ignored"' }
+
+// Invalid: Both expression and content (without clear)
 { location: 'value', expr: '42', content: 'text' } // Validation error
 
-// Invalid: Neither expression nor content
+// Invalid: Neither expression nor content (without clear)
 { location: 'value' } // Validation error
 
 // Invalid: Empty location
 { location: '', expr: '"value"' } // Validation error
+
+// Invalid: Invalid clear value
+{ location: 'value', clear: 'invalid' } // Validation error
 ```
 
 ## Performance Considerations

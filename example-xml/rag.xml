@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scxml xmlns="http://www.w3.org/2005/07/scxml"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="../schemas/scxml.xsd"
+       version="1.0"
+       datamodel="ecmascript"
+       initial="agents">
+
+  <datamodel>
+    <data id="" type="json" >
+      [
+
+
+
+      ]
+    </data>
+    <data id="output.summary" expr="''" />
+    <data id="output.entities" expr="[]" />
+    <data id="output.summary" expr="" />
+  </datamodel>
+
+  <state id="callLLM">
+  
+    <state id="httpRequest"></state>
+
+    <state id="onSuccess"></state>
+    
+    <state id="onError"></state>
+  
+    <transition event="http.response" target="onSuccess" />
+    <transition event="http.error" target="onError" />
+  </state>
+
+  <state id="agents"></state>
+
+
+
+</scxml>

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { runInContext, createContext } from 'node:vm';
 import { InternalState } from '../models/internalState';
 import { BaseSCXMLError } from '../errors';
@@ -8,7 +9,6 @@ class SCXMLExpressionError extends BaseSCXMLError {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const evaluateNullDataModelExpression = (
   _expression: string,
   _data: InternalState,

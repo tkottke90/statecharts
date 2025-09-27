@@ -1,4 +1,3 @@
-import js from '@eslint/js';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 import { defineConfig } from 'eslint/config';
@@ -24,8 +23,9 @@ export default defineConfig([
       },
     },
     rules: {
-      'no-unused-vars': 'warn',
+      '@typescript-eslint/no-unused-vars': 'warn',
       'no-undef': 'warn',
+      '@typescript-eslint/no-explicit-any': 'off',
     },
   },
 ]);

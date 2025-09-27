@@ -24,7 +24,11 @@ The base interface that all processors must implement:
 ```typescript
 interface EventIOProcessor {
   readonly type: string;
-  send(event: SCXMLEvent, target: string, config?: ProcessorConfig): Promise<SendResult>;
+  send(
+    event: SCXMLEvent,
+    target: string,
+    config?: ProcessorConfig,
+  ): Promise<SendResult>;
   canHandle?(target: string): boolean;
   initialize?(): Promise<void>;
   cleanup?(): Promise<void>;
@@ -32,9 +36,11 @@ interface EventIOProcessor {
 ```
 
 **Properties:**
+
 - `type`: Unique identifier for the processor (e.g., 'http', 'scxml', 'websocket')
 
 **Methods:**
+
 - `send()`: Send an event to the specified target
 - `canHandle()`: Optional method to determine if this processor can handle a target URL
 - `initialize()`: Optional setup method called when processor is registered
@@ -46,16 +52,22 @@ Central registry that manages all available processors:
 
 ```typescript
 class EventIOProcessorRegistry extends EventEmitter {
-  register(processor: EventIOProcessor): void
-  unregister(type: string): boolean
-  send(event: SCXMLEvent, target: string, processorType?: string, config?: ProcessorConfig): Promise<SendResult>
-  setDefault(processor: EventIOProcessor): void
-  getDefault(): EventIOProcessor | undefined
-  clear(): void
+  register(processor: EventIOProcessor): void;
+  unregister(type: string): boolean;
+  send(
+    event: SCXMLEvent,
+    target: string,
+    processorType?: string,
+    config?: ProcessorConfig,
+  ): Promise<SendResult>;
+  setDefault(processor: EventIOProcessor): void;
+  getDefault(): EventIOProcessor | undefined;
+  clear(): void;
 }
 ```
 
 **Key Features:**
+
 - **Auto-detection**: Automatically selects appropriate processor using `canHandle()` method
 - **Default Processor**: Fallback processor when no specific handler is found
 - **Event Emission**: Emits events for registration, unregistration, and communication activities
@@ -72,6 +84,7 @@ const httpProcessor = new HTTPProcessor();
 ```
 
 **Features:**
+
 - Supports GET, POST, PUT, DELETE, and other HTTP methods
 - Automatic JSON serialization of event data
 - Configurable headers and request options
@@ -79,9 +92,10 @@ const httpProcessor = new HTTPProcessor();
 - Auto-detects HTTP/HTTPS URLs
 
 **Configuration Options:**
+
 ```typescript
 interface ProcessorConfig {
-  method?: string;        // HTTP method (default: 'POST')
+  method?: string; // HTTP method (default: 'POST')
   headers?: Record<string, string>;
   timeout?: number;
   // ... other HTTP options
@@ -97,12 +111,14 @@ const scxmlProcessor = new SCXMLProcessor();
 ```
 
 **Features:**
+
 - Supports both internal and external SCXML targets
 - Target registration for external state machines
 - Handles SCXML event format and routing
 - Auto-detects SCXML target format (`scxml:targetId`)
 
 **Target Formats:**
+
 - `scxml:internal` - Send to the same state machine
 - `scxml:externalId` - Send to registered external state machine
 
@@ -111,7 +127,11 @@ const scxmlProcessor = new SCXMLProcessor();
 ### Basic Setup
 
 ```typescript
-import { EventIOProcessorRegistry, HTTPProcessor, SCXMLProcessor } from './event-io-processor';
+import {
+  EventIOProcessorRegistry,
+  HTTPProcessor,
+  SCXMLProcessor,
+} from './event-io-processor';
 
 // Create registry and register processors
 const registry = new EventIOProcessorRegistry();
@@ -128,10 +148,10 @@ await registry.send(
   {
     name: 'userUpdate',
     type: 'external',
-    data: { userId: 123, name: 'John Doe' }
+    data: { userId: 123, name: 'John Doe' },
   },
   'http://api.example.com/users',
-  'http'
+  'http',
 );
 
 // Send to another state machine
@@ -139,9 +159,9 @@ await registry.send(
   {
     name: 'workflowComplete',
     type: 'external',
-    data: { result: 'success' }
+    data: { result: 'success' },
   },
-  'scxml:paymentProcessor'
+  'scxml:paymentProcessor',
 );
 ```
 
@@ -150,11 +170,11 @@ await registry.send(
 ```typescript
 class WebSocketProcessor implements EventIOProcessor {
   readonly type = 'websocket';
-  
+
   canHandle(target: string): boolean {
     return target.startsWith('ws://') || target.startsWith('wss://');
   }
-  
+
   async send(event: SCXMLEvent, target: string): Promise<SendResult> {
     // WebSocket implementation
     const ws = new WebSocket(target);
@@ -184,6 +204,7 @@ interface SendResult {
 ```
 
 **Error Types:**
+
 - `processor.not.found` - No suitable processor available
 - `processor.send.failed` - Processor failed to send event
 - `network.error` - Network communication failure
@@ -198,9 +219,12 @@ registry.on('processorRegistered', (type: string) => {
   console.log(`Processor ${type} registered`);
 });
 
-registry.on('eventSent', (event: SCXMLEvent, target: string, result: SendResult) => {
-  console.log(`Event ${event.name} sent to ${target}`);
-});
+registry.on(
+  'eventSent',
+  (event: SCXMLEvent, target: string, result: SendResult) => {
+    console.log(`Event ${event.name} sent to ${target}`);
+  },
+);
 
 registry.on('sendError', (event: SCXMLEvent, target: string, error: any) => {
   console.error(`Failed to send ${event.name} to ${target}:`, error);
@@ -212,8 +236,8 @@ registry.on('sendError', (event: SCXMLEvent, target: string, error: any) => {
 The Event I/O Processor system integrates seamlessly with SCXML `<send>` elements:
 
 ```xml
-<send event="userUpdate" 
-      target="http://api.example.com/users" 
+<send event="userUpdate"
+      target="http://api.example.com/users"
       type="http">
   <param name="userId" expr="data.user.id"/>
   <param name="name" expr="data.user.name"/>

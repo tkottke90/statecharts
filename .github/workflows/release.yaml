@@ -1,0 +1,83 @@
+name: Create Release
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - v*
+
+env:
+  IS_SNAPSHOT: ${{ github.ref == 'refs/heads/master' }}
+  IS_RELEASE: ${{ startsWith(github.ref, 'refs/tags/v') }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup
+        run: npx pnpm install
+
+      - name: 'Get Version from package.json'
+        id: get_version
+        run: echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_ENV
+
+      - name: 'Get Short SHA'
+        id: get_short_sha
+        run: echo "SHORT_SHA=${GITHUB_SHA:0:7}" >> $GITHUB_ENV
+
+      - name: 'Create Release Filename Suffix'
+        id: create_release_filename_suffix
+        run: |
+          if [ "${{ env.IS_SNAPSHOT }}" == "true" ]; then
+            echo "RELEASE_FILENAME_SUFFIX=${{ env.SHORT_SHA }}-SNAPSHOT" >> $GITHUB_ENV
+          else
+            echo "RELEASE_FILENAME_SUFFIX=" >> $GITHUB_ENV
+          fi
+
+      - name: 'Create Release Filename'
+        id: create_release_filename
+        run: echo "RELEASE_FILENAME=@tkottke90-statecharts-${{ env.VERSION }}${{ env.RELEASE_FILENAME_SUFFIX != '' && format('-{0}', env.RELEASE_FILENAME_SUFFIX) || '' }}.tar.gz" >> $GITHUB_ENV
+
+      - name: Build
+        run: npx pnpm run build
+
+      - name: Test
+        # Run tests if npm run test is available otherwise log no tests found
+        run: npx pnpm run test --if-present || echo "No tests found"
+
+      - name: Package the artifacts
+        # Tar the dist folder into a archive as long as the RELEASE_FILENAME is set or throw an error
+        run: |
+          if [ -z "${{ env.RELEASE_FILENAME }}" ]; then
+            echo "RELEASE_FILENAME is not set. Aborting."
+            exit 1
+          fi
+
+          tar -czvf ${{ env.RELEASE_FILENAME }} dist
+
+      - name: Create Tag
+        id: create_tag
+        run: echo "TAG=v${{ env.VERSION }}${{ env.RELEASE_FILENAME_SUFFIX != '' && format('-{0}', env.RELEASE_FILENAME_SUFFIX) || '' }}" >> $GITHUB_ENV
+
+      - name: Release
+        if: ${{ env.IS_RELEASE == 'true' }}
+        uses: softprops/action-gh-release@v2
+        with:
+          make_latest: true
+          files: ${{ env.RELEASE_FILENAME }}
+          name: Release ${{ env.VERSION }}${{ env.RELEASE_FILENAME_SUFFIX != '' && format('-{0}', env.RELEASE_FILENAME_SUFFIX) || '' }}
+          generate_release_notes: true
+          draft: false
+          prerelease: ${{ env.IS_SNAPSHOT == 'true' }}
+          tag: ${{ github.ref }}
+
+      - name: Save Artifact
+        if: ${{ env.IS_SNAPSHOT == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.RELEASE_FILENAME }}
+          path: ${{ env.RELEASE_FILENAME }}

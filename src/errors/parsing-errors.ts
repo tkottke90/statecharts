@@ -1,7 +1,4 @@
-
-
 export class XMLParsingError extends Error {
-
   constructor(readonly metadata: Record<string, unknown>) {
     super('There were errors parsing the XML');
 
@@ -13,7 +10,7 @@ export class XMLParsingError extends Error {
       name: this.name,
       metadata: this.metadata,
       stack: this.stack,
-      message: this.message
-    }
+      message: this.message,
+    };
   }
 }

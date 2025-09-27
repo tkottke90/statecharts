@@ -85,9 +85,9 @@ class ParamNode extends BaseExecutableNode {
   readonly expr?: string;
   readonly location?: string;
   readonly content?: string;
-  
-  async evaluateValue(state: InternalState): Promise<unknown>
-  async getNameValuePair(state: InternalState): Promise<[string, unknown]>
+
+  async evaluateValue(state: InternalState): Promise<unknown>;
+  async getNameValuePair(state: InternalState): Promise<[string, unknown]>;
 }
 ```
 
@@ -125,6 +125,7 @@ Creates a new ParamNode instance from JSON representation.
 Evaluates the parameter value based on the configured value source.
 
 **Parameters:**
+
 - `state`: Current internal state of the state machine
 
 **Returns:** Promise resolving to the evaluated parameter value
@@ -136,6 +137,7 @@ Evaluates the parameter value based on the configured value source.
 Returns a tuple containing the parameter name and its evaluated value.
 
 **Parameters:**
+
 - `state`: Current internal state of the state machine
 
 **Returns:** Promise resolving to `[name, value]` tuple
@@ -161,17 +163,22 @@ Creates a ParamNode instance from JSON with validation.
 Collects all parameter values from an array of ParamNode instances into a single object.
 
 **Parameters:**
+
 - `paramNodes`: Array of ParamNode instances
 - `state`: Current internal state
 
 **Returns:** Promise resolving to object with parameter names as keys and evaluated values as values
 
 **Example:**
+
 ```typescript
-const params = await collectParamValues([
-  paramNode1, // name: 'userId', value: 123
-  paramNode2, // name: 'status', value: 'active'
-], state);
+const params = await collectParamValues(
+  [
+    paramNode1, // name: 'userId', value: 123
+    paramNode2, // name: 'status', value: 'active'
+  ],
+  state,
+);
 
 // Result: { userId: 123, status: 'active' }
 ```
@@ -200,10 +207,10 @@ The implementation provides detailed error messages for debugging:
 
 ```typescript
 // Expression evaluation error
-"Failed to evaluate param 'userId': ReferenceError: user is not defined"
+"Failed to evaluate param 'userId': ReferenceError: user is not defined";
 
 // Collection error
-"Failed to collect parameter 'status': Invalid expression syntax"
+"Failed to collect parameter 'status': Invalid expression syntax";
 ```
 
 ## Integration Examples
@@ -212,14 +219,17 @@ The implementation provides detailed error messages for debugging:
 
 ```typescript
 // ParamNode instances are automatically processed by SendNode
-const sendNode = new SendNode({
-  send: {
-    event: 'dataUpdate',
-    target: 'http://api.example.com',
-    type: 'http',
-    children: [paramNode1, paramNode2]
-  }
-}, processorRegistry);
+const sendNode = new SendNode(
+  {
+    send: {
+      event: 'dataUpdate',
+      target: 'http://api.example.com',
+      type: 'http',
+      children: [paramNode1, paramNode2],
+    },
+  },
+  processorRegistry,
+);
 ```
 
 ### Manual Parameter Collection
@@ -227,7 +237,7 @@ const sendNode = new SendNode({
 ```typescript
 const paramNodes = [
   new ParamNode({ param: { name: 'id', expr: 'data.user.id' } }),
-  new ParamNode({ param: { name: 'name', content: 'John Doe' } })
+  new ParamNode({ param: { name: 'name', content: 'John Doe' } }),
 ];
 
 const parameters = await collectParamValues(paramNodes, currentState);
@@ -256,6 +266,7 @@ The ParamNode implementation includes comprehensive unit tests covering:
 - Parameter collection utilities
 
 Run tests with:
+
 ```bash
 npm test -- src/nodes/param.node.spec.ts
 ```

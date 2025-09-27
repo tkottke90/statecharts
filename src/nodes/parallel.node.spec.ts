@@ -99,7 +99,7 @@ describe('Node: <parallel>', () => {
       // Add assign node to onentry
       const assignNode = new AssignNode({
         assign: {
-          location: 'testVar',
+          location: 'data.testVar',
           expr: '"onentry executed"',
           content: '',
           children: [],

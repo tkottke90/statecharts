@@ -22,6 +22,7 @@ npm install statecharts
 ```
 
 **Requirements:**
+
 - Node.js >= 20.0.0
 - TypeScript (recommended)
 
@@ -54,7 +55,7 @@ const xmlString = `
 const stateChart = StateChart.fromXML(xmlString);
 const result = await stateChart.execute({
   data: {},
-  _datamodel: 'ecmascript'
+  _datamodel: 'ecmascript',
 });
 
 console.log('State machine result:', result.data);
@@ -64,14 +65,17 @@ console.log('State machine result:', result.data);
 ## 📚 Documentation
 
 ### Getting Started
+
 - **[Getting Started Guide](./docs/Getting_Started.md)** - Complete walkthrough from installation to execution
 
 ### Core Documentation
+
 - **[SCXML Nodes](./src/nodes/README.md)** - Complete reference for all SCXML elements
 - **[Model Classes](./src/models/README.md)** - Understanding the underlying architecture
 - **[Error Handling](./src/errors/Errors.md)** - Comprehensive error handling guide
 
 ### Node Reference
+
 - **[State Node](./src/nodes/state.md)** - Individual states and state hierarchies
 - **[Transition Node](./src/nodes/transition.md)** - State transitions and conditions
 - **[Parallel Node](./src/nodes/parallel.md)** - Concurrent state processing
@@ -80,6 +84,7 @@ console.log('State machine result:', result.data);
 - **[Executable Content](./src/nodes/assign.md)** - Variable assignment and actions
 
 ### Advanced Topics
+
 - **[OnEntry/OnExit Actions](./src/nodes/onentry.md)** - State lifecycle management
 - **[Event Generation](./src/nodes/raise.md)** - Internal event creation
 - **[Final States](./src/nodes/final.md)** - Terminal state handling
@@ -114,6 +119,7 @@ Perfect for applications that need:
 ## 🔧 Advanced Features
 
 ### Parallel State Processing
+
 ```xml
 <parallel id="multimedia">
   <state id="audio">
@@ -126,6 +132,7 @@ Perfect for applications that need:
 ```
 
 ### Data Model Integration
+
 ```xml
 <datamodel>
   <data id="user" expr="{ name: 'John', role: 'admin' }"/>
@@ -134,6 +141,7 @@ Perfect for applications that need:
 ```
 
 ### Event-Driven Transitions
+
 ```xml
 <state id="waiting">
   <transition event="success" target="completed"/>
@@ -172,14 +180,18 @@ This implementation follows the [W3C SCXML specification](https://www.w3.org/TR/
 We welcome contributions! Here's how you can help:
 
 ### 🐛 Report Issues
+
 Found a bug or have a feature request? Please [open an issue](https://github.com/your-repo/statecharts/issues) with:
+
 - Clear description of the problem or feature
 - Steps to reproduce (for bugs)
 - Expected vs actual behavior
 - Code examples when applicable
 
 ### 🔧 Submit Pull Requests
+
 Ready to contribute code? Great! Please:
+
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Make your changes with tests
@@ -188,14 +200,18 @@ Ready to contribute code? Great! Please:
 6. Submit a pull request with a clear description
 
 ### 📝 Improve Documentation
+
 Help make the documentation better:
+
 - Fix typos or unclear explanations
 - Add more examples
 - Improve existing guides
 - Create new tutorials
 
 ### 🧪 Add Tests
+
 Help improve test coverage:
+
 - Add unit tests for new features
 - Create integration tests
 - Add edge case testing

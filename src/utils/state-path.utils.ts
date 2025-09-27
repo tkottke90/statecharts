@@ -1,5 +1,3 @@
-
-
 /**
  * Utility function which creates a dot delimited path string
  * from any number of string segments.  This primarily helps
@@ -9,6 +7,6 @@
  */
 export function createStatePath(...parts: string[]): string {
   return parts
-    .filter(Boolean)  // Filter out empty strings
-    .join('.')        // Join on periods
+    .filter(Boolean) // Filter out empty strings
+    .join('.'); // Join on periods
 }

@@ -14,24 +14,22 @@ export interface SCXMLEvent {
 }
 
 const errorMap: Record<string, (node: string) => string> = {
-  'TypeError': (node: string) => `error.${node}.typeerror`
-}
+  TypeError: (node: string) => `error.${node}.typeerror`,
+};
 /**
  * Converts a JS Error into an SCXML Error
- * @param err 
- * @returns 
+ * @param err
+ * @returns
  */
 export function fromJsError(err: any, node: string = 'scxml'): SCXMLEvent {
   let message = 'Unknown Error';
-  let name = 'error.scxml.unknown_error'
-  let stack = ''
+  let name = 'error.scxml.unknown_error';
+  let stack = '';
 
   if (err instanceof Error || 'name' in err) {
     const nameProp = err!.name as string;
 
-    name = nameProp in errorMap
-      ? errorMap[nameProp]!(node)
-      : err.name;
+    name = nameProp in errorMap ? errorMap[nameProp]!(node) : err.name;
   }
 
   if (err instanceof Error || 'message' in err) {
@@ -51,7 +49,7 @@ export function fromJsError(err: any, node: string = 'scxml'): SCXMLEvent {
     invokeid: '',
     data: {
       message,
-      stack
+      stack,
     },
   };
 }
@@ -60,8 +58,8 @@ export function addNodeDetails(event: SCXMLEvent, node: BaseNode) {
   event.data = {
     ...event.data,
     nodeId: node.uuid,
-    nodeType: node.label
-  }
+    nodeType: node.label,
+  };
 
   return event;
 }
@@ -114,8 +112,8 @@ export function addPendingEvent(
     origintype: '',
     invokeid: '',
     data: {},
-    ...event
-  }
+    ...event,
+  };
 
   const existingEvents = state._pendingInternalEvents ?? [];
 

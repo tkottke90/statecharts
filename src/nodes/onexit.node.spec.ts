@@ -122,7 +122,7 @@ describe('Node: <onexit>', () => {
       // Arrange
       const assignChild = new AssignNode({
         assign: {
-          location: 'exitExecuted',
+          location: 'data.exitExecuted',
           expr: 'true',
           content: '',
           children: [],
@@ -151,7 +151,7 @@ describe('Node: <onexit>', () => {
       // Arrange
       const assignChild1 = new AssignNode({
         assign: {
-          location: 'step1',
+          location: 'data.step1',
           expr: '"completed"',
           content: '',
           children: [],
@@ -160,7 +160,7 @@ describe('Node: <onexit>', () => {
 
       const assignChild2 = new AssignNode({
         assign: {
-          location: 'step2',
+          location: 'data.step2',
           expr: '"completed"',
           content: '',
           children: [],
@@ -169,7 +169,7 @@ describe('Node: <onexit>', () => {
 
       const assignChild3 = new AssignNode({
         assign: {
-          location: 'counter',
+          location: 'data.counter',
           expr: 'counter + 1',
           content: '',
           children: [],
@@ -229,7 +229,7 @@ describe('Node: <onexit>', () => {
       // Arrange
       const assignChild = new AssignNode({
         assign: {
-          location: 'exitTime',
+          location: 'data.exitTime',
           expr: 'Date.now()',
           content: '',
           children: [],
@@ -269,7 +269,7 @@ describe('Node: <onexit>', () => {
       // Arrange
       const assignChild = new AssignNode({
         assign: {
-          location: 'nested.value',
+          location: 'data.nested.value',
           expr: '"exit-value"',
           content: '',
           children: [],
@@ -397,7 +397,7 @@ describe('Node: <onexit>', () => {
       // Arrange - Simulate SCXML onexit usage
       const logAssign = new AssignNode({
         assign: {
-          location: 'log',
+          location: 'data.log',
           expr: '"Exiting state"',
           content: '',
           children: [],
@@ -460,7 +460,7 @@ describe('Node: <onexit>', () => {
       // Arrange
       const assignChild = new AssignNode({
         assign: {
-          location: 'newProp',
+          location: 'data.newProp',
           expr: '"test"',
           content: '',
           children: [],
@@ -544,8 +544,8 @@ describe('Node: <onexit>', () => {
       // Arrange - Simulate typical onexit cleanup operations
       const clearDataAssign = new AssignNode({
         assign: {
-          location: 'tempData',
-          expr: 'null',
+          location: 'data.tempData',
+          clear: true,
           content: '',
           children: [],
         },
@@ -553,7 +553,7 @@ describe('Node: <onexit>', () => {
 
       const logExitAssign = new AssignNode({
         assign: {
-          location: 'exitLog',
+          location: 'data.exitLog',
           expr: '"State cleanup completed"',
           content: '',
           children: [],
@@ -584,7 +584,7 @@ describe('Node: <onexit>', () => {
       const result = await onexitNode.run(initialState);
 
       // Assert
-      expect(result.data.tempData).toBeNull(); // Cleared
+      expect(result.data.tempData).toBeUndefined(); // Cleared
       expect(result.data.exitLog).toBe('State cleanup completed'); // Logged
       expect(result.data.persistentData).toBeDefined(); // Preserved
 

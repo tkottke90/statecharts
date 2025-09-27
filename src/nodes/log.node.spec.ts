@@ -2,14 +2,16 @@ import { LogNode } from './log.node';
 import { InternalState } from '../models/internalState';
 
 // Helper function to create LogNode instances for testing
-function createLogNode(attributes: Partial<{ expr?: string; label?: string; content?: string }>): LogNode {
+function createLogNode(
+  attributes: Partial<{ expr?: string; label?: string; content?: string }>,
+): LogNode {
   return new LogNode({
     log: {
       expr: attributes.expr,
       label: attributes.label,
       content: attributes.content || '',
-      children: []
-    }
+      children: [],
+    },
   });
 }
 
@@ -20,14 +22,14 @@ describe('LogNode', () => {
   beforeEach(() => {
     // Mock console.log to capture output
     mockConsoleLog = jest.spyOn(console, 'log').mockImplementation(() => {});
-    
+
     // Create test state
     testState = {
       data: {
         counter: 42,
         message: 'Hello World',
         items: ['a', 'b', 'c'],
-        user: { name: 'John', age: 30 }
+        user: { name: 'John', age: 30 },
       },
       _event: {
         name: 'test.event',
@@ -36,10 +38,10 @@ describe('LogNode', () => {
         sendid: '',
         origin: '',
         origintype: '',
-        invokeid: ''
+        invokeid: '',
       },
       _name: 'testState',
-      _datamodel: 'ecmascript'
+      _datamodel: 'ecmascript',
     };
   });
 
@@ -53,8 +55,8 @@ describe('LogNode', () => {
         log: {
           expr: "'Hello World'",
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       expect(result.success).toBe(true);
@@ -68,8 +70,8 @@ describe('LogNode', () => {
           label: 'Debug',
           expr: 'data.counter',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       expect(result.success).toBe(true);
@@ -81,8 +83,8 @@ describe('LogNode', () => {
       const result = LogNode.createFromJSON({
         log: {
           content: 'Static log message',
-          children: []
-        }
+          children: [],
+        },
       });
 
       expect(result.success).toBe(true);
@@ -94,8 +96,8 @@ describe('LogNode', () => {
         log: {
           label: 'Info',
           content: 'Application started',
-          children: []
-        }
+          children: [],
+        },
       });
 
       expect(result.success).toBe(true);
@@ -107,8 +109,8 @@ describe('LogNode', () => {
       const result = LogNode.createFromJSON({
         log: {
           label: 'Empty',
-          children: []
-        }
+          children: [],
+        },
       });
 
       expect(result.success).toBe(false);
@@ -119,8 +121,8 @@ describe('LogNode', () => {
       const result = LogNode.createFromJSON({
         log: {
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       expect(result.success).toBe(true);
@@ -135,7 +137,9 @@ describe('LogNode', () => {
       await node.run(testState);
 
       expect(mockConsoleLog).toHaveBeenCalledWith(
-        expect.stringMatching(/\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\] Hello World/)
+        expect.stringMatching(
+          /\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\] Hello World/,
+        ),
       );
     });
 
@@ -145,17 +149,21 @@ describe('LogNode', () => {
       await node.run(testState);
 
       expect(mockConsoleLog).toHaveBeenCalledWith(
-        expect.stringMatching(/\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\] 42/)
+        expect.stringMatching(
+          /\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\] 42/,
+        ),
       );
     });
 
     it('should log complex expression', async () => {
-      const node = createLogNode({ expr: "'Counter value: ' + data.counter + ', Message: ' + data.message" });
+      const node = createLogNode({
+        expr: "'Counter value: ' + data.counter + ', Message: ' + data.message",
+      });
 
       await node.run(testState);
 
       expect(mockConsoleLog).toHaveBeenCalledWith(
-        expect.stringMatching(/Counter value: 42, Message: Hello World/)
+        expect.stringMatching(/Counter value: 42, Message: Hello World/),
       );
     });
 
@@ -186,7 +194,7 @@ describe('LogNode', () => {
       await node.run(testState);
 
       expect(mockConsoleLog).toHaveBeenCalledWith(
-        expect.stringMatching(/null/)
+        expect.stringMatching(/null/),
       );
     });
 
@@ -196,7 +204,7 @@ describe('LogNode', () => {
       await node.run(testState);
 
       expect(mockConsoleLog).toHaveBeenCalledWith(
-        expect.stringMatching(/undefined/)
+        expect.stringMatching(/undefined/),
       );
     });
   });
@@ -208,7 +216,7 @@ describe('LogNode', () => {
       await node.run(testState);
 
       expect(mockConsoleLog).toHaveBeenCalledWith(
-        expect.stringMatching(/Static log message/)
+        expect.stringMatching(/Static log message/),
       );
     });
 
@@ -218,7 +226,7 @@ describe('LogNode', () => {
       await node.run(testState);
 
       expect(mockConsoleLog).toHaveBeenCalledWith(
-        expect.stringMatching(/Trimmed message/)
+        expect.stringMatching(/Trimmed message/),
       );
     });
 
@@ -228,7 +236,9 @@ describe('LogNode', () => {
       await node.run(testState);
 
       expect(mockConsoleLog).toHaveBeenCalledWith(
-        expect.stringMatching(/\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\] $/)
+        expect.stringMatching(
+          /\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\] $/,
+        ),
       );
     });
   });
@@ -240,17 +250,22 @@ describe('LogNode', () => {
       await node.run(testState);
 
       expect(mockConsoleLog).toHaveBeenCalledWith(
-        expect.stringMatching(/\[DEBUG\] Test message/)
+        expect.stringMatching(/\[DEBUG\] Test message/),
       );
     });
 
     it('should format timestamp and label correctly', async () => {
-      const node = createLogNode({ label: 'INFO', content: 'Application started' });
+      const node = createLogNode({
+        label: 'INFO',
+        content: 'Application started',
+      });
 
       await node.run(testState);
 
       const logCall = mockConsoleLog.mock.calls[0][0];
-      expect(logCall).toMatch(/^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\] \[INFO\] Application started$/);
+      expect(logCall).toMatch(
+        /^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\] \[INFO\] Application started$/,
+      );
     });
 
     it('should work without label', async () => {
@@ -259,7 +274,9 @@ describe('LogNode', () => {
       await node.run(testState);
 
       const logCall = mockConsoleLog.mock.calls[0][0];
-      expect(logCall).toMatch(/^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\] No label message$/);
+      expect(logCall).toMatch(
+        /^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\] No label message$/,
+      );
       expect(logCall).not.toContain('][');
     });
   });
@@ -275,19 +292,19 @@ describe('LogNode', () => {
 
       // Should log error message
       expect(mockConsoleLog).toHaveBeenCalledWith(
-        expect.stringContaining('[LOG ERROR]')
+        expect.stringContaining('[LOG ERROR]'),
       );
     });
 
     it('should handle circular reference objects', async () => {
       // Create circular reference
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       const circular: any = { name: 'test' };
       circular.self = circular;
 
       const stateWithCircular = {
         ...testState,
-        data: { ...testState.data, circular }
+        data: { ...testState.data, circular },
       };
 
       const node = createLogNode({ expr: 'data.circular' });
@@ -295,7 +312,7 @@ describe('LogNode', () => {
       await node.run(stateWithCircular);
 
       expect(mockConsoleLog).toHaveBeenCalledWith(
-        expect.stringContaining('[Object - cannot stringify]')
+        expect.stringContaining('[Object - cannot stringify]'),
       );
     });
 

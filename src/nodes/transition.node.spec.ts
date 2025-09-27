@@ -209,7 +209,7 @@ describe('Node: <transition>', () => {
         transition: {
           target: 'nextState',
           event: 'trigger',
-          cond: 'data.count > 5 ? "true" : "false"',
+          cond: 'data.count > 5',
           content: '',
           children: [],
         },
@@ -251,7 +251,7 @@ describe('Node: <transition>', () => {
         transition: {
           target: 'nextState',
           event: 'trigger',
-          cond: 'data.count > 5 ? "true" : "false"',
+          cond: 'data.count > 5',
           content: '',
           children: [],
         },
@@ -294,7 +294,7 @@ describe('Node: <transition>', () => {
         transition: {
           target: 'nextState',
           event: 'trigger',
-          cond: '"true"',
+          cond: 'true',
           content: '',
           children: [],
         },
@@ -315,7 +315,7 @@ describe('Node: <transition>', () => {
         transition: {
           target: 'nextState',
           event: 'trigger',
-          cond: '"false"',
+          cond: 'false',
           content: '',
           children: [],
         },
@@ -356,7 +356,7 @@ describe('Node: <transition>', () => {
       // Arrange
       const assignNode = new AssignNode({
         assign: {
-          location: 'transitionVar',
+          location: 'data.transitionVar',
           expr: '"executed"',
           content: '',
           children: [],
@@ -385,7 +385,7 @@ describe('Node: <transition>', () => {
       // Arrange
       const assignNode1 = new AssignNode({
         assign: {
-          location: 'step1',
+          location: 'data.step1',
           expr: '"first"',
           content: '',
           children: [],
@@ -394,7 +394,7 @@ describe('Node: <transition>', () => {
 
       const assignNode2 = new AssignNode({
         assign: {
-          location: 'step2',
+          location: 'data.step2',
           expr: '"second"',
           content: '',
           children: [],
@@ -424,7 +424,7 @@ describe('Node: <transition>', () => {
       // Arrange
       const assignNode = new AssignNode({
         assign: {
-          location: 'status',
+          location: 'data.status',
           expr: '"transitioning"',
           content: '',
           children: [],
@@ -477,7 +477,7 @@ describe('Node: <transition>', () => {
 
       const successNode = new AssignNode({
         assign: {
-          location: 'success',
+          location: 'data.success',
           expr: '"completed"',
           content: '',
           children: [],
@@ -520,7 +520,7 @@ describe('Node: <transition>', () => {
 
       const assignNode = new AssignNode({
         assign: {
-          location: 'executed',
+          location: 'data.executed',
           expr: '"yes"',
           content: '',
           children: [],
@@ -747,7 +747,7 @@ describe('Node: <transition>', () => {
         transition: {
           target: 'conditionalTarget',
           event: 'check',
-          cond: 'data.count >= 10 ? "true" : "false"',
+          cond: 'data.count >= 10',
           content: '',
           children: [],
         },
@@ -831,7 +831,7 @@ describe('Node: <transition>', () => {
       // Arrange
       const assignNode = new AssignNode({
         assign: {
-          location: 'newProp',
+          location: 'data.newProp',
           expr: '"added"',
           content: '',
           children: [],

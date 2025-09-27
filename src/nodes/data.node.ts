@@ -77,7 +77,7 @@ export class DataNode
    * This is called during data model initialization.
    */
   async run(state: InternalState): Promise<InternalState> {
-    const nextState = { ...state }
+    const nextState = { ...state };
     let value: unknown;
 
     if (this.expr) {
@@ -102,25 +102,25 @@ export class DataNode
       value = this.convertToType(this.content);
     }
 
-    _.set(nextState.data, this.id, value)
+    _.set(nextState.data, this.id, value);
 
     return nextState;
   }
 
   protected convertToType(value: unknown) {
-    switch(this.type) {
+    switch (this.type) {
       case 'json': {
         try {
-          return JSON.parse(value as string)
+          return JSON.parse(value as string);
         } catch {
           return {
-            json: value
-          }
+            json: value,
+          };
         }
       }
 
       case 'text':
-        return `${value}`
+        return `${value}`;
 
       default:
         return value;

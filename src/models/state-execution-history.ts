@@ -38,7 +38,12 @@ export class StateExecutionHistory extends EventEmitter {
     type: HistoryEventType,
     stateConfiguration: string[],
     internalState: InternalState,
-    additionalData: Partial<Pick<HistoryEntry, 'event' | 'transition' | 'duration' | 'error' | 'metadata'>> = {}
+    additionalData: Partial<
+      Pick<
+        HistoryEntry,
+        'event' | 'transition' | 'duration' | 'error' | 'metadata'
+      >
+    > = {},
   ): HistoryId {
     if (!this.options.enabled) {
       return '';
@@ -56,7 +61,9 @@ export class StateExecutionHistory extends EventEmitter {
       timestamp,
       type,
       stateConfiguration: [...stateConfiguration],
-      internalState: this.options.includeInternalState ? { ...internalState } : { data: {} },
+      internalState: this.options.includeInternalState
+        ? { ...internalState }
+        : { data: {} },
       metadata: { ...this.options.defaultMetadata, ...additionalData.metadata },
       childIds: [],
     };
@@ -149,29 +156,35 @@ export class StateExecutionHistory extends EventEmitter {
 
     // Apply filters
     if (options.eventTypes) {
-      results = results.filter(entry => options.eventTypes!.includes(entry.type));
+      results = results.filter(entry =>
+        options.eventTypes!.includes(entry.type),
+      );
     }
 
     if (options.timeRange) {
-      results = results.filter(entry => 
-        entry.timestamp >= options.timeRange!.start && 
-        entry.timestamp <= options.timeRange!.end
+      results = results.filter(
+        entry =>
+          entry.timestamp >= options.timeRange!.start &&
+          entry.timestamp <= options.timeRange!.end,
       );
     }
 
     if (options.stateFilter) {
-      const stateFilters = Array.isArray(options.stateFilter) ? options.stateFilter : [options.stateFilter];
+      const stateFilters = Array.isArray(options.stateFilter)
+        ? options.stateFilter
+        : [options.stateFilter];
       results = results.filter(entry =>
-        stateFilters.some(filter => entry.stateConfiguration.includes(filter))
+        stateFilters.some(filter => entry.stateConfiguration.includes(filter)),
       );
     }
 
     if (options.eventNamePattern) {
-      const pattern = options.eventNamePattern instanceof RegExp 
-        ? options.eventNamePattern 
-        : new RegExp(options.eventNamePattern);
-      results = results.filter(entry => 
-        entry.event && pattern.test(entry.event.name)
+      const pattern =
+        options.eventNamePattern instanceof RegExp
+          ? options.eventNamePattern
+          : new RegExp(options.eventNamePattern);
+      results = results.filter(
+        entry => entry.event && pattern.test(entry.event.name),
       );
     }
 
@@ -252,12 +265,12 @@ export class StateExecutionHistory extends EventEmitter {
    */
   updateOptions(newOptions: Partial<HistoryTrackingOptions>): void {
     this.options = { ...this.options, ...newOptions };
-    
+
     // If disabled, clear existing entries
     if (!this.options.enabled) {
       this.clear();
     }
-    
+
     // Prune entries if max entries was reduced
     this.pruneEntries();
   }
@@ -282,7 +295,7 @@ export class StateExecutionHistory extends EventEmitter {
 
     for (const entry of this.entries.values()) {
       entriesByType[entry.type]++;
-      
+
       if (!oldestEntry || entry.timestamp < oldestEntry) {
         oldestEntry = entry.timestamp;
       }
@@ -292,7 +305,9 @@ export class StateExecutionHistory extends EventEmitter {
     }
 
     // Rough memory usage calculation
-    const memoryUsage = JSON.stringify(Array.from(this.entries.values())).length;
+    const memoryUsage = JSON.stringify(
+      Array.from(this.entries.values()),
+    ).length;
 
     const result: {
       totalEntries: number;
@@ -329,7 +344,7 @@ export class StateExecutionHistory extends EventEmitter {
    */
   import(serializedEntries: SerializableHistoryEntry[]): void {
     this.clear();
-    
+
     for (const serialized of serializedEntries) {
       const entry = deserializeHistoryEntry(serialized);
       this.entries.set(entry.id, entry);
@@ -350,13 +365,16 @@ export class StateExecutionHistory extends EventEmitter {
    * Prune old entries based on maxEntries setting
    */
   private pruneEntries(): boolean {
-    if (this.options.maxEntries === 0 || this.entries.size <= this.options.maxEntries) {
+    if (
+      this.options.maxEntries === 0 ||
+      this.entries.size <= this.options.maxEntries
+    ) {
       return false;
     }
 
     const entriesToRemove = this.entries.size - this.options.maxEntries;
     const removedIds = this.orderedEntries.splice(0, entriesToRemove);
-    
+
     for (const id of removedIds) {
       this.entries.delete(id);
     }

@@ -687,10 +687,10 @@ Complete state machines with parallel states, data model initialization, conditi
 9. **Phase 8.3 Complete**: ✅ External communication system (`<send>` and `<param>` elements)
 10. **Continue with Phase 7**: Extensible parser architecture (custom node registration)
 11. **Then Phase 8.1**: Advanced features (history states)
-9. **Optional Phase 9**: Multi-environment support (browser compatibility)
-10. **Incremental Development**: Each phase builds on the previous
-11. **Test-Driven**: Write tests for each new feature
-12. **SCXML Compliance**: Reference W3C spec for exact semantics
+12. **Optional Phase 9**: Multi-environment support (browser compatibility)
+13. **Incremental Development**: Each phase builds on the previous
+14. **Test-Driven**: Write tests for each new feature
+15. **SCXML Compliance**: Reference W3C spec for exact semantics
 
 ### **Current Status: Production-Ready State Machines with Parallel States and Data Model!**
 

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { StateChart } from './statechart';
 import { StateNode } from './nodes/state.node';
 import { TransitionNode } from './nodes/transition.node';
@@ -316,7 +315,8 @@ describe('StateChart', () => {
       ).activeStateChain = activeStateChain;
 
       // Mock the findSourceStateForTransition method to return the source state
-      jest.spyOn(stateChart as any, 'findSourceStateForTransition')
+      jest
+        .spyOn(stateChart as any, 'findSourceStateForTransition')
         .mockReturnValue('playing.healthSystem.healthy');
 
       const initialState = { currentData: 'initial' };
@@ -374,35 +374,56 @@ describe('StateChart', () => {
       });
 
       // Mock unmount methods
-      jest.spyOn(healthyStateNode, 'unmount').mockResolvedValue({ data: { healthy: 'exited' } });
-      jest.spyOn(criticalStateNode, 'unmount').mockResolvedValue({ data: { critical: 'exited' } });
+      jest
+        .spyOn(healthyStateNode, 'unmount')
+        .mockResolvedValue({ data: { healthy: 'exited' } });
+      jest
+        .spyOn(criticalStateNode, 'unmount')
+        .mockResolvedValue({ data: { critical: 'exited' } });
 
       // Set up active state chain
       const activeStateChain: ActiveStateEntry[] = [
-        ['playing', new StateNode({ state: { id: 'playing', content: '', children: [] } })],
-        ['playing.healthSystem', new StateNode({ state: { id: 'healthSystem', content: '', children: [] } })],
+        [
+          'playing',
+          new StateNode({
+            state: { id: 'playing', content: '', children: [] },
+          }),
+        ],
+        [
+          'playing.healthSystem',
+          new StateNode({
+            state: { id: 'healthSystem', content: '', children: [] },
+          }),
+        ],
         ['playing.healthSystem.healthy', healthyStateNode],
         ['playing.healthSystem.critical', criticalStateNode],
       ];
-      (stateChart as unknown as { activeStateChain: ActiveStateEntry[] }).activeStateChain = activeStateChain;
+      (
+        stateChart as unknown as { activeStateChain: ActiveStateEntry[] }
+      ).activeStateChain = activeStateChain;
 
       // Mock the findSourceStateForTransition method
-      jest.spyOn(stateChart as any, 'findSourceStateForTransition')
-        .mockImplementation((transition) => {
+      jest
+        .spyOn(stateChart as any, 'findSourceStateForTransition')
+        .mockImplementation(transition => {
           if (transition === transition1) return 'playing.healthSystem.healthy';
-          if (transition === transition2) return 'playing.healthSystem.critical';
+          if (transition === transition2)
+            return 'playing.healthSystem.critical';
           return null;
         });
 
       const initialState = { baseData: 'base' };
 
       // Act
-      const result = await (stateChart as any).exitStates([transition1, transition2], initialState);
+      const result = await (stateChart as any).exitStates(
+        [transition1, transition2],
+        initialState,
+      );
 
       // Assert
       expect(result).toEqual({
         baseData: 'base',
-        data: { critical: 'exited' },
+        data: { healthy: 'exited' },
       });
 
       // Verify states were removed from active chain
@@ -426,13 +447,17 @@ describe('StateChart', () => {
       });
 
       // Mock findSourceStateForTransition to return null (no source found)
-      jest.spyOn(stateChart as any, 'findSourceStateForTransition')
+      jest
+        .spyOn(stateChart as any, 'findSourceStateForTransition')
         .mockReturnValue(null);
 
       const initialState = { baseData: 'base' };
 
       // Act
-      const result = await (stateChart as any).exitStates([transition], initialState);
+      const result = await (stateChart as any).exitStates(
+        [transition],
+        initialState,
+      );
 
       // Assert
       expect(result).toEqual({ baseData: 'base' });
@@ -538,7 +563,10 @@ describe('StateChart', () => {
       );
 
       // Assert
-      expect(playingMountSpy).toHaveBeenCalledWith(initialState);
+      expect(playingMountSpy).toHaveBeenCalledWith({
+        currentData: 'initial',
+        data: {},
+      });
       expect(healthSystemMountSpy).toHaveBeenCalled();
       expect(healthyMountSpy).toHaveBeenCalled();
 
@@ -581,18 +609,24 @@ describe('StateChart', () => {
       });
 
       // Mock mount methods
-      const playingMountSpy = jest.spyOn(playingStateNode, 'mount').mockResolvedValue({
-        node: playingStateNode,
-        state: { data: { playing: true } },
-      });
-      const healthSystemMountSpy = jest.spyOn(healthSystemStateNode, 'mount').mockResolvedValue({
-        node: healthSystemStateNode,
-        state: { data: { health: 100 } },
-      });
-      const criticalMountSpy = jest.spyOn(criticalStateNode, 'mount').mockResolvedValue({
-        node: criticalStateNode,
-        state: { data: { status: 'critical' } },
-      });
+      const playingMountSpy = jest
+        .spyOn(playingStateNode, 'mount')
+        .mockResolvedValue({
+          node: playingStateNode,
+          state: { data: { playing: true } },
+        });
+      const healthSystemMountSpy = jest
+        .spyOn(healthSystemStateNode, 'mount')
+        .mockResolvedValue({
+          node: healthSystemStateNode,
+          state: { data: { health: 100 } },
+        });
+      const criticalMountSpy = jest
+        .spyOn(criticalStateNode, 'mount')
+        .mockResolvedValue({
+          node: criticalStateNode,
+          state: { data: { status: 'critical' } },
+        });
 
       // Set up states map
       const statesMap = new Map([
@@ -600,25 +634,34 @@ describe('StateChart', () => {
         ['playing.healthSystem', healthSystemStateNode],
         ['playing.healthSystem.critical', criticalStateNode],
       ]);
-      (stateChart as unknown as { states: Map<string, BaseStateNode> }).states = statesMap;
+      (stateChart as unknown as { states: Map<string, BaseStateNode> }).states =
+        statesMap;
 
       // Set up active state chain with some states already active
       const activeStateChain: ActiveStateEntry[] = [
         ['playing', playingStateNode],
         ['playing.healthSystem', healthSystemStateNode],
       ];
-      (stateChart as unknown as { activeStateChain: ActiveStateEntry[] }).activeStateChain = activeStateChain;
+      (
+        stateChart as unknown as { activeStateChain: ActiveStateEntry[] }
+      ).activeStateChain = activeStateChain;
 
       const initialState = { baseData: 'base' };
 
       // Act
-      const result = await (stateChart as any).enterStates([transition], initialState);
+      const result = await (stateChart as any).enterStates(
+        [transition],
+        initialState,
+      );
 
       // Assert
       // Only the critical state should be entered (playing and healthSystem are already active)
       expect(playingMountSpy).not.toHaveBeenCalled();
       expect(healthSystemMountSpy).not.toHaveBeenCalled();
-      expect(criticalMountSpy).toHaveBeenCalledWith(initialState);
+      expect(criticalMountSpy).toHaveBeenCalledWith({
+        baseData: 'base',
+        data: {},
+      });
 
       expect(result).toEqual({
         baseData: 'base',
@@ -888,13 +931,13 @@ describe('StateChart', () => {
         assign: {
           children: [],
           content: 'added',
-          location: 'test'
-        }
-      })
-      
+          location: 'data.test',
+        },
+      });
+
       const onEntryNode = new OnEntryNode({
-        onentry: { content: '', children: [assignNode] }
-      })
+        onentry: { content: '', children: [assignNode] },
+      });
 
       const stateNode = new StateNode({
         state: { id: 'testState', content: '', children: [onEntryNode] },
@@ -905,27 +948,32 @@ describe('StateChart', () => {
       const stateChart = new StateChart(
         'testState',
         new SCXMLNode({
-          scxml: { content: '', children: [stateNode], version: '1.0', datamodel: 'ecmascript' }
+          scxml: {
+            content: '',
+            children: [stateNode],
+            version: '1.0',
+            datamodel: 'ecmascript',
+          },
         }),
-        new Map([[stateNode.id, stateNode]])
-      )
+        new Map([[stateNode.id, stateNode]]),
+      );
 
       const initialState: InternalState = {
-        data: {}
+        data: {},
       };
 
       // Act
       const result = await (stateChart as any).updateStates(
         initialState,
         ['testState'],
-        'add'
+        'add',
       );
 
       // Assert
       expect(mountSpy).toHaveBeenCalledWith(initialState);
 
       expect(result).toEqual({
-        data: { test: 'added' }
+        data: { test: 'added' },
       });
 
       // Verify state was added to active chain
@@ -948,7 +996,9 @@ describe('StateChart', () => {
 
       // Set up active state chain with the state to remove
       const activeStateChain: ActiveStateEntry[] = [['testState', stateNode]];
-      (stateChart as unknown as { activeStateChain: ActiveStateEntry[] }).activeStateChain = activeStateChain;
+      (
+        stateChart as unknown as { activeStateChain: ActiveStateEntry[] }
+      ).activeStateChain = activeStateChain;
 
       const initialState = { baseData: 'base' };
 
@@ -956,7 +1006,7 @@ describe('StateChart', () => {
       const result = await (stateChart as any).updateStates(
         initialState,
         ['testState'],
-        'remove'
+        'remove',
       );
 
       // Assert
@@ -976,13 +1026,15 @@ describe('StateChart', () => {
     it('should skip states not in active chain when removing', async () => {
       // Arrange
       const initialState = { baseData: 'base' };
-      (stateChart as unknown as { activeStateChain: ActiveStateEntry[] }).activeStateChain = [];
+      (
+        stateChart as unknown as { activeStateChain: ActiveStateEntry[] }
+      ).activeStateChain = [];
 
       // Act
       const result = await (stateChart as any).updateStates(
         initialState,
         ['nonexistentState'],
-        'remove'
+        'remove',
       );
 
       // Assert
@@ -997,8 +1049,12 @@ describe('StateChart', () => {
 
     it('should handle multiple states in correct order', async () => {
       // Arrange
-      const stateA = new StateNode({ state: { id: 'a', content: '', children: [] } });
-      const stateB = new StateNode({ state: { id: 'b', content: '', children: [] } });
+      const stateA = new StateNode({
+        state: { id: 'a', content: '', children: [] },
+      });
+      const stateB = new StateNode({
+        state: { id: 'b', content: '', children: [] },
+      });
 
       const mountOrder: string[] = [];
       jest.spyOn(stateA, 'mount').mockImplementation(async () => {
@@ -1011,9 +1067,15 @@ describe('StateChart', () => {
       });
 
       // Set up states map
-      const statesMap = new Map([['a', stateA], ['b', stateB]]);
-      (stateChart as unknown as { states: Map<string, BaseStateNode> }).states = statesMap;
-      (stateChart as unknown as { activeStateChain: ActiveStateEntry[] }).activeStateChain = [];
+      const statesMap = new Map([
+        ['a', stateA],
+        ['b', stateB],
+      ]);
+      (stateChart as unknown as { states: Map<string, BaseStateNode> }).states =
+        statesMap;
+      (
+        stateChart as unknown as { activeStateChain: ActiveStateEntry[] }
+      ).activeStateChain = [];
 
       const initialState = {};
 
@@ -1048,7 +1110,7 @@ describe('StateChart', () => {
       // Arrange
       const assignNode = new AssignNode({
         assign: {
-          location: 'testVar',
+          location: 'data.testVar',
           expr: '"Hello World"', // Proper JavaScript string literal
           content: '',
           children: [],
@@ -1093,7 +1155,7 @@ describe('StateChart', () => {
       // Arrange
       const assignNode1 = new AssignNode({
         assign: {
-          location: 'var1',
+          location: 'data.var1',
           expr: '"value1"', // Proper JavaScript string literal
           content: '',
           children: [],
@@ -1102,7 +1164,7 @@ describe('StateChart', () => {
 
       const assignNode2 = new AssignNode({
         assign: {
-          location: 'var2',
+          location: 'data.var2',
           expr: '"value2"', // Proper JavaScript string literal
           content: '',
           children: [],
@@ -1148,7 +1210,7 @@ describe('StateChart', () => {
       // Arrange
       const assignNode1 = new AssignNode({
         assign: {
-          location: 'transition1Var',
+          location: 'data.transition1Var',
           expr: '"from transition 1"', // Proper JavaScript string literal
           content: '',
           children: [],
@@ -1157,7 +1219,7 @@ describe('StateChart', () => {
 
       const assignNode2 = new AssignNode({
         assign: {
-          location: 'transition2Var',
+          location: 'data.transition2Var',
           expr: '"from transition 2"', // Proper JavaScript string literal
           content: '',
           children: [],
@@ -1247,7 +1309,7 @@ describe('StateChart', () => {
 
       const successNode = new AssignNode({
         assign: {
-          location: 'successVar',
+          location: 'data.successVar',
           expr: '"success"', // Proper JavaScript string literal
           content: '',
           children: [],
@@ -1325,7 +1387,7 @@ describe('StateChart', () => {
 
       const assignNode1 = new AssignNode({
         assign: {
-          location: 'status',
+          location: 'data.status',
           expr: '"processing started"', // Proper JavaScript string literal
           content: '',
           children: [],
@@ -1334,7 +1396,7 @@ describe('StateChart', () => {
 
       const assignNode2 = new AssignNode({
         assign: {
-          location: 'timestamp',
+          location: 'data.timestamp',
           expr: '"1234567890"', // Proper JavaScript string literal
           content: '',
           children: [],
@@ -1406,5 +1468,4 @@ describe('StateChart', () => {
 
     it.todo('should handle history state transitions');
   });
-
 });

@@ -16,7 +16,6 @@ Example:
 npm run test:statechart -- ./examples/basic-ollama.xml
 ```
 
-
 ## Output Format
 
 The output will be rendered to console log and is broken up into sections

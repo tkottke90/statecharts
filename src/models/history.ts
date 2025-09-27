@@ -30,31 +30,31 @@ export enum HistoryEventType {
 export interface StateTransition {
   /** Unique identifier for this transition */
   id: HistoryId;
-  
+
   /** Timestamp when the transition started */
   timestamp: number;
-  
+
   /** Source state path (e.g., "playing.healthSystem.healthy") */
   sourceState: string;
-  
+
   /** Target state path (e.g., "playing.healthSystem.critical") */
   targetState: string;
-  
+
   /** Event that triggered this transition (if any) */
   triggeringEvent?: SCXMLEvent;
-  
+
   /** States that were exited during this transition */
   exitedStates: string[];
-  
+
   /** States that were entered during this transition */
   enteredStates: string[];
-  
+
   /** Duration of the transition in milliseconds */
   duration?: number;
-  
+
   /** Any error that occurred during the transition */
   error?: Error;
-  
+
   /** Additional metadata about the transition */
   metadata: Record<string, unknown>;
 }
@@ -65,37 +65,37 @@ export interface StateTransition {
 export interface HistoryEntry {
   /** Unique identifier for this history entry */
   id: HistoryId;
-  
+
   /** Timestamp when this event occurred */
   timestamp: number;
-  
+
   /** Type of history event */
   type: HistoryEventType;
-  
+
   /** Current state machine configuration at the time of this event */
   stateConfiguration: string[];
-  
+
   /** The internal state at the time of this event */
   internalState: InternalState;
-  
+
   /** Event being processed (if applicable) */
   event?: SCXMLEvent;
-  
+
   /** State transition information (if applicable) */
   transition?: StateTransition;
-  
+
   /** Duration of the operation in milliseconds (if applicable) */
   duration?: number;
-  
+
   /** Any error that occurred */
   error?: Error;
-  
+
   /** Additional context and metadata */
   metadata: Record<string, unknown>;
-  
+
   /** Reference to the parent history entry (for causality tracking) */
   parentId?: HistoryId;
-  
+
   /** References to child history entries */
   childIds: HistoryId[];
 }
@@ -106,22 +106,22 @@ export interface HistoryEntry {
 export interface HistoryTrackingOptions {
   /** Whether history tracking is enabled */
   enabled: boolean;
-  
+
   /** Maximum number of history entries to retain (0 = unlimited) */
   maxEntries: number;
-  
+
   /** Types of events to track */
   trackedEventTypes: HistoryEventType[];
-  
+
   /** Whether to include full internal state in history entries */
   includeInternalState: boolean;
-  
+
   /** Whether to track timing information */
   trackTiming: boolean;
-  
+
   /** Whether to track causality relationships */
   trackCausality: boolean;
-  
+
   /** Custom metadata to include in all history entries */
   defaultMetadata: Record<string, unknown>;
 }
@@ -145,28 +145,28 @@ export const DEFAULT_HISTORY_OPTIONS: HistoryTrackingOptions = {
 export interface HistoryQueryOptions {
   /** Filter by event types */
   eventTypes?: HistoryEventType[];
-  
+
   /** Filter by time range */
   timeRange?: {
     start: number;
     end: number;
   };
-  
+
   /** Filter by state configuration */
   stateFilter?: string | string[];
-  
+
   /** Filter by event name pattern */
   eventNamePattern?: string | RegExp;
-  
+
   /** Maximum number of results to return */
   limit?: number;
-  
+
   /** Number of results to skip (for pagination) */
   offset?: number;
-  
+
   /** Sort order */
   sortOrder?: 'asc' | 'desc';
-  
+
   /** Include child entries in results */
   includeChildren?: boolean;
 }
@@ -177,10 +177,10 @@ export interface HistoryQueryOptions {
 export interface HistoryQueryResult {
   /** Matching history entries */
   entries: HistoryEntry[];
-  
+
   /** Total number of matching entries (before limit/offset) */
   totalCount: number;
-  
+
   /** Query execution metadata */
   metadata: {
     executionTime: number;
@@ -194,10 +194,10 @@ export interface HistoryQueryResult {
 export interface HistoryEventPayload {
   /** The history entry that was added */
   entry: HistoryEntry;
-  
+
   /** Current total number of history entries */
   totalEntries: number;
-  
+
   /** Whether this entry caused old entries to be pruned */
   entriesPruned: boolean;
 }
@@ -230,7 +230,9 @@ export function generateHistoryId(): HistoryId {
 /**
  * Utility function to convert HistoryEntry to serializable format
  */
-export function serializeHistoryEntry(entry: HistoryEntry): SerializableHistoryEntry {
+export function serializeHistoryEntry(
+  entry: HistoryEntry,
+): SerializableHistoryEntry {
   const result: SerializableHistoryEntry = {
     id: entry.id,
     timestamp: entry.timestamp,
@@ -246,7 +248,9 @@ export function serializeHistoryEntry(entry: HistoryEntry): SerializableHistoryE
     result.event = entry.event;
   }
   if (entry.transition !== undefined) {
-    const serializedTransition: Omit<StateTransition, 'error'> & { error?: string } = {
+    const serializedTransition: Omit<StateTransition, 'error'> & {
+      error?: string;
+    } = {
       id: entry.transition.id,
       timestamp: entry.transition.timestamp,
       sourceState: entry.transition.sourceState,
@@ -284,7 +288,9 @@ export function serializeHistoryEntry(entry: HistoryEntry): SerializableHistoryE
 /**
  * Utility function to convert serializable format back to HistoryEntry
  */
-export function deserializeHistoryEntry(serialized: SerializableHistoryEntry): HistoryEntry {
+export function deserializeHistoryEntry(
+  serialized: SerializableHistoryEntry,
+): HistoryEntry {
   const result: HistoryEntry = {
     id: serialized.id,
     timestamp: serialized.timestamp,
@@ -311,7 +317,8 @@ export function deserializeHistoryEntry(serialized: SerializableHistoryEntry): H
     };
 
     if (serialized.transition.triggeringEvent !== undefined) {
-      deserializedTransition.triggeringEvent = serialized.transition.triggeringEvent;
+      deserializedTransition.triggeringEvent =
+        serialized.transition.triggeringEvent;
     }
     if (serialized.transition.duration !== undefined) {
       deserializedTransition.duration = serialized.transition.duration;

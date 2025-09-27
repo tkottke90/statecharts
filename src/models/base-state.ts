@@ -69,28 +69,30 @@ export class BaseStateNode extends InitializeDataModelMixin(BaseNode) {
   }
 
   containsTransaction(node: TransitionNode) {
-    return this.getTransitions().some(transaction => transaction.uuid === node.uuid);
+    return this.getTransitions().some(
+      transaction => transaction.uuid === node.uuid,
+    );
   }
 
   /**
-   * Returns an array of initial state paths  This will 
+   * Returns an array of initial state paths  This will
    * handle looking up and providing the nested list
    * paths that would be initialized when this node is
    * mounted in the StateChart.  This will only mount one
    * initial state.  If you are calling this on the <parallel>
    * node it will return all the initial states for all the
    * child states.
-   * 
+   *
    * @param prefix The prefix to use for the initial state path
    * @returns The list of initial state paths
    */
   getInitialStateList(prefix: string = '') {
     const localPrefix = createStatePath(prefix, this.id);
-    const initialActiveStateList = [ localPrefix ]
+    const initialActiveStateList = [localPrefix];
 
     if (this.initialState) {
-      const [ node ] = this.getChildState(this.initialState);
-      
+      const [node] = this.getChildState(this.initialState);
+
       if (node) {
         initialActiveStateList.push(...node.getInitialStateList(localPrefix));
       }
@@ -230,6 +232,4 @@ export class BaseStateNode extends InitializeDataModelMixin(BaseNode) {
 
     return currentState;
   }
-
 }
-

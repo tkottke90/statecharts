@@ -23,7 +23,7 @@ export type ElseNodeType = { else: z.infer<typeof ElseNodeAttr> };
 
 /**
  * IfNode - Main conditional container that orchestrates execution
- * 
+ *
  * Execution flow:
  * 1. Evaluate own condition - if true, execute own children
  * 2. If false, check each ElseIfNode child in document order
@@ -39,31 +39,33 @@ export class IfNode extends BaseConditionalNode {
     this.condition = ifConfig.cond;
   }
 
-  static createFromJSON(jsonInput: Record<string, unknown>,): CreateFromJsonResponse<IfNode> {
-    const { success, data, error} = IfNodeAttr.safeParse(
-      this.getAttributes(this.label, jsonInput)
+  static createFromJSON(
+    jsonInput: Record<string, unknown>,
+  ): CreateFromJsonResponse<IfNode> {
+    const { success, data, error } = IfNodeAttr.safeParse(
+      this.getAttributes(this.label, jsonInput),
     );
 
     if (!success) {
       return {
         success: false,
         node: undefined,
-        error
+        error,
       };
     }
 
     return {
       success: true,
       node: new IfNode({ if: data }),
-      error: undefined
+      error: undefined,
     };
   }
 
   async run(state: InternalState): Promise<InternalState> {
     let nextState = { ...state };
-    
+
     // Check own condition first
-    const [ success, stateAfterEval ] = await this.evaluateCondition(nextState);
+    const [success, stateAfterEval] = await this.evaluateCondition(nextState);
     nextState = stateAfterEval;
 
     if (success) {
@@ -74,20 +76,21 @@ export class IfNode extends BaseConditionalNode {
       // and else-if node, then we should update the sorting
       const boundaryChildren = this.children
         .filter(child => {
-          return child instanceof ElseIfNode || child instanceof ElseNode
+          return child instanceof ElseIfNode || child instanceof ElseNode;
         })
         .sort((childA, childB) => {
           const aIsElse = childA instanceof ElseNode ? 0 : 1;
           const bIsElse = childB instanceof ElseNode ? 0 : 1;
-  
+
           return bIsElse - aIsElse;
         });
-  
+
       // Go through the boundary children and evaluate if any of them
       // match the condition, return the first one that does and it's
       // result.
       for (const child of boundaryChildren) {
-        const [ success, stateAfterChildEval ] = await child.evaluateCondition(nextState);
+        const [success, stateAfterChildEval] =
+          await child.evaluateCondition(nextState);
         nextState = stateAfterChildEval;
 
         if (success) {
@@ -105,7 +108,7 @@ export class IfNode extends BaseConditionalNode {
 
 /**
  * ElseIfNode - Additional conditional branch within an IfNode
- * 
+ *
  * Execution is controlled by parent IfNode - this node's run method
  * is called directly by the parent when its condition needs evaluation
  */
@@ -117,23 +120,25 @@ export class ElseIfNode extends BaseConditionalNode {
     this.condition = elseifConfig.cond;
   }
 
-  static createFromJSON(jsonInput: Record<string, unknown>,): CreateFromJsonResponse<ElseIfNode> {
-    const { success, data, error} = ElseIfNodeAttr.safeParse(
-      this.getAttributes(this.label, jsonInput)
+  static createFromJSON(
+    jsonInput: Record<string, unknown>,
+  ): CreateFromJsonResponse<ElseIfNode> {
+    const { success, data, error } = ElseIfNodeAttr.safeParse(
+      this.getAttributes(this.label, jsonInput),
     );
 
     if (!success) {
       return {
         success: false,
         node: undefined,
-        error
+        error,
       };
     }
 
     return {
       success: true,
       node: new ElseIfNode({ elseif: data }),
-      error: undefined
+      error: undefined,
     };
   }
 
@@ -141,7 +146,7 @@ export class ElseIfNode extends BaseConditionalNode {
     // ElseIfNode execution is typically handled by parent IfNode
     // This method is here for completeness and direct testing
 
-    const [ success, nextState ] = await this.evaluateCondition(state);
+    const [success, nextState] = await this.evaluateCondition(state);
     if (success) {
       return await this.executeOwnChildren(nextState);
     }
@@ -151,7 +156,7 @@ export class ElseIfNode extends BaseConditionalNode {
 
 /**
  * ElseNode - Fallback branch that executes when no conditions match
- * 
+ *
  * Has no condition - always executes its children when called
  * Execution is controlled by parent IfNode
  */
@@ -164,23 +169,25 @@ export class ElseNode extends BaseConditionalNode {
     this.condition = 'true';
   }
 
-  static createFromJSON(jsonInput: Record<string, unknown>,): CreateFromJsonResponse<ElseNode> {
-    const { success, data, error} = ElseNodeAttr.safeParse(
-      this.getAttributes(this.label, jsonInput)
+  static createFromJSON(
+    jsonInput: Record<string, unknown>,
+  ): CreateFromJsonResponse<ElseNode> {
+    const { success, data, error } = ElseNodeAttr.safeParse(
+      this.getAttributes(this.label, jsonInput),
     );
 
     if (!success) {
       return {
         success: false,
         node: undefined,
-        error
+        error,
       };
     }
 
     return {
       success: true,
       node: new ElseNode({ else: data }),
-      error: undefined
+      error: undefined,
     };
   }
 
@@ -194,7 +201,9 @@ export class ElseNode extends BaseConditionalNode {
    * Override evaluateCondition to always return true
    * ElseNode has no condition and should always execute when reached
    */
-  async evaluateCondition(state: InternalState): Promise<[boolean, InternalState]> {
+  async evaluateCondition(
+    state: InternalState,
+  ): Promise<[boolean, InternalState]> {
     return [true, state];
   }
 }

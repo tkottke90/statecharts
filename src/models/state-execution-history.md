@@ -46,15 +46,15 @@ This enum defines all the different types of events that the history system can 
 
 ```typescript
 enum HistoryEventType {
-  STATE_ENTRY = 'state_entry',        // When a state becomes active
-  STATE_EXIT = 'state_exit',          // When a state becomes inactive
-  TRANSITION = 'transition',          // When a transition is taken between states
+  STATE_ENTRY = 'state_entry', // When a state becomes active
+  STATE_EXIT = 'state_exit', // When a state becomes inactive
+  TRANSITION = 'transition', // When a transition is taken between states
   EVENT_PROCESSED = 'event_processed', // When an SCXML event is handled
   MICROSTEP_START = 'microstep_start', // Beginning of a single transition processing
-  MICROSTEP_END = 'microstep_end',     // End of a single transition processing
+  MICROSTEP_END = 'microstep_end', // End of a single transition processing
   MACROSTEP_START = 'macrostep_start', // Beginning of a complete event processing cycle
-  MACROSTEP_END = 'macrostep_end',     // End of a complete event processing cycle
-  ERROR = 'error',                     // When an error occurs during execution
+  MACROSTEP_END = 'macrostep_end', // End of a complete event processing cycle
+  ERROR = 'error', // When an error occurs during execution
 }
 ```
 
@@ -78,18 +78,18 @@ This is the core data structure that represents a single recorded event in your 
 
 ```typescript
 interface HistoryEntry {
-  id: HistoryId;                    // Unique identifier for this specific event
-  timestamp: number;                // Precise time when this event occurred (milliseconds)
-  type: HistoryEventType;          // What kind of event this was (entry, exit, transition, etc.)
-  stateConfiguration: string[];     // Which states were active when this event happened
-  internalState: InternalState;    // Complete state machine data at this moment
-  event?: SCXMLEvent;              // The SCXML event that triggered this (if applicable)
-  transition?: StateTransition;     // Details about the transition taken (if applicable)
-  duration?: number;               // How long this operation took (milliseconds)
-  error?: Error;                   // Any error that occurred (if applicable)
-  metadata: Record<string, any>;   // Additional context and debugging information
-  parentId?: HistoryId;            // Links to the event that caused this one
-  childIds: HistoryId[];           // Links to events that this one caused
+  id: HistoryId; // Unique identifier for this specific event
+  timestamp: number; // Precise time when this event occurred (milliseconds)
+  type: HistoryEventType; // What kind of event this was (entry, exit, transition, etc.)
+  stateConfiguration: string[]; // Which states were active when this event happened
+  internalState: InternalState; // Complete state machine data at this moment
+  event?: SCXMLEvent; // The SCXML event that triggered this (if applicable)
+  transition?: StateTransition; // Details about the transition taken (if applicable)
+  duration?: number; // How long this operation took (milliseconds)
+  error?: Error; // Any error that occurred (if applicable)
+  metadata: Record<string, any>; // Additional context and debugging information
+  parentId?: HistoryId; // Links to the event that caused this one
+  childIds: HistoryId[]; // Links to events that this one caused
 }
 ```
 
@@ -118,60 +118,72 @@ This is the main class that manages all history tracking functionality. It exten
 ```typescript
 class StateExecutionHistory extends EventEmitter {
   // Core Methods - Adding and retrieving history entries
-  addEntry(type: HistoryEventType, stateConfig: string[], state: InternalState, options?: Partial<HistoryEntry>): HistoryId
-  getEntry(id: HistoryId): HistoryEntry | undefined
-  getAllEntries(): HistoryEntry[]
+  addEntry(
+    type: HistoryEventType,
+    stateConfig: string[],
+    state: InternalState,
+    options?: Partial<HistoryEntry>,
+  ): HistoryId;
+  getEntry(id: HistoryId): HistoryEntry | undefined;
+  getAllEntries(): HistoryEntry[];
 
   // Query Methods - Powerful searching and filtering
-  query(options?: HistoryQueryOptions): HistoryQueryResult
+  query(options?: HistoryQueryOptions): HistoryQueryResult;
 
   // Causality Tracking - Understanding cause-and-effect relationships
-  startContext(parentId: HistoryId): void
-  endContext(): void
+  startContext(parentId: HistoryId): void;
+  endContext(): void;
 
   // Configuration - Runtime configuration changes
-  updateOptions(options: Partial<HistoryTrackingOptions>): void
-  getOptions(): HistoryTrackingOptions
+  updateOptions(options: Partial<HistoryTrackingOptions>): void;
+  getOptions(): HistoryTrackingOptions;
 
   // Statistics - Performance and usage metrics
-  getStats(): HistoryStatistics
+  getStats(): HistoryStatistics;
 
   // Serialization - Save and load history data
-  export(): SerializableHistoryEntry[]
-  import(entries: SerializableHistoryEntry[]): void
+  export(): SerializableHistoryEntry[];
+  import(entries: SerializableHistoryEntry[]): void;
 
   // Management - Cleanup and maintenance
-  clear(): void
+  clear(): void;
 }
 ```
 
 **Method Categories Explained:**
 
 **Core Methods** handle the basic lifecycle of history entries:
+
 - `addEntry()` is called automatically by the state machine when something happens. It returns a unique ID for the new entry.
 - `getEntry()` lets you retrieve a specific entry by its ID, useful when following causality chains.
 - `getAllEntries()` returns everything in chronological order, useful for building timelines.
 
 **Query Methods** provide powerful filtering capabilities:
+
 - `query()` is your main tool for finding specific events. You can filter by event type, time range, state names, or even use regex patterns to match event names.
 
 **Causality Tracking** helps you understand cause-and-effect:
+
 - `startContext()` tells the system "everything that happens next was caused by this event"
 - `endContext()` ends that relationship, returning to normal tracking
 - This creates parent-child relationships that help you trace how one action led to another.
 
 **Configuration Methods** let you adjust behavior at runtime:
+
 - `updateOptions()` lets you change settings like which events to track or memory limits without restarting
 - `getOptions()` shows current configuration, useful for debugging configuration issues.
 
 **Statistics Methods** provide insights into system behavior:
+
 - `getStats()` returns metrics like total entries, memory usage, and event frequency distributions.
 
 **Serialization Methods** enable data persistence:
+
 - `export()` converts all history data to JSON-serializable format for saving to files or databases
 - `import()` loads previously exported data, useful for debugging issues that happened in the past.
 
 **Management Methods** handle maintenance:
+
 - `clear()` removes all history data, useful for starting fresh or managing memory usage.
 
 ## Configuration Options
@@ -180,13 +192,13 @@ class StateExecutionHistory extends EventEmitter {
 
 ```typescript
 interface HistoryTrackingOptions {
-  enabled: boolean;                           // Enable/disable tracking
-  maxEntries: number;                        // Maximum entries (0 = unlimited)
-  trackedEventTypes: HistoryEventType[];     // Which events to track
-  includeInternalState: boolean;             // Include state machine data
-  trackTiming: boolean;                      // Track execution timing
-  trackCausality: boolean;                   // Track parent-child relationships
-  defaultMetadata: Record<string, any>;      // Default metadata for all entries
+  enabled: boolean; // Enable/disable tracking
+  maxEntries: number; // Maximum entries (0 = unlimited)
+  trackedEventTypes: HistoryEventType[]; // Which events to track
+  includeInternalState: boolean; // Include state machine data
+  trackTiming: boolean; // Track execution timing
+  trackCausality: boolean; // Track parent-child relationships
+  defaultMetadata: Record<string, any>; // Default metadata for all entries
 }
 ```
 
@@ -220,7 +232,7 @@ const historyOptions = {
 };
 
 const stateChart = StateChart.fromXMLWithOptions(xmlString, {
-  history: historyOptions
+  history: historyOptions,
 });
 
 // Access history
@@ -231,13 +243,13 @@ const history = stateChart.getHistory();
 
 ```typescript
 // Listen for history events
-history.on('history', (payload) => {
+history.on('history', payload => {
   console.log('New history entry:', payload.entry);
   console.log('Total entries:', payload.totalEntries);
 });
 
 // Listen for memory management events
-history.on('pruned', (data) => {
+history.on('pruned', data => {
   console.log(`Pruned ${data.removedCount} old entries`);
 });
 ```
@@ -247,22 +259,25 @@ history.on('pruned', (data) => {
 ```typescript
 // Get all macrostep events
 const macrosteps = history.query({
-  eventTypes: [HistoryEventType.MACROSTEP_START, HistoryEventType.MACROSTEP_END]
+  eventTypes: [
+    HistoryEventType.MACROSTEP_START,
+    HistoryEventType.MACROSTEP_END,
+  ],
 });
 
 // Get events in time range
 const recentEvents = history.query({
   timeRange: {
     start: Date.now() - 60000, // Last minute
-    end: Date.now()
+    end: Date.now(),
   },
-  limit: 100
+  limit: 100,
 });
 
 // Get state-specific events
 const stateEvents = history.query({
   stateFilter: 'playing.healthSystem',
-  eventTypes: [HistoryEventType.STATE_ENTRY, HistoryEventType.STATE_EXIT]
+  eventTypes: [HistoryEventType.STATE_ENTRY, HistoryEventType.STATE_EXIT],
 });
 ```
 
@@ -296,13 +311,19 @@ try {
   history.import(savedHistory);
   console.log(`History imported from ${historyFilePath}`);
 } catch (error) {
-  console.warn('No existing history file found or failed to parse:', error.message);
+  console.warn(
+    'No existing history file found or failed to parse:',
+    error.message,
+  );
 }
 
 // Async version for better performance with large files
 async function exportHistoryAsync(filePath: string) {
   const exportedHistory = history.export();
-  await fs.promises.writeFile(filePath, JSON.stringify(exportedHistory, null, 2));
+  await fs.promises.writeFile(
+    filePath,
+    JSON.stringify(exportedHistory, null, 2),
+  );
   console.log(`History exported to ${filePath}`);
 }
 
@@ -313,7 +334,10 @@ async function importHistoryAsync(filePath: string) {
     history.import(savedHistory);
     console.log(`History imported from ${filePath}`);
   } catch (error) {
-    console.warn('No existing history file found or failed to parse:', error.message);
+    console.warn(
+      'No existing history file found or failed to parse:',
+      error.message,
+    );
   }
 }
 ```
@@ -364,13 +388,14 @@ Macrostep Start
 // Production configuration
 const productionHistoryOptions = {
   enabled: true,
-  maxEntries: 100,                    // Smaller buffer
-  includeInternalState: false,        // Reduce memory usage
-  trackedEventTypes: [                // Track only essential events
+  maxEntries: 100, // Smaller buffer
+  includeInternalState: false, // Reduce memory usage
+  trackedEventTypes: [
+    // Track only essential events
     HistoryEventType.STATE_ENTRY,
     HistoryEventType.STATE_EXIT,
-    HistoryEventType.ERROR
-  ]
+    HistoryEventType.ERROR,
+  ],
 };
 ```
 
@@ -381,16 +406,18 @@ const productionHistoryOptions = {
 ```typescript
 // Find all errors
 const errors = history.query({
-  eventTypes: [HistoryEventType.ERROR]
+  eventTypes: [HistoryEventType.ERROR],
 });
 
 // Trace execution path
-const executionPath = history.getAllEntries()
+const executionPath = history
+  .getAllEntries()
   .filter(e => e.type === HistoryEventType.STATE_ENTRY)
   .map(e => e.metadata.enteredState);
 
 // Find slow transitions
-const slowTransitions = history.getAllEntries()
+const slowTransitions = history
+  .getAllEntries()
   .filter(e => e.duration && e.duration > 100); // > 100ms
 ```
 

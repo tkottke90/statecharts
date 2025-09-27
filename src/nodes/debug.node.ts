@@ -1,5 +1,10 @@
 import z from 'zod';
-import { BaseExecutableNode, BaseExecutableNodeAttr, CreateFromJsonResponse, InternalState } from '../models';
+import {
+  BaseExecutableNode,
+  BaseExecutableNodeAttr,
+  CreateFromJsonResponse,
+  InternalState,
+} from '../models';
 import { evaluateExpression } from '../parser/expressions.nodejs';
 
 const DebugNodeAttr = BaseExecutableNodeAttr.extend({
@@ -14,20 +19,19 @@ export class DebugNode extends BaseExecutableNode {
   readonly cond: string;
 
   static label = 'debug';
-  static schema = DebugNodeAttr
+  static schema = DebugNodeAttr;
 
   constructor({ debug }: DebugNodeType) {
     super(debug);
     this.cond = debug.cond;
   }
 
-
   async run(state: InternalState) {
-
     // If a condition is configured, then only pause if the condition is true.
     if (this.cond && evaluateExpression(this.cond, state)) {
       debugger;
-    } else { // If there is no condition, always stop
+    } else {
+      // If there is no condition, always stop
       debugger;
     }
 

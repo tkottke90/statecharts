@@ -23,7 +23,7 @@ describe('Integration Tests', () => {
 
         // Act
         await stateChart.execute({
-          data: {}
+          data: {},
         });
 
         // Assert
@@ -50,7 +50,7 @@ describe('Integration Tests', () => {
           _datamodel: 'ecmascript',
           data: {},
         };
-        
+
         const stateChart = StateChart.fromXML(xmlStr);
 
         // Act - Execute the state chart (this will enter initial states)
@@ -66,13 +66,16 @@ describe('Integration Tests', () => {
         const activePaths = activeStateChain.map(([path]) => path);
 
         console.table(
-          stateChart.getHistory().getAllEntries().map((entry) => {
-            return {
-              type: entry.type,
-              event: entry.stateConfiguration.at(-1)
-            }
-          })
-        )
+          stateChart
+            .getHistory()
+            .getAllEntries()
+            .map(entry => {
+              return {
+                type: entry.type,
+                event: entry.stateConfiguration.at(-1),
+              };
+            }),
+        );
 
         // All parallel regions should be active simultaneously
         expect(activePaths).toContain('gameRunning');
@@ -125,18 +128,19 @@ describe('Integration Tests', () => {
 
         const stateChart = StateChart.fromXML(xmlStr);
 
-        const gameRunningState = (stateChart as any).states.get('gameRunning') as StateNode;
-        const gameRunningMountSpy = jest.spyOn(gameRunningState, 'mount')
+        const gameRunningState = (stateChart as any).states.get(
+          'gameRunning',
+        ) as StateNode;
+        const gameRunningMountSpy = jest.spyOn(gameRunningState, 'mount');
 
         // Act - Execute the state chart (this will enter initial states)
         await stateChart.execute(initialState);
 
         // Assert
-        
+
         // We should have mounted the `gameRunning` state once
         expect(gameRunningMountSpy).toHaveBeenCalledTimes(1);
-        
-        
+
         // activeStateChain should contain paths for all parallel regions
         // This tests our flattened multi-path approach
         const activeStateChain = (

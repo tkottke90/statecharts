@@ -67,8 +67,8 @@ export class BaseNode implements z.infer<typeof BaseNodeAttr> {
     return internalState;
   }
 
-   
   getChildrenOfType<T extends BaseNode>(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     typeCtor: new (...args: any[]) => T,
   ): T[] {
     return this.children.filter(child => child instanceof typeCtor) as T[];
@@ -84,9 +84,10 @@ export class BaseNode implements z.infer<typeof BaseNodeAttr> {
   }
 
   protected cleanUpContent(content: string) {
-    return content.split('\n')
-                  .map(line => line.trim())
-                  .join('\n')
+    return content
+      .split('\n')
+      .map(line => line.trim())
+      .join('\n');
   }
 
   static get name() {
@@ -118,9 +119,12 @@ export class BaseNode implements z.infer<typeof BaseNodeAttr> {
     // We combine the attribute syntax with the tag/label
     const attributes = parts.concat(
       Object.entries(attr)
-        .filter(([key]) => ![ 'isExecutable', 'allowChildren', 'children' ].includes(key))
-        .filter(([,value]) => value !== undefined)
-        .map(([key, value]) => `${key}="${value}"`)
+        .filter(
+          ([key]) =>
+            !['isExecutable', 'allowChildren', 'children'].includes(key),
+        )
+        .filter(([, value]) => value !== undefined)
+        .map(([key, value]) => `${key}="${value}"`),
     );
 
     // We create an XML string from the attributes and content

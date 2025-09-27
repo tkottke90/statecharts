@@ -10,12 +10,12 @@ The Log node extends BaseExecutableNode, making it executable within transitions
 
 ## Attributes
 
-| Attribute | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `label` | string | No | Optional label for categorizing log messages |
-| `expr` | string | Conditional* | JavaScript expression to evaluate and log |
+| Attribute | Type   | Required      | Description                                  |
+| --------- | ------ | ------------- | -------------------------------------------- |
+| `label`   | string | No            | Optional label for categorizing log messages |
+| `expr`    | string | Conditional\* | JavaScript expression to evaluate and log    |
 
-*Either `expr` attribute or text content must be provided.
+\*Either `expr` attribute or text content must be provided.
 
 ## Content
 
@@ -26,6 +26,7 @@ The `<log>` element can contain literal text content that will be logged directl
 ### Expression Evaluation
 
 When the `expr` attribute is provided:
+
 1. The expression is evaluated in the current state context
 2. The result is converted to a string representation
 3. Objects and arrays are formatted as JSON
@@ -35,6 +36,7 @@ When the `expr` attribute is provided:
 ### Content Logging
 
 When text content is provided:
+
 1. Leading and trailing whitespace is trimmed
 2. The content is logged as-is
 3. Empty content results in an empty log message
@@ -42,6 +44,7 @@ When text content is provided:
 ### Message Formatting
 
 All log messages are formatted with:
+
 - ISO timestamp in brackets
 - Optional label in brackets (if provided)
 - The actual message content
@@ -51,6 +54,7 @@ Format: `[timestamp] [label] message` or `[timestamp] message`
 ### Error Handling
 
 The Log node is designed to be robust:
+
 - Expression evaluation errors are caught and logged as error messages
 - Circular reference objects are handled gracefully
 - Logging failures do not interrupt state machine execution
@@ -107,7 +111,7 @@ This logs both the count and contents of an array.
   <onentry>
     <log label="STATE" expr="'Entering processing state with ' + data.queue.length + ' items'"/>
   </onentry>
-  
+
   <onexit>
     <log label="STATE" expr="'Exiting processing state, ' + data.processed + ' items completed'"/>
   </onexit>
@@ -257,7 +261,7 @@ const logNode = new LogNode({
   label: 'DEBUG',
   expr: 'data.counter',
   content: '',
-  children: []
+  children: [],
 });
 ```
 

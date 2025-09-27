@@ -57,24 +57,26 @@ export class ParallelNode
    * Returns an array of initial state paths.  This will
    * look at all state paths and return a list to every
    * initial path within the parallel node
-   * 
+   *
    * @param prefix The prefix to use for the initial state path
    * @returns The list of initial state paths
    */
   getInitialStateList(prefix: string) {
     const localPrefix = createStatePath(prefix, this.id);
-    const initialActiveStateList = [ localPrefix ]
+    const initialActiveStateList = [localPrefix];
 
-    const childStates = this.buildParallelChildPath()
+    const childStates = this.buildParallelChildPath();
 
     // Loop over each child state and initialize
     for (const child of childStates) {
       // Grab the child node out of the child array
-      const [ childNode ] = this.getChildState(child);
+      const [childNode] = this.getChildState(child);
 
       // If the child state exists, concat the childs
       if (childNode) {
-        initialActiveStateList.push(...childNode.getInitialStateList(localPrefix))
+        initialActiveStateList.push(
+          ...childNode.getInitialStateList(localPrefix),
+        );
       }
     }
 
@@ -114,7 +116,7 @@ export class ParallelNode
    * This signals to the StateChart that all child states should be entered.
    * Returns a comma-separated list of all child state IDs.
    */
-private buildParallelChildPath() {
+  private buildParallelChildPath() {
     const childStates = this.activeChildStates;
     if (childStates.length === 0) {
       return [];

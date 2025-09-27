@@ -22,22 +22,27 @@ According to the W3C SCXML specification, `<send>` is an executable element that
 ### Attributes
 
 #### Event Specification (Required - one of)
+
 - **`event`**: Static event name to send
 - **`eventexpr`**: Expression that evaluates to the event name
 
 #### Target Specification (Optional)
+
 - **`target`**: Static target URL or identifier
 - **`targetexpr`**: Expression that evaluates to the target
 
 #### Processor Type (Optional)
+
 - **`type`**: Static processor type (e.g., 'http', 'scxml')
 - **`typeexpr`**: Expression that evaluates to the processor type
 
 #### Timing (Optional)
+
 - **`delay`**: Static delay before sending (e.g., '1s', '500ms')
 - **`delayexpr`**: Expression that evaluates to the delay
 
 #### Data Inclusion (Optional)
+
 - **`namelist`**: Space-separated list of data model variables to include
 - **`id`**: Static send identifier for tracking
 - **`idlocation`**: Location to store the generated send ID
@@ -57,8 +62,8 @@ According to the W3C SCXML specification, `<send>` is an executable element that
 ### Basic HTTP Request
 
 ```xml
-<send event="userCreated" 
-      target="http://api.example.com/webhooks/user" 
+<send event="userCreated"
+      target="http://api.example.com/webhooks/user"
       type="http">
   <param name="userId" expr="data.user.id"/>
   <param name="email" expr="data.user.email"/>
@@ -68,8 +73,8 @@ According to the W3C SCXML specification, `<send>` is an executable element that
 ### Dynamic Event and Target
 
 ```xml
-<send eventexpr="data.eventType" 
-      targetexpr="data.webhookUrl" 
+<send eventexpr="data.eventType"
+      targetexpr="data.webhookUrl"
       type="http">
   <param name="timestamp" expr="Date.now()"/>
   <param name="source">payment-system</param>
@@ -79,8 +84,8 @@ According to the W3C SCXML specification, `<send>` is an executable element that
 ### Inter-State-Machine Communication
 
 ```xml
-<send event="workflowComplete" 
-      target="scxml:orderProcessor" 
+<send event="workflowComplete"
+      target="scxml:orderProcessor"
       type="scxml">
   <param name="orderId" expr="data.order.id"/>
   <param name="result" expr="data.processingResult"/>
@@ -90,9 +95,9 @@ According to the W3C SCXML specification, `<send>` is an executable element that
 ### Delayed Sending
 
 ```xml
-<send event="reminder" 
-      target="http://notifications.example.com/send" 
-      type="http" 
+<send event="reminder"
+      target="http://notifications.example.com/send"
+      type="http"
       delay="1h">
   <param name="userId" expr="data.user.id"/>
   <param name="message">Your session will expire soon</param>
@@ -102,8 +107,8 @@ According to the W3C SCXML specification, `<send>` is an executable element that
 ### Using Namelist for Data
 
 ```xml
-<send event="dataSync" 
-      target="http://sync.example.com/data" 
+<send event="dataSync"
+      target="http://sync.example.com/data"
       type="http"
       namelist="data.user.id data.user.email data.lastModified"/>
 ```
@@ -111,8 +116,8 @@ According to the W3C SCXML specification, `<send>` is an executable element that
 ### Send ID Tracking
 
 ```xml
-<send event="asyncOperation" 
-      target="http://async.example.com/process" 
+<send event="asyncOperation"
+      target="http://async.example.com/process"
       type="http"
       idlocation="data.sendId">
   <param name="operation" expr="data.operationType"/>
@@ -136,16 +141,16 @@ class SendNode extends BaseExecutableNode {
   readonly namelist?: string;
   readonly id?: string;
   readonly idlocation?: string;
-  
-  constructor(json: any, processorRegistry: EventIOProcessorRegistry)
-  async run(state: InternalState): Promise<InternalState>
+
+  constructor(json: any, processorRegistry: EventIOProcessorRegistry);
+  async run(state: InternalState): Promise<InternalState>;
 }
 ```
 
 ### Execution Flow
 
 1. **Evaluate Event Name**: Resolve event name from `event` or `eventexpr`
-2. **Evaluate Target**: Resolve target from `target` or `targetexpr` 
+2. **Evaluate Target**: Resolve target from `target` or `targetexpr`
 3. **Evaluate Processor Type**: Resolve type from `type` or `typeexpr`
 4. **Collect Parameters**: Process child `<param>` elements
 5. **Collect Namelist Data**: Include specified data model variables
@@ -175,6 +180,7 @@ new SendNode(json: any, processorRegistry: EventIOProcessorRegistry)
 Creates a new SendNode instance with the specified processor registry.
 
 **Parameters:**
+
 - `json`: JSON representation of the send element
 - `processorRegistry`: Registry of available Event I/O Processors
 
@@ -185,6 +191,7 @@ Creates a new SendNode instance with the specified processor registry.
 Executes the send operation.
 
 **Parameters:**
+
 - `state`: Current internal state of the state machine
 
 **Returns:** Promise resolving to updated state (may include error events)
@@ -221,7 +228,7 @@ if (result.success) {
   state.events.push({
     name: 'error.communication',
     type: 'platform',
-    data: result.error
+    data: result.error,
   });
 }
 ```
@@ -278,6 +285,7 @@ The SendNode generates SCXML-compliant error events:
 ### Send ID Generation
 
 Unique send IDs are automatically generated using the format:
+
 ```
 send_{timestamp}_{randomString}
 ```
@@ -293,6 +301,7 @@ The namelist attribute allows including data model variables:
 ```
 
 Results in:
+
 ```json
 {
   "data": {
@@ -306,6 +315,7 @@ Results in:
 ### Expression Evaluation Context
 
 All expressions have access to:
+
 - **`data`**: State machine data model
 - **`_event`**: Current event
 - **`_name`**: State machine name
@@ -325,6 +335,7 @@ The SendNode implementation includes comprehensive unit tests:
 - Send ID generation and tracking
 
 Run tests with:
+
 ```bash
 npm test -- src/nodes/send.node.spec.ts
 ```
@@ -346,8 +357,8 @@ npm test -- src/nodes/send.node.spec.ts
 ```xml
 <state id="processPayment">
   <onentry>
-    <send event="processPayment" 
-          target="http://payment.example.com/process" 
+    <send event="processPayment"
+          target="http://payment.example.com/process"
           type="http"
           idlocation="data.paymentSendId">
       <param name="amount" expr="data.order.total"/>
@@ -355,7 +366,7 @@ npm test -- src/nodes/send.node.spec.ts
       <param name="cardToken" expr="data.payment.token"/>
     </send>
   </onentry>
-  
+
   <transition event="paymentProcessed" target="orderComplete"/>
   <transition event="error.communication" target="paymentFailed"/>
 </state>
@@ -364,8 +375,8 @@ npm test -- src/nodes/send.node.spec.ts
 ### Microservice Communication
 
 ```xml
-<send event="orderCreated" 
-      target="scxml:inventoryService" 
+<send event="orderCreated"
+      target="scxml:inventoryService"
       type="scxml">
   <param name="orderId" expr="data.order.id"/>
   <param name="items" expr="data.order.items"/>

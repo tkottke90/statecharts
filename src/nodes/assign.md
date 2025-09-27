@@ -10,11 +10,11 @@ The Assign node extends BaseExecutableNode, making it executable within transiti
 
 ## Attributes
 
-| Attribute  | Type                                    | Required | Default | Description                                         |
-| ---------- | --------------------------------------- | -------- | ------- | --------------------------------------------------- |
-| `location` | `string`                                | Yes      | -       | The data model location to assign to                |
-| `expr`     | `string`                                | No\*     | -       | JavaScript expression to evaluate for the value     |
-| `content`  | `string`                                | No\*     | `""`    | Literal content to assign (inherited from BaseNode) |
+| Attribute  | Type                                     | Required | Default | Description                                                                                                                             |
+| ---------- | ---------------------------------------- | -------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `location` | `string`                                 | Yes      | -       | The data model location to assign to                                                                                                    |
+| `expr`     | `string`                                 | No\*     | -       | JavaScript expression to evaluate for the value                                                                                         |
+| `content`  | `string`                                 | No\*     | `""`    | Literal content to assign (inherited from BaseNode)                                                                                     |
 | `clear`    | `boolean \| null \| undefined \| string` | No       | -       | Clear operation: `true` deletes property, `null` sets to null, `undefined` sets to undefined, `"null"`/`"undefined"` string equivalents |
 
 \*Either `expr` or content must be specified, but not both (unless using `clear`).

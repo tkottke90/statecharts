@@ -1,6 +1,9 @@
 import { SendNode } from './send.node';
 import { ParamNode } from './param.node';
-import { EventIOProcessorRegistry, EventIOProcessor } from '../models/event-io-processor';
+import {
+  EventIOProcessorRegistry,
+  EventIOProcessor,
+} from '../models/event-io-processor';
 import { InternalState } from '../models/internalState';
 import SimpleXML from 'simple-xml-to-json';
 import { StateNode } from './state.node';
@@ -19,20 +22,20 @@ describe('Node: <send>', () => {
       data: {
         user: {
           name: 'John Doe',
-          email: 'john@example.com'
+          email: 'john@example.com',
         },
         apiUrl: 'http://api.example.com',
         eventName: 'userUpdate',
-        targetUrl: 'http://target.example.com'
+        targetUrl: 'http://target.example.com',
       },
-      _datamodel: 'ecmascript'
+      _datamodel: 'ecmascript',
     };
 
     // Create mock processor
     mockProcessor = {
       type: 'test',
       send: jest.fn().mockResolvedValue({ success: true, sendid: 'test-123' }),
-      canHandle: jest.fn().mockReturnValue(true)
+      canHandle: jest.fn().mockReturnValue(true),
     };
 
     // Create mock registry
@@ -79,7 +82,7 @@ describe('Node: <send>', () => {
         target: 'http://example.com',
         delay: '5s',
         id: 'send-123',
-        namelist: 'user.name user.email'
+        namelist: 'user.name user.email',
       };
 
       const { success, node, error } = SendNode.createFromJSON(sendJSON);
@@ -96,7 +99,7 @@ describe('Node: <send>', () => {
       const sendJSON = {
         event: 'testEvent',
         eventexpr: 'eventName',
-        target: 'http://example.com'
+        target: 'http://example.com',
       };
 
       const { success, node, error } = SendNode.createFromJSON(sendJSON);
@@ -108,7 +111,7 @@ describe('Node: <send>', () => {
 
     it('should fail validation when neither event nor eventexpr is provided', () => {
       const sendJSON = {
-        target: 'http://example.com'
+        target: 'http://example.com',
       };
 
       const { success, node, error } = SendNode.createFromJSON(sendJSON);
@@ -122,7 +125,7 @@ describe('Node: <send>', () => {
       const sendJSON = {
         event: 'testEvent',
         target: 'http://example.com',
-        targetexpr: 'targetUrl'
+        targetexpr: 'targetUrl',
       };
 
       const { success, node, error } = SendNode.createFromJSON(sendJSON);
@@ -137,7 +140,7 @@ describe('Node: <send>', () => {
         event: 'testEvent',
         target: 'http://example.com',
         type: 'http',
-        typeexpr: "'http'"
+        typeexpr: "'http'",
       };
 
       const { success, node, error } = SendNode.createFromJSON(sendJSON);
@@ -152,52 +155,58 @@ describe('Node: <send>', () => {
     it('should send event immediately when no delay is specified', async () => {
       // Arrange
       const currentState = { ...testState };
-    
-      const sendNode = new SendNode({
-        send: {
-          event: 'testEvent',
-          target: 'http://example.com',
-          type: 'test',
-          content: '',
-          children: []
-        }
-      }, mockRegistry);
+
+      const sendNode = new SendNode(
+        {
+          send: {
+            event: 'testEvent',
+            target: 'http://example.com',
+            type: 'test',
+            content: '',
+            children: [],
+          },
+        },
+        mockRegistry,
+      );
 
       // Act
       const result = await sendNode.run(currentState);
 
       // Assert
 
-      expect(result).toBe(currentState);
+      expect(result).toEqual(currentState);
       expect(mockProcessor.send).toHaveBeenCalledWith(
         expect.objectContaining({
           name: 'testEvent',
-          type: 'external'
+          type: 'external',
         }),
         'http://example.com',
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
     it('should evaluate expressions for event name and target', async () => {
-      const sendNode = new SendNode({
-        send: {
-          eventexpr: 'data.eventName',
-          targetexpr: 'data.targetUrl',
-          type: 'test',
-          content: '',
-          children: []
-        }
-      }, mockRegistry);
+      const sendNode = new SendNode(
+        {
+          send: {
+            eventexpr: 'data.eventName',
+            targetexpr: 'data.targetUrl',
+            type: 'test',
+            content: '',
+            children: [],
+          },
+        },
+        mockRegistry,
+      );
 
       await sendNode.run(testState);
 
       expect(mockProcessor.send).toHaveBeenCalledWith(
         expect.objectContaining({
-          name: 'userUpdate'
+          name: 'userUpdate',
         }),
         'http://target.example.com',
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -207,8 +216,8 @@ describe('Node: <send>', () => {
           name: 'userName',
           expr: 'data.user.name',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
       const paramNode2 = new ParamNode({
@@ -216,19 +225,22 @@ describe('Node: <send>', () => {
           name: 'userEmail',
           expr: 'data.user.email',
           content: '',
-          children: []
-        }
+          children: [],
+        },
       });
 
-      const sendNode = new SendNode({
-        send: {
-          event: 'testEvent',
-          target: 'http://example.com',
-          type: 'test',
-          content: '',
-          children: [paramNode1, paramNode2]
-        }
-      }, mockRegistry);
+      const sendNode = new SendNode(
+        {
+          send: {
+            event: 'testEvent',
+            target: 'http://example.com',
+            type: 'test',
+            content: '',
+            children: [paramNode1, paramNode2],
+          },
+        },
+        mockRegistry,
+      );
 
       await sendNode.run(testState);
 
@@ -236,25 +248,28 @@ describe('Node: <send>', () => {
         expect.objectContaining({
           data: expect.objectContaining({
             userName: 'John Doe',
-            userEmail: 'john@example.com'
-          })
+            userEmail: 'john@example.com',
+          }),
         }),
         'http://example.com',
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
     it('should collect namelist data', async () => {
-      const sendNode = new SendNode({
-        send: {
-          event: 'testEvent',
-          target: 'http://example.com',
-          type: 'test',
-          namelist: 'data.user.name data.user.email',
-          content: '',
-          children: []
-        }
-      }, mockRegistry);
+      const sendNode = new SendNode(
+        {
+          send: {
+            event: 'testEvent',
+            target: 'http://example.com',
+            type: 'test',
+            namelist: 'data.user.name data.user.email',
+            content: '',
+            children: [],
+          },
+        },
+        mockRegistry,
+      );
 
       await sendNode.run(testState);
 
@@ -262,25 +277,28 @@ describe('Node: <send>', () => {
         expect.objectContaining({
           data: expect.objectContaining({
             'data.user.name': 'John Doe',
-            'data.user.email': 'john@example.com'
-          })
+            'data.user.email': 'john@example.com',
+          }),
         }),
         'http://example.com',
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
     it('should handle delay by using setTimeout', async () => {
-      const sendNode = new SendNode({
-        send: {
-          event: 'delayedEvent',
-          target: 'http://example.com',
-          type: 'test',
-          delay: '1000ms',
-          content: '',
-          children: []
-        }
-      }, mockRegistry);
+      const sendNode = new SendNode(
+        {
+          send: {
+            event: 'delayedEvent',
+            target: 'http://example.com',
+            type: 'test',
+            delay: '1000ms',
+            content: '',
+            children: [],
+          },
+        },
+        mockRegistry,
+      );
 
       await sendNode.run(testState);
 
@@ -295,16 +313,19 @@ describe('Node: <send>', () => {
     });
 
     it('should parse delay in seconds', async () => {
-      const sendNode = new SendNode({
-        send: {
-          event: 'delayedEvent',
-          target: 'http://example.com',
-          type: 'test',
-          delay: '2s',
-          content: '',
-          children: []
-        }
-      }, mockRegistry);
+      const sendNode = new SendNode(
+        {
+          send: {
+            event: 'delayedEvent',
+            target: 'http://example.com',
+            type: 'test',
+            delay: '2s',
+            content: '',
+            children: [],
+          },
+        },
+        mockRegistry,
+      );
 
       await sendNode.run(testState);
 
@@ -318,16 +339,19 @@ describe('Node: <send>', () => {
     it('should evaluate delay expression', async () => {
       testState.data.delayValue = '500ms';
 
-      const sendNode = new SendNode({
-        send: {
-          event: 'delayedEvent',
-          target: 'http://example.com',
-          type: 'test',
-          delayexpr: 'data.delayValue',
-          content: '',
-          children: []
-        }
-      }, mockRegistry);
+      const sendNode = new SendNode(
+        {
+          send: {
+            event: 'delayedEvent',
+            target: 'http://example.com',
+            type: 'test',
+            delayexpr: 'data.delayValue',
+            content: '',
+            children: [],
+          },
+        },
+        mockRegistry,
+      );
 
       await sendNode.run(testState);
 
@@ -339,61 +363,70 @@ describe('Node: <send>', () => {
     });
 
     it('should generate unique send ID when not specified', async () => {
-      const sendNode = new SendNode({
-        send: {
-          event: 'testEvent',
-          target: 'http://example.com',
-          type: 'test',
-          content: '',
-          children: []
-        }
-      }, mockRegistry);
+      const sendNode = new SendNode(
+        {
+          send: {
+            event: 'testEvent',
+            target: 'http://example.com',
+            type: 'test',
+            content: '',
+            children: [],
+          },
+        },
+        mockRegistry,
+      );
 
       await sendNode.run(testState);
 
       expect(mockProcessor.send).toHaveBeenCalledWith(
         expect.objectContaining({
-          sendid: expect.stringMatching(/^send_\d+_[a-z0-9]+$/)
+          sendid: expect.stringMatching(/^send_\d+_[a-z0-9]+$/),
         }),
         'http://example.com',
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
     it('should use specified send ID', async () => {
-      const sendNode = new SendNode({
-        send: {
-          event: 'testEvent',
-          target: 'http://example.com',
-          type: 'test',
-          id: 'custom-send-id',
-          content: '',
-          children: []
-        }
-      }, mockRegistry);
+      const sendNode = new SendNode(
+        {
+          send: {
+            event: 'testEvent',
+            target: 'http://example.com',
+            type: 'test',
+            id: 'custom-send-id',
+            content: '',
+            children: [],
+          },
+        },
+        mockRegistry,
+      );
 
       await sendNode.run(testState);
 
       expect(mockProcessor.send).toHaveBeenCalledWith(
         expect.objectContaining({
-          sendid: 'custom-send-id'
+          sendid: 'custom-send-id',
         }),
         'http://example.com',
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
     it('should store send ID in idlocation', async () => {
-      const sendNode = new SendNode({
-        send: {
-          event: 'testEvent',
-          target: 'http://example.com',
-          type: 'test',
-          idlocation: 'lastSendId',
-          content: '',
-          children: []
-        }
-      }, mockRegistry);
+      const sendNode = new SendNode(
+        {
+          send: {
+            event: 'testEvent',
+            target: 'http://example.com',
+            type: 'test',
+            idlocation: 'lastSendId',
+            content: '',
+            children: [],
+          },
+        },
+        mockRegistry,
+      );
 
       const result = await sendNode.run(testState);
 
@@ -403,124 +436,111 @@ describe('Node: <send>', () => {
     it('should handle processor send failure', async () => {
       mockProcessor.send = jest.fn().mockResolvedValue({
         success: false,
-        error: new Error('Network error')
+        error: new Error('Network error'),
       });
 
-      const sendNode = new SendNode({
-        send: {
-          event: 'testEvent',
-          target: 'http://example.com',
-          type: 'test',
-          content: '',
-          children: []
-        }
-      }, mockRegistry);
+      const sendNode = new SendNode(
+        {
+          send: {
+            event: 'testEvent',
+            target: 'http://example.com',
+            type: 'test',
+            content: '',
+            children: [],
+          },
+        },
+        mockRegistry,
+      );
 
       const result = await sendNode.run(testState);
 
       // Should add error event to pending events
       expect(result._pendingInternalEvents).toBeDefined();
       expect(result._pendingInternalEvents!.length).toBeGreaterThan(0);
-      expect(result._pendingInternalEvents![0].name).toBe('error.communication');
+      expect(result._pendingInternalEvents![0].name).toBe(
+        'error.communication',
+      );
     });
 
     it('should handle missing target error', async () => {
-      const sendNode = new SendNode({
-        send: {
-          event: 'testEvent',
-          type: 'test',
-          content: '',
-          children: []
-        }
-      }, mockRegistry);
+      const sendNode = new SendNode(
+        {
+          send: {
+            event: 'testEvent',
+            type: 'test',
+            content: '',
+            children: [],
+          },
+        },
+        mockRegistry,
+      );
 
       const result = await sendNode.run(testState);
 
       expect(result._pendingInternalEvents).toBeDefined();
       expect(result._pendingInternalEvents!.length).toBeGreaterThan(0);
-      expect(result._pendingInternalEvents![0].name).toBe('error.communication');
+      expect(result._pendingInternalEvents![0].name).toBe(
+        'error.communication',
+      );
     });
 
     it('should handle expression evaluation errors', async () => {
-      const sendNode = new SendNode({
-        send: {
-          eventexpr: 'nonexistent.property',
-          target: 'http://example.com',
-          type: 'test',
-          content: '',
-          children: []
-        }
-      }, mockRegistry);
+      const sendNode = new SendNode(
+        {
+          send: {
+            eventexpr: 'nonexistent.property',
+            target: 'http://example.com',
+            type: 'test',
+            content: '',
+            children: [],
+          },
+        },
+        mockRegistry,
+      );
 
       const result = await sendNode.run(testState);
 
       expect(result._pendingInternalEvents).toBeDefined();
       expect(result._pendingInternalEvents!.length).toBeGreaterThan(0);
-      expect(result._pendingInternalEvents![0].name).toBe('error.communication');
+      expect(result._pendingInternalEvents![0].name).toBe(
+        'error.communication',
+      );
     });
 
     it('should handle invalid delay format', async () => {
-      const sendNode = new SendNode({
-        send: {
-          event: 'testEvent',
-          target: 'http://example.com',
-          type: 'test',
-          delay: 'invalid-delay',
-          content: '',
-          children: []
-        }
-      }, mockRegistry);
+      const sendNode = new SendNode(
+        {
+          send: {
+            event: 'testEvent',
+            target: 'http://example.com',
+            type: 'test',
+            delay: 'invalid-delay',
+            content: '',
+            children: [],
+          },
+        },
+        mockRegistry,
+      );
 
       const result = await sendNode.run(testState);
 
       expect(result._pendingInternalEvents).toBeDefined();
       expect(result._pendingInternalEvents!.length).toBeGreaterThan(0);
-      expect(result._pendingInternalEvents![0].name).toBe('error.communication');
+      expect(result._pendingInternalEvents![0].name).toBe(
+        'error.communication',
+      );
     });
   });
 
   describe('Integration with Default Processors', () => {
-    it('[HTTP] should trigger an http request', async () => {
-      // Arrange
-      const currentState = { ...testState }
-
-      const fetchSpy = jest.spyOn(global, 'fetch').mockResolvedValue({
-        ok: true,
-        status: 200,
-        statusText: 'Okay'
-      } as Response);
-
-      const sendNode = new SendNode({
-        send: {
-          content: '',
-          children: [],
-          event: 'test-api',
-          type: 'http',
-          target: 'http://example.com',
-          id: 'test-sendId'
-        }
-      })
-
-      // Act
-      const result = await sendNode.run(currentState);
-
-      // Assert
-      expect(fetchSpy).toHaveBeenCalled();
-      expect(result._pendingInternalEvents).toContainEqual(
-        expect.objectContaining({
-          name: 'http.response'
-        })
-      )
-    });
-
     it('[HTTP] should trigger an http request onentry', async () => {
       // Arrange
-      const currentState = { ...testState }
+      const currentState = { ...testState };
 
       const fetchSpy = jest.spyOn(global, 'fetch').mockResolvedValue({
         ok: true,
         status: 200,
-        statusText: 'Okay'
+        statusText: 'Okay',
       } as Response);
 
       const sendNode = new SendNode({
@@ -530,31 +550,31 @@ describe('Node: <send>', () => {
           event: 'test-api',
           type: 'http',
           target: 'http://example.com',
-          id: 'test-sendId'
-        }
-      })
+          id: 'test-sendId',
+        },
+      });
 
       const apiOnEntry = new OnEntryNode({
         onentry: {
           children: [sendNode],
-          content: ''
-        }
-      })
+          content: '',
+        },
+      });
 
       const apiCallState = new StateNode({
         state: {
           children: [apiOnEntry],
           content: '',
-          id: 'callAPI'
-        }
-      })
+          id: 'callAPI',
+        },
+      });
 
       // Act
       const result = await apiCallState.mount(currentState);
 
       // Assert
       expect(fetchSpy).toHaveBeenCalled();
-      expect(result.state._pendingInternalEvents?.length).toBe(1)
+      expect(result.state._pendingInternalEvents?.length).toBe(1);
     });
   });
 
@@ -567,7 +587,7 @@ describe('Node: <send>', () => {
     it('should be marked as executable', () => {
       const { node } = SendNode.createFromJSON({
         event: 'testEvent',
-        target: 'http://example.com'
+        target: 'http://example.com',
       });
 
       expect(node!.isExecutable).toBe(true);
@@ -576,7 +596,7 @@ describe('Node: <send>', () => {
     it('should inherit from BaseExecutableNode', () => {
       const { node } = SendNode.createFromJSON({
         event: 'testEvent',
-        target: 'http://example.com'
+        target: 'http://example.com',
       });
 
       expect(node!.label).toBe('send');

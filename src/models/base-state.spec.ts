@@ -516,7 +516,7 @@ describe('BaseStateNode', () => {
           constructor() {
             super({
               content: '',
-              children: [dataModelNode1, onEntryNode, dataModelNode2]
+              children: [dataModelNode1, onEntryNode, dataModelNode2],
             });
             // @ts-expect-error - Setting readonly property for testing
             this.id = 'multiDataModelState';
@@ -587,7 +587,7 @@ describe('BaseStateNode', () => {
           children: [
             new AssignNode({
               assign: {
-                location: 'entryExecuted',
+                location: 'data.entryExecuted',
                 content: 'yes',
                 children: [],
               },
@@ -670,7 +670,7 @@ describe('BaseStateNode', () => {
           children: [
             new AssignNode({
               assign: {
-                location: 'result',
+                location: 'data.result',
                 expr: 'data.localVar + "_processed"',
                 content: '',
                 children: [],
@@ -762,7 +762,7 @@ describe('BaseStateNode', () => {
           children: [
             new AssignNode({
               assign: {
-                location: 'exitExecuted',
+                location: 'data.exitExecuted',
                 content: 'yes',
                 children: [],
               },
@@ -799,7 +799,7 @@ describe('BaseStateNode', () => {
           content: '',
           children: [
             new AssignNode({
-              assign: { location: 'step1', content: 'true', children: [] },
+              assign: { location: 'data.step1', content: 'true', children: [] },
             }),
           ],
         },
@@ -810,7 +810,7 @@ describe('BaseStateNode', () => {
           content: '',
           children: [
             new AssignNode({
-              assign: { location: 'step2', content: 'true', children: [] },
+              assign: { location: 'data.step2', content: 'true', children: [] },
             }),
           ],
         },

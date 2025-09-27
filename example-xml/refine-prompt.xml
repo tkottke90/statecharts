@@ -9,7 +9,7 @@
   <datamodel>
     <data id="ollamaUrl" expr="'http://10.0.0.6:11434'"/>
     <data id="callLLM.model" expr="'mistral:7b'"/>
-    <data id="message">I would like an LLM prompt which will instruct the LLM to summarize a youtube transcript for me</data>
+    <data id="message">I would like an LLM prompt which will instruct the LLM to summarize a body of text that it has been provided</data>
     <data id="evalCount" expr="0"/>
     <data id="maxEvalCount" expr="500" />
     <data id="versions" type="json" >[]</data>

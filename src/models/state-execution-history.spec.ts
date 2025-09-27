@@ -70,7 +70,7 @@ describe('StateExecutionHistory', () => {
         HistoryEventType.STATE_ENTRY,
         stateConfig,
         mockState,
-        { metadata: { test: true } }
+        { metadata: { test: true } },
       );
 
       // Assert
@@ -91,7 +91,7 @@ describe('StateExecutionHistory', () => {
       const entryId = history.addEntry(
         HistoryEventType.STATE_ENTRY,
         stateConfig,
-        mockState
+        mockState,
       );
 
       // Assert
@@ -101,8 +101,8 @@ describe('StateExecutionHistory', () => {
 
     it('should not add entry for untracked event types', () => {
       // Arrange
-      history.updateOptions({ 
-        trackedEventTypes: [HistoryEventType.STATE_ENTRY] 
+      history.updateOptions({
+        trackedEventTypes: [HistoryEventType.STATE_ENTRY],
       });
       const stateConfig = ['state1'];
 
@@ -110,7 +110,7 @@ describe('StateExecutionHistory', () => {
       const entryId = history.addEntry(
         HistoryEventType.STATE_EXIT,
         stateConfig,
-        mockState
+        mockState,
       );
 
       // Assert
@@ -118,11 +118,11 @@ describe('StateExecutionHistory', () => {
       expect(history.getAllEntries()).toHaveLength(0);
     });
 
-    it('should emit history event when entry is added', (done) => {
+    it('should emit history event when entry is added', done => {
       // Arrange
       const stateConfig = ['state1'];
-      
-      history.on('history', (payload) => {
+
+      history.on('history', payload => {
         // Assert
         expect(payload.entry.type).toBe(HistoryEventType.STATE_ENTRY);
         expect(payload.totalEntries).toBe(1);
@@ -143,7 +143,7 @@ describe('StateExecutionHistory', () => {
         HistoryEventType.EVENT_PROCESSED,
         stateConfig,
         mockState,
-        { event: mockEvent }
+        { event: mockEvent },
       );
 
       // Assert
@@ -160,7 +160,7 @@ describe('StateExecutionHistory', () => {
       const entryId = history.addEntry(
         HistoryEventType.STATE_ENTRY,
         stateConfig,
-        mockState
+        mockState,
       );
 
       // Assert
@@ -178,7 +178,7 @@ describe('StateExecutionHistory', () => {
         HistoryEventType.STATE_ENTRY,
         stateConfig,
         mockState,
-        { duration: 100 }
+        { duration: 100 },
       );
 
       // Assert
@@ -196,23 +196,23 @@ describe('StateExecutionHistory', () => {
       const parentId = history.addEntry(
         HistoryEventType.MACROSTEP_START,
         stateConfig,
-        mockState
+        mockState,
       );
-      
+
       history.startContext(parentId);
-      
+
       const childId = history.addEntry(
         HistoryEventType.MICROSTEP_START,
         stateConfig,
-        mockState
+        mockState,
       );
-      
+
       history.endContext();
 
       // Assert
       const parent = history.getEntry(parentId);
       const child = history.getEntry(childId);
-      
+
       expect(parent!.childIds).toContain(childId);
       expect(child!.parentId).toBe(parentId);
     });
@@ -226,15 +226,15 @@ describe('StateExecutionHistory', () => {
       const parentId = history.addEntry(
         HistoryEventType.MACROSTEP_START,
         stateConfig,
-        mockState
+        mockState,
       );
-      
+
       history.startContext(parentId);
-      
+
       const childId = history.addEntry(
         HistoryEventType.MICROSTEP_START,
         stateConfig,
-        mockState
+        mockState,
       );
 
       // Assert
@@ -248,17 +248,22 @@ describe('StateExecutionHistory', () => {
       // Add some test entries
       history.addEntry(HistoryEventType.STATE_ENTRY, ['state1'], mockState, {
         event: mockEvent,
-        metadata: { timestamp: 1000 }
+        metadata: { timestamp: 1000 },
       });
-      
+
       history.addEntry(HistoryEventType.STATE_EXIT, ['state1'], mockState, {
-        metadata: { timestamp: 2000 }
+        metadata: { timestamp: 2000 },
       });
-      
-      history.addEntry(HistoryEventType.EVENT_PROCESSED, ['state2'], mockState, {
-        event: { ...mockEvent, name: 'other.event' },
-        metadata: { timestamp: 3000 }
-      });
+
+      history.addEntry(
+        HistoryEventType.EVENT_PROCESSED,
+        ['state2'],
+        mockState,
+        {
+          event: { ...mockEvent, name: 'other.event' },
+          metadata: { timestamp: 3000 },
+        },
+      );
     });
 
     it('should return all entries with no filters', () => {
@@ -274,7 +279,7 @@ describe('StateExecutionHistory', () => {
     it('should filter by event types', () => {
       // Arrange
       const options: HistoryQueryOptions = {
-        eventTypes: [HistoryEventType.STATE_ENTRY, HistoryEventType.STATE_EXIT]
+        eventTypes: [HistoryEventType.STATE_ENTRY, HistoryEventType.STATE_EXIT],
       };
 
       // Act
@@ -282,15 +287,19 @@ describe('StateExecutionHistory', () => {
 
       // Assert
       expect(result.entries).toHaveLength(2);
-      expect(result.entries.every(e => 
-        e.type === HistoryEventType.STATE_ENTRY || e.type === HistoryEventType.STATE_EXIT
-      )).toBe(true);
+      expect(
+        result.entries.every(
+          e =>
+            e.type === HistoryEventType.STATE_ENTRY ||
+            e.type === HistoryEventType.STATE_EXIT,
+        ),
+      ).toBe(true);
     });
 
     it('should filter by state configuration', () => {
       // Arrange
       const options: HistoryQueryOptions = {
-        stateFilter: 'state2'
+        stateFilter: 'state2',
       };
 
       // Act
@@ -304,7 +313,7 @@ describe('StateExecutionHistory', () => {
     it('should filter by event name pattern', () => {
       // Arrange
       const options: HistoryQueryOptions = {
-        eventNamePattern: /^test\./
+        eventNamePattern: /^test\./,
       };
 
       // Act
@@ -319,7 +328,7 @@ describe('StateExecutionHistory', () => {
       // Arrange
       const options: HistoryQueryOptions = {
         limit: 2,
-        offset: 1
+        offset: 1,
       };
 
       // Act
@@ -333,7 +342,7 @@ describe('StateExecutionHistory', () => {
     it('should sort in descending order', () => {
       // Arrange
       const options: HistoryQueryOptions = {
-        sortOrder: 'desc'
+        sortOrder: 'desc',
       };
 
       // Act
@@ -347,12 +356,12 @@ describe('StateExecutionHistory', () => {
   });
 
   describe('memory management', () => {
-    it('should prune old entries when maxEntries is exceeded', (done) => {
+    it('should prune old entries when maxEntries is exceeded', done => {
       // Arrange
       history.updateOptions({ maxEntries: 2 });
       const stateConfig = ['state1'];
 
-      history.on('pruned', (data) => {
+      history.on('pruned', data => {
         // Assert
         expect(data.removedCount).toBe(1);
         expect(history.getAllEntries()).toHaveLength(2);
@@ -362,7 +371,11 @@ describe('StateExecutionHistory', () => {
       // Act - Add 3 entries to trigger pruning
       history.addEntry(HistoryEventType.STATE_ENTRY, stateConfig, mockState);
       history.addEntry(HistoryEventType.STATE_EXIT, stateConfig, mockState);
-      history.addEntry(HistoryEventType.EVENT_PROCESSED, stateConfig, mockState);
+      history.addEntry(
+        HistoryEventType.EVENT_PROCESSED,
+        stateConfig,
+        mockState,
+      );
     });
 
     it('should not prune when maxEntries is 0 (unlimited)', () => {
@@ -386,7 +399,7 @@ describe('StateExecutionHistory', () => {
       const stateConfig = ['state1'];
       history.addEntry(HistoryEventType.STATE_ENTRY, stateConfig, mockState, {
         event: mockEvent,
-        metadata: { test: true }
+        metadata: { test: true },
       });
 
       // Act
@@ -402,12 +415,12 @@ describe('StateExecutionHistory', () => {
       expect(importedEntry.metadata.test).toBe(true);
     });
 
-    it('should emit imported event', (done) => {
+    it('should emit imported event', done => {
       // Arrange
       const exported: SerializableHistoryEntry[] = [];
       const newHistory = new StateExecutionHistory();
 
-      newHistory.on('imported', (data) => {
+      newHistory.on('imported', data => {
         // Assert
         expect(data.count).toBe(0);
         done();
@@ -441,7 +454,7 @@ describe('StateExecutionHistory', () => {
   });
 
   describe('clear', () => {
-    it('should clear all entries and emit cleared event', (done) => {
+    it('should clear all entries and emit cleared event', done => {
       // Arrange
       const stateConfig = ['state1'];
       history.addEntry(HistoryEventType.STATE_ENTRY, stateConfig, mockState);

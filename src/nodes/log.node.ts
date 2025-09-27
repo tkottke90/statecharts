@@ -20,18 +20,18 @@ export type LogNodeType = {
 
 /**
  * LogNode represents the SCXML `<log>` element for debugging output.
- * 
+ *
  * The `<log>` element is used to generate logging output for debugging purposes.
  * It can log either the result of an expression evaluation or literal text content.
- * 
+ *
  * @example
  * ```xml
  * <!-- Expression logging -->
  * <log label="Debug" expr="'Current state: ' + _name + ', counter: ' + data.counter"/>
- * 
+ *
  * <!-- Literal content logging -->
  * <log label="Info">State machine started</log>
- * 
+ *
  * <!-- Simple expression -->
  * <log expr="'Processing complete: ' + data.results.length + ' items'"/>
  * ```
@@ -59,19 +59,29 @@ export class LogNode extends BaseExecutableNode {
   /**
    * Create a LogNode from JSON representation
    */
-  static createFromJSON(jsonInput: Record<string, unknown>): CreateFromJsonResponse<LogNode> {
-    const attributes = this.getAttributes(this.label, jsonInput) as Record<string, unknown>;
+  static createFromJSON(
+    jsonInput: Record<string, unknown>,
+  ): CreateFromJsonResponse<LogNode> {
+    const attributes = this.getAttributes(this.label, jsonInput) as Record<
+      string,
+      unknown
+    >;
 
     // Validate that either expr or content is provided
     // We check the original attributes before schema processing to detect explicit content
-    const hasExpr = 'expr' in attributes && typeof attributes.expr === 'string' && attributes.expr.length > 0;
+    const hasExpr =
+      'expr' in attributes &&
+      typeof attributes.expr === 'string' &&
+      attributes.expr.length > 0;
     const hasExplicitContent = 'content' in attributes;
 
     if (!hasExpr && !hasExplicitContent) {
       return {
         success: false,
         node: undefined,
-        error: new Error("Either 'expr' attribute or text content must be provided")
+        error: new Error(
+          "Either 'expr' attribute or text content must be provided",
+        ),
       };
     }
 
@@ -81,7 +91,7 @@ export class LogNode extends BaseExecutableNode {
       return {
         success: false,
         node: undefined,
-        error: new Error(`LogNode validation failed: ${error.message}`)
+        error: new Error(`LogNode validation failed: ${error.message}`),
       };
     }
 
@@ -92,18 +102,21 @@ export class LogNode extends BaseExecutableNode {
       return {
         success: false,
         node: undefined,
-        error: constructorError instanceof Error ? constructorError : new Error(String(constructorError))
+        error:
+          constructorError instanceof Error
+            ? constructorError
+            : new Error(String(constructorError)),
       };
     }
   }
 
   /**
    * Execute the log node to output debugging information.
-   * 
+   *
    * This method evaluates the expression (if provided) or uses the text content,
    * formats the log message with the label (if provided), and outputs it.
    * The state is returned unchanged as logging is a side-effect operation.
-   * 
+   *
    * @param state - Current internal state of the state machine
    * @returns Promise resolving to the unchanged state
    */
@@ -132,23 +145,21 @@ export class LogNode extends BaseExecutableNode {
 
       // Return state unchanged (logging is a side-effect)
       return state;
-
     } catch (error) {
       // Log the error but don't throw - logging failures shouldn't break execution
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       this.outputLog(
-        this.formatLogMessage(`[LOG ERROR] Failed to log: ${errorMessage}`)
+        this.formatLogMessage(`[LOG ERROR] Failed to log: ${errorMessage}`),
       );
-      this.outputLog(
-        this.formatLogMessage(this.toString())
-      );
+      this.outputLog(this.formatLogMessage(this.toString()));
       return state;
     }
   }
 
   /**
    * Format a value for logging output
-   * 
+   *
    * @param value - The value to format
    * @returns Formatted string representation
    */
@@ -174,7 +185,7 @@ export class LogNode extends BaseExecutableNode {
 
   /**
    * Format the complete log message with label if provided
-   * 
+   *
    * @param message - The core message to log
    * @returns Formatted log message
    */
@@ -190,15 +201,13 @@ export class LogNode extends BaseExecutableNode {
 
   /**
    * Output the log message to the appropriate destination
-   * 
+   *
    * By default, this outputs to console.log, but can be overridden
    * for custom logging implementations.
-   * 
+   *
    * @param message - The formatted message to output
    */
   protected outputLog(message: string): void {
     console.log(message);
   }
-
-
 }

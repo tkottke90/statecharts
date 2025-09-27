@@ -60,11 +60,10 @@ describe('BaseNode', () => {
       const children = baseNode.getChildrenOfType(DataNode);
 
       // Assert
-      expect(children).toEqual([
-        DataNode.createFromJSON({
-          data: { content: 'test', children: [], id: 'test' },
-        }).node,
-      ]);
+      expect(children).toHaveLength(1);
+      expect(children[0]).toBeInstanceOf(DataNode);
+      expect(children[0].id).toBe('test');
+      expect(children[0].content).toBe('test');
     });
   });
 
@@ -73,25 +72,26 @@ describe('BaseNode', () => {
       it('should return class name for basic node', () => {
         const node = new BaseNode({ content: '', children: [] });
         const result = node.toString();
-        expect(result).toBe('<base/>');
+        expect(result).toMatch(/^<base uuid="[^"]*"\/>$/);
       });
 
       it('should include content when present', () => {
         const node = new BaseNode({ content: 'Hello World', children: [] });
         const result = node.toString();
-        expect(result).toBe('<base>Hello World</base>');
+        expect(result).toMatch(/^<base uuid="[^"]*">Hello World<\/base>$/);
       });
 
       it('should handle empty content', () => {
         const node = new BaseNode({ content: '', children: [] });
         const result = node.toString();
-        expect(result).toBe('<base/>');
+        expect(result).toMatch(/^<base uuid="[^"]*"\/>$/);
       });
 
       it('should handle whitespace-only content', () => {
         const node = new BaseNode({ content: '   ', children: [] });
         const result = node.toString();
-        expect(result).toBe('<base>   </base>');
+        // Whitespace-only content is treated as empty by the toString method
+        expect(result).toMatch(/^<base uuid="[^"]*"\/>$/);
       });
     });
 
@@ -100,51 +100,55 @@ describe('BaseNode', () => {
         const result = LogNode.createFromJSON({
           log: {
             label: 'DEBUG',
-            expr: 'data.counter'
-          }
+            expr: 'data.counter',
+          },
         });
 
         expect(result.success).toBe(true);
         const str = result.node!.toString();
-        expect(str).toBe('<log logLabel="DEBUG" expr="data.counter"/>');
+        expect(str).toMatch(
+          /^<log uuid="[^"]*" logLabel="DEBUG" expr="data\.counter"\/>$/,
+        );
       });
 
       it('should display LogNode with content', () => {
         const result = LogNode.createFromJSON({
           log: {
-            content: 'Static message'
-          }
+            content: 'Static message',
+          },
         });
 
         expect(result.success).toBe(true);
         const str = result.node!.toString();
-        expect(str).toBe('<log>Static message</log>');
+        expect(str).toMatch(/^<log uuid="[^"]*">Static message<\/log>$/);
       });
 
       it('should display LogNode with label and content', () => {
         const result = LogNode.createFromJSON({
           log: {
             label: 'INFO',
-            content: 'Application started'
-          }
+            content: 'Application started',
+          },
         });
 
         expect(result.success).toBe(true);
         const str = result.node!.toString();
-        expect(str).toBe('<log logLabel="INFO">Application started</log>');
+        expect(str).toMatch(
+          /^<log uuid="[^"]*" logLabel="INFO">Application started<\/log>$/,
+        );
       });
 
       it('should handle LogNode with empty content', () => {
         const result = LogNode.createFromJSON({
           log: {
-            content: ''
-          }
+            content: '',
+          },
         });
 
         expect(result.success).toBe(true);
         const str = result.node!.toString();
         expect(result.node!.content).toBe('');
-        expect(str).toBe('<log/>');
+        expect(str).toMatch(/^<log uuid="[^"]*"\/>$/);
       });
     });
 
@@ -153,13 +157,15 @@ describe('BaseNode', () => {
         const result = AssignNode.createFromJSON({
           assign: {
             location: 'data.counter',
-            expr: 'data.counter + 1'
-          }
+            expr: 'data.counter + 1',
+          },
         });
 
         expect(result.success).toBe(true);
         const str = result.node!.toString();
-        expect(str).toBe('<assign location="data.counter" expr="data.counter + 1"/>');
+        expect(str).toMatch(
+          /^<assign uuid="[^"]*" location="data\.counter" expr="data\.counter \+ 1"\/>$/,
+        );
       });
 
       it('should display AssignNode with location and content', () => {
@@ -167,13 +173,15 @@ describe('BaseNode', () => {
           assign: {
             location: 'data.message',
             content: 'Hello World',
-            children: []
-          }
+            children: [],
+          },
         });
 
         expect(result.success).toBe(true);
         const str = result.node!.toString();
-        expect(str).toBe('<assign location="data.message">Hello World</assign>');
+        expect(str).toMatch(
+          /^<assign uuid="[^"]*" location="data\.message">Hello World<\/assign>$/,
+        );
       });
     });
 
@@ -181,25 +189,27 @@ describe('BaseNode', () => {
       it('should display RaiseNode with event', () => {
         const result = RaiseNode.createFromJSON({
           raise: {
-            event: 'test.event'
-          }
+            event: 'test.event',
+          },
         });
 
         expect(result.success).toBe(true);
         const str = result.node!.toString();
-        expect(str).toBe('<raise event="test.event"/>');
+        expect(str).toMatch(/^<raise uuid="[^"]*" event="test\.event"\/>$/);
       });
 
       it('should display RaiseNode with eventexpr', () => {
         const result = RaiseNode.createFromJSON({
           raise: {
-            eventexpr: "'dynamic.' + data.type"
-          }
+            eventexpr: "'dynamic.' + data.type",
+          },
         });
 
         expect(result.success).toBe(true);
         const str = result.node!.toString();
-        expect(str).toBe('<raise eventexpr="\'dynamic.\' + data.type"/>');
+        expect(str).toMatch(
+          /^<raise uuid="[^"]*" eventexpr="'dynamic\.' \+ data\.type"\/>$/,
+        );
       });
     });
 
@@ -243,7 +253,7 @@ describe('BaseNode', () => {
 
         const node = new SimpleNode();
         const str = node.toString();
-        expect(str).toBe('<simple/>');
+        expect(str).toMatch(/^<simple uuid="[^"]*"\/>$/);
       });
 
       it('should handle nodes with content and attributes', () => {
@@ -258,7 +268,9 @@ describe('BaseNode', () => {
 
         const node = new ContentNode();
         const str = node.toString();
-        expect(str).toBe('<content id="content-id">Node content</content>');
+        expect(str).toMatch(
+          /^<content uuid="[^"]*" id="content-id">Node content<\/content>$/,
+        );
       });
 
       it('should show both expr and content when both are present', () => {
@@ -273,7 +285,9 @@ describe('BaseNode', () => {
 
         const node = new ExprContentNode();
         const str = node.toString();
-        expect(str).toBe('<exprContent expr="data.value">This should be shown</exprContent>');
+        expect(str).toMatch(
+          /^<exprContent uuid="[^"]*" expr="data\.value">This should be shown<\/exprContent>$/,
+        );
         expect(str).toContain('This should be shown');
       });
 
@@ -287,7 +301,7 @@ describe('BaseNode', () => {
         const node = new CustomNode();
         const str = node.toString();
         // Since CustomNode extends BaseNode, it inherits the 'base' label
-        expect(str).toBe('<base/>');
+        expect(str).toMatch(/^<base uuid="[^"]*"\/>$/);
       });
 
       it('should handle undefined attributes gracefully', () => {
@@ -304,7 +318,7 @@ describe('BaseNode', () => {
 
         const node = new UndefinedAttrsNode();
         const str = node.toString();
-        expect(str).toBe('<undefined/>');
+        expect(str).toMatch(/^<undefined uuid="[^"]*"\/>$/);
       });
     });
   });

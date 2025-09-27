@@ -20,7 +20,7 @@ import {
   SCXMLNode,
   SendNode,
   StateNode,
-  TransitionNode
+  TransitionNode,
 } from '../nodes';
 
 type NodeInitMethod<T extends BaseNode = BaseNode> = (
@@ -30,23 +30,28 @@ type NodeInitMethod<T extends BaseNode = BaseNode> = (
 const nodeMap: Record<string, NodeInitMethod> = {
   assign: (input: Record<string, unknown>) => AssignNode.createFromJSON(input),
   data: (input: Record<string, unknown>) => DataNode.createFromJSON(input),
-  datamodel: (input: Record<string, unknown>) => DataModelNode.createFromJSON(input),
+  datamodel: (input: Record<string, unknown>) =>
+    DataModelNode.createFromJSON(input),
   debug: (input: Record<string, unknown>) => DebugNode.createFromJSON(input),
   else: (input: Record<string, unknown>) => ElseNode.createFromJSON(input),
   elseif: (input: Record<string, unknown>) => ElseIfNode.createFromJSON(input),
   final: (input: Record<string, unknown>) => FinalNode.createFromJSON(input),
   if: (input: Record<string, unknown>) => IfNode.createFromJSON(input),
-  initial: (input: Record<string, unknown>) => InitialNode.createFromJSON(input),
+  initial: (input: Record<string, unknown>) =>
+    InitialNode.createFromJSON(input),
   log: (input: Record<string, unknown>) => LogNode.createFromJSON(input),
-  onentry: (input: Record<string, unknown>) =>  OnEntryNode.createFromJSON(input),
+  onentry: (input: Record<string, unknown>) =>
+    OnEntryNode.createFromJSON(input),
   onexit: (input: Record<string, unknown>) => OnExitNode.createFromJSON(input),
-  parallel: (input: Record<string, unknown>) => ParallelNode.createFromJSON(input),
+  parallel: (input: Record<string, unknown>) =>
+    ParallelNode.createFromJSON(input),
   param: (input: Record<string, unknown>) => ParamNode.createFromJSON(input),
   raise: (input: Record<string, unknown>) => RaiseNode.createFromJSON(input),
   scxml: (input: Record<string, unknown>) => SCXMLNode.createFromJSON(input),
   send: (input: Record<string, unknown>) => SendNode.createFromJSON(input),
   state: (input: Record<string, unknown>) => StateNode.createFromJSON(input),
-  transition: (input: Record<string, unknown>) =>TransitionNode.createFromJSON(input),
+  transition: (input: Record<string, unknown>) =>
+    TransitionNode.createFromJSON(input),
 };
 
 export function mergeMaps(

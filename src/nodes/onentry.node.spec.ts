@@ -21,7 +21,6 @@ function createTestEventState(
     _event: mockEvent,
     _datamodel: 'ecmascript',
     data: { ...data },
-    ...data, // Also spread data at root level for backward compatibility with tests
   };
 }
 
@@ -62,7 +61,7 @@ describe('Node: <onentry>', () => {
       // Arrange
       const assignChild = new AssignNode({
         assign: {
-          location: 'entryFlag',
+          location: 'data.entryFlag',
           expr: 'true',
           content: '',
           children: [],
@@ -122,7 +121,7 @@ describe('Node: <onentry>', () => {
       // Arrange
       const assignChild = new AssignNode({
         assign: {
-          location: 'entryExecuted',
+          location: 'data.entryExecuted',
           expr: 'true',
           content: '',
           children: [],
@@ -151,7 +150,7 @@ describe('Node: <onentry>', () => {
       // Arrange
       const assignChild1 = new AssignNode({
         assign: {
-          location: 'step1',
+          location: 'data.step1',
           expr: '"completed"',
           content: '',
           children: [],
@@ -160,7 +159,7 @@ describe('Node: <onentry>', () => {
 
       const assignChild2 = new AssignNode({
         assign: {
-          location: 'step2',
+          location: 'data.step2',
           expr: '"completed"',
           content: '',
           children: [],
@@ -169,8 +168,8 @@ describe('Node: <onentry>', () => {
 
       const assignChild3 = new AssignNode({
         assign: {
-          location: 'counter',
-          expr: 'counter + 1',
+          location: 'data.counter',
+          expr: 'data.counter + 1',
           content: '',
           children: [],
         },
@@ -229,7 +228,7 @@ describe('Node: <onentry>', () => {
       // Arrange
       const assignChild = new AssignNode({
         assign: {
-          location: 'entryTime',
+          location: 'data.entryTime',
           expr: 'Date.now()',
           content: '',
           children: [],
@@ -269,7 +268,7 @@ describe('Node: <onentry>', () => {
       // Arrange
       const assignChild = new AssignNode({
         assign: {
-          location: 'nested.value',
+          location: 'data.nested.value',
           expr: '"entry-value"',
           content: '',
           children: [],
@@ -397,7 +396,7 @@ describe('Node: <onentry>', () => {
       // Arrange - Simulate SCXML onentry usage
       const logAssign = new AssignNode({
         assign: {
-          location: 'log',
+          location: 'data.log',
           expr: '"Entering state"',
           content: '',
           children: [],
@@ -460,7 +459,7 @@ describe('Node: <onentry>', () => {
       // Arrange
       const assignChild = new AssignNode({
         assign: {
-          location: 'newProp',
+          location: 'data.newProp',
           expr: '"test"',
           content: '',
           children: [],
@@ -490,7 +489,7 @@ describe('Node: <onentry>', () => {
       // Arrange
       const assignChild1 = new AssignNode({
         assign: {
-          location: 'user.profile.name',
+          location: 'data.user.profile.name',
           expr: '"John Doe"',
           content: '',
           children: [],
@@ -499,7 +498,7 @@ describe('Node: <onentry>', () => {
 
       const assignChild2 = new AssignNode({
         assign: {
-          location: 'user.profile.active',
+          location: 'data.user.profile.active',
           expr: 'true',
           content: '',
           children: [],

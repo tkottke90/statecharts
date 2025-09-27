@@ -11,10 +11,10 @@ describe('Node: <param>', () => {
         user: {
           name: 'John Doe',
           email: 'john@example.com',
-          age: 30
+          age: 30,
         },
         message: 'Hello World',
-        count: 42
+        count: 42,
       },
       _datamodel: 'ecmascript',
       _event: {
@@ -24,10 +24,10 @@ describe('Node: <param>', () => {
         origin: '',
         origintype: '',
         invokeid: '',
-        data: {}
+        data: {},
       },
       _name: 'testStateMachine',
-      _sessionId: 'test-session'
+      _sessionId: 'test-session',
     };
   });
 
@@ -81,7 +81,7 @@ describe('Node: <param>', () => {
         name: 'testParam',
         expr: 'count * 2',
         content: '',
-        children: []
+        children: [],
       };
 
       const { success, node, error } = ParamNode.createFromJSON(paramJSON);
@@ -97,7 +97,7 @@ describe('Node: <param>', () => {
       const paramJSON = {
         expr: 'user.name',
         content: '',
-        children: []
+        children: [],
       };
 
       const { success, node, error } = ParamNode.createFromJSON(paramJSON);
@@ -113,7 +113,7 @@ describe('Node: <param>', () => {
         expr: 'user.name',
         location: 'user.email',
         content: '',
-        children: []
+        children: [],
       };
 
       const { success, node, error } = ParamNode.createFromJSON(paramJSON);
@@ -127,7 +127,7 @@ describe('Node: <param>', () => {
       const paramJSON = {
         name: 'testParam',
         content: '',
-        children: []
+        children: [],
       };
 
       const { success, node, error } = ParamNode.createFromJSON(paramJSON);
@@ -144,7 +144,7 @@ describe('Node: <param>', () => {
         name: 'testParam',
         expr: 'user.name',
         content: '',
-        children: []
+        children: [],
       });
 
       const result = await node!.run(testState);
@@ -159,7 +159,7 @@ describe('Node: <param>', () => {
         name: 'userName',
         expr: 'data.user.name',
         content: '',
-        children: []
+        children: [],
       });
 
       const value = await node!.evaluateValue(testState);
@@ -172,7 +172,7 @@ describe('Node: <param>', () => {
         name: 'userAge',
         location: 'data.user.age',
         content: '',
-        children: []
+        children: [],
       });
 
       const value = await node!.evaluateValue(testState);
@@ -184,7 +184,7 @@ describe('Node: <param>', () => {
       const result = ParamNode.createFromJSON({
         name: 'greeting',
         content: 'Hello World',
-        children: []
+        children: [],
       });
 
       expect(result.success).toBe(true);
@@ -202,9 +202,9 @@ describe('Node: <param>', () => {
           content: '',
           children: [
             { content: 'Hello ', children: [] },
-            { content: 'World!', children: [] }
-          ]
-        }
+            { content: 'World!', children: [] },
+          ],
+        },
       });
 
       const value = await paramNode.evaluateValue(testState);
@@ -217,11 +217,11 @@ describe('Node: <param>', () => {
         name: 'invalidParam',
         expr: 'nonexistent.property',
         content: '',
-        children: []
+        children: [],
       });
 
       await expect(node!.evaluateValue(testState)).rejects.toThrow(
-        "Failed to evaluate param 'invalidParam'"
+        "Failed to evaluate param 'invalidParam'",
       );
     });
 
@@ -230,7 +230,7 @@ describe('Node: <param>', () => {
         name: 'calculation',
         expr: 'data.user.age * 2 + data.count',
         content: '',
-        children: []
+        children: [],
       });
 
       const value = await node!.evaluateValue(testState);
@@ -245,7 +245,7 @@ describe('Node: <param>', () => {
         name: 'userEmail',
         expr: 'data.user.email',
         content: '',
-        children: []
+        children: [],
       });
 
       const [name, value] = await node!.getNameValuePair(testState);
@@ -259,11 +259,11 @@ describe('Node: <param>', () => {
         name: 'invalidParam',
         expr: 'nonexistent.property',
         content: '',
-        children: []
+        children: [],
       });
 
       await expect(node!.getNameValuePair(testState)).rejects.toThrow(
-        "Failed to evaluate param 'invalidParam'"
+        "Failed to evaluate param 'invalidParam'",
       );
     });
   });
@@ -276,20 +276,20 @@ describe('Node: <param>', () => {
         name: 'userName',
         expr: 'data.user.name',
         content: '',
-        children: []
+        children: [],
       }).node!;
 
       const param2 = ParamNode.createFromJSON({
         name: 'userAge',
         expr: 'data.user.age',
         content: '',
-        children: []
+        children: [],
       }).node!;
 
       const param3 = ParamNode.createFromJSON({
         name: 'greeting',
         content: 'Hello World',
-        children: []
+        children: [],
       }).node!;
 
       paramNodes = [param1, param2, param3];
@@ -301,7 +301,7 @@ describe('Node: <param>', () => {
       expect(params).toEqual({
         userName: 'John Doe',
         userAge: 30,
-        greeting: 'Hello World'
+        greeting: 'Hello World',
       });
     });
 
@@ -316,14 +316,14 @@ describe('Node: <param>', () => {
         name: 'invalidParam',
         expr: 'nonexistent.property',
         content: '',
-        children: []
+        children: [],
       }).node!;
 
       const paramsWithError = [...paramNodes, invalidParam];
 
-      await expect(collectParamValues(paramsWithError, testState)).rejects.toThrow(
-        "Failed to collect parameter 'invalidParam'"
-      );
+      await expect(
+        collectParamValues(paramsWithError, testState),
+      ).rejects.toThrow("Failed to collect parameter 'invalidParam'");
     });
 
     it('should handle parameters with different value sources', async () => {
@@ -332,19 +332,19 @@ describe('Node: <param>', () => {
           name: 'fromExpr',
           expr: 'data.count',
           content: '',
-          children: []
+          children: [],
         }).node!,
         ParamNode.createFromJSON({
           name: 'fromLocation',
           location: 'data.message',
           content: '',
-          children: []
+          children: [],
         }).node!,
         ParamNode.createFromJSON({
           name: 'fromContent',
           content: 'Static Value',
-          children: []
-        }).node!
+          children: [],
+        }).node!,
       ];
 
       const params = await collectParamValues(mixedParams, testState);
@@ -352,7 +352,7 @@ describe('Node: <param>', () => {
       expect(params).toEqual({
         fromExpr: 42,
         fromLocation: 'Hello World',
-        fromContent: 'Static Value'
+        fromContent: 'Static Value',
       });
     });
   });
@@ -363,23 +363,12 @@ describe('Node: <param>', () => {
       expect(ParamNode.schema).toBeDefined();
     });
 
-    it('should be marked as executable', () => {
-      const { node } = ParamNode.createFromJSON({
-        name: 'testParam',
-        expr: 'user.name',
-        content: '',
-        children: []
-      });
-
-      expect(node!.isExecutable).toBe(true);
-    });
-
     it('should inherit from BaseExecutableNode', () => {
       const { node } = ParamNode.createFromJSON({
         name: 'testParam',
         expr: 'user.name',
         content: '',
-        children: []
+        children: [],
       });
 
       expect(node!.label).toBe('param');

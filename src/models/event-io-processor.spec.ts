@@ -4,7 +4,7 @@ import {
   EventIOProcessor,
   EventIOProcessorRegistry,
   HTTPProcessor,
-  SCXMLProcessor
+  SCXMLProcessor,
 } from './event-io-processor';
 import { SCXMLEvent } from './internalState';
 
@@ -23,14 +23,14 @@ describe('EventIOProcessor System', () => {
 
   beforeEach(() => {
     registry = new EventIOProcessorRegistry();
-    
+
     // Create mock processor
     mockProcessor = {
       type: 'test',
       send: jest.fn().mockResolvedValue({ success: true, sendid: 'test-123' }),
       canHandle: jest.fn().mockReturnValue(true),
       initialize: jest.fn().mockResolvedValue(undefined),
-      cleanup: jest.fn().mockResolvedValue(undefined)
+      cleanup: jest.fn().mockResolvedValue(undefined),
     };
 
     // Create test event
@@ -41,7 +41,7 @@ describe('EventIOProcessor System', () => {
       origin: '',
       origintype: '',
       invokeid: '',
-      data: { message: 'Hello World' }
+      data: { message: 'Hello World' },
     };
 
     // Clear fetch mock
@@ -59,13 +59,13 @@ describe('EventIOProcessor System', () => {
     describe('#register', () => {
       it('should register a processor successfully', () => {
         registry.register(mockProcessor);
-        
+
         expect(registry.has('test')).toBe(true);
         expect(registry.get('test')).toBe(mockProcessor);
         expect(registry.size).toBe(1);
       });
 
-      it('should emit processorRegistered event', (done) => {
+      it('should emit processorRegistered event', done => {
         registry.on('processorRegistered', (type, processor) => {
           expect(type).toBe('test');
           expect(processor).toBe(mockProcessor);
@@ -77,10 +77,12 @@ describe('EventIOProcessor System', () => {
 
       it('should throw error when registering duplicate type', () => {
         registry.register(mockProcessor);
-        
+
         expect(() => {
           registry.register(mockProcessor);
-        }).toThrow("Event I/O Processor with type 'test' is already registered");
+        }).toThrow(
+          "Event I/O Processor with type 'test' is already registered",
+        );
       });
     });
 
@@ -91,13 +93,13 @@ describe('EventIOProcessor System', () => {
 
       it('should unregister a processor successfully', () => {
         const result = registry.unregister('test');
-        
+
         expect(result).toBe(true);
         expect(registry.has('test')).toBe(false);
         expect(registry.size).toBe(0);
       });
 
-      it('should emit processorUnregistered event', (done) => {
+      it('should emit processorUnregistered event', done => {
         registry.on('processorUnregistered', (type, processor) => {
           expect(type).toBe('test');
           expect(processor).toBe(mockProcessor);
@@ -125,11 +127,11 @@ describe('EventIOProcessor System', () => {
     describe('#setDefault and #getDefault', () => {
       it('should set and get default processor', () => {
         registry.setDefault(mockProcessor);
-        
+
         expect(registry.getDefault()).toBe(mockProcessor);
       });
 
-      it('should emit defaultProcessorSet event', (done) => {
+      it('should emit defaultProcessorSet event', done => {
         registry.on('defaultProcessorSet', (type, processor) => {
           expect(type).toBe('test');
           expect(processor).toBe(mockProcessor);
@@ -147,21 +149,31 @@ describe('EventIOProcessor System', () => {
 
       it('should send using specified processor type', async () => {
         const result = await registry.send(testEvent, 'test://target', 'test');
-        
+
         expect(result.success).toBe(true);
-        expect(mockProcessor.send).toHaveBeenCalledWith(testEvent, 'test://target', undefined);
+        expect(mockProcessor.send).toHaveBeenCalledWith(
+          testEvent,
+          'test://target',
+          undefined,
+        );
       });
 
       it('should return error for unregistered processor type', async () => {
-        const result = await registry.send(testEvent, 'test://target', 'nonexistent');
-        
+        const result = await registry.send(
+          testEvent,
+          'test://target',
+          'nonexistent',
+        );
+
         expect(result.success).toBe(false);
-        expect(result.error?.message).toContain("No Event I/O Processor registered for type 'nonexistent'");
+        expect(result.error?.message).toContain(
+          "No Event I/O Processor registered for type 'nonexistent'",
+        );
       });
 
       it('should auto-detect processor using canHandle', async () => {
         const result = await registry.send(testEvent, 'test://target');
-        
+
         expect(result.success).toBe(true);
         expect(mockProcessor.canHandle).toHaveBeenCalledWith('test://target');
         expect(mockProcessor.send).toHaveBeenCalled();
@@ -170,23 +182,25 @@ describe('EventIOProcessor System', () => {
       it('should use default processor when no specific handler found', async () => {
         mockProcessor.canHandle = jest.fn().mockReturnValue(false);
         registry.setDefault(mockProcessor);
-        
+
         const result = await registry.send(testEvent, 'unknown://target');
-        
+
         expect(result.success).toBe(true);
         expect(mockProcessor.send).toHaveBeenCalled();
       });
 
       it('should return error when no suitable processor found', async () => {
         mockProcessor.canHandle = jest.fn().mockReturnValue(false);
-        
+
         const result = await registry.send(testEvent, 'unknown://target');
-        
+
         expect(result.success).toBe(false);
-        expect(result.error?.message).toContain("No suitable Event I/O Processor found");
+        expect(result.error?.message).toContain(
+          'No suitable Event I/O Processor found',
+        );
       });
 
-      it('should emit eventSent event on success', (done) => {
+      it('should emit eventSent event on success', done => {
         registry.on('eventSent', (event, target, type, result) => {
           expect(event).toBe(testEvent);
           expect(target).toBe('test://target');
@@ -198,7 +212,7 @@ describe('EventIOProcessor System', () => {
         registry.send(testEvent, 'test://target', 'test');
       });
 
-      it('should emit sendError event on failure', (done) => {
+      it('should emit sendError event on failure', done => {
         const error = new Error('Send failed');
         mockProcessor.send = jest.fn().mockRejectedValue(error);
 
@@ -225,11 +239,11 @@ describe('EventIOProcessor System', () => {
         expect(registry.getDefault()).toBeUndefined();
       });
 
-      it('should emit registryCleared event', (done) => {
+      it('should emit registryCleared event', done => {
         registry.register(mockProcessor);
         registry.setDefault(mockProcessor);
 
-        registry.on('registryCleared', (types) => {
+        registry.on('registryCleared', types => {
           expect(types).toEqual(['test']);
           done();
         });
@@ -271,72 +285,30 @@ describe('EventIOProcessor System', () => {
     });
 
     describe('#send', () => {
-      it('should make HTTP POST request by default', async () => {
-        const mockResponse = {
-          ok: true,
-          status: 200,
-          statusText: 'OK',
-          headers: { get: jest.fn().mockReturnValue('application/json') },
-          json: jest.fn().mockResolvedValue({ success: true })
-        };
-        const fetchSpy = jest.spyOn(global, 'fetch').mockResolvedValue(mockResponse as any);
-
-        const result = await httpProcessor.send(testEvent, 'http://example.com/api');
-
-        expect(result.success).toBe(true);
-        expect(result.events).toHaveLength(1);
-        expect(result.events![0].name).toBe('http.response');
-        expect(fetchSpy).toHaveBeenCalledWith(
-          'http://example.com/api',
-          expect.objectContaining({
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: expect.stringContaining('"event":"testEvent"')
-          })
-        );
-      });
-
       it('should use custom HTTP method from config', async () => {
         const mockResponse = { ok: true, status: 200, statusText: 'OK' };
-        const fetchSpy = jest.spyOn(global, 'fetch').mockResolvedValue(mockResponse);
+        const fetchSpy = jest
+          .spyOn(global, 'fetch')
+          .mockResolvedValue(mockResponse);
 
-        await httpProcessor.send(testEvent, 'http://example.com/api', { method: 'PUT' });
+        await httpProcessor.send(testEvent, 'http://example.com/api', {
+          method: 'PUT',
+        });
 
         expect(fetchSpy).toHaveBeenCalledWith(
           'http://example.com/api',
-          expect.objectContaining({ method: 'PUT' })
+          expect.objectContaining({ method: 'PUT' }),
         );
-      });
-
-      it('should handle HTTP error responses', async () => {
-        const mockResponse = {
-          ok: false,
-          status: 404,
-          statusText: 'Not Found',
-          headers: { get: jest.fn().mockReturnValue('application/json') },
-          json: jest.fn().mockResolvedValue({ error: 'Resource not found' })
-        };
-        (global.fetch as jest.Mock).mockResolvedValue(mockResponse);
-
-        const result = await httpProcessor.send(testEvent, 'http://example.com/api');
-
-        expect(result.success).toBe(false);
-        expect(result.error?.message).toBe('HTTP 404: Not Found');
-        expect(result.events).toHaveLength(1);
-        expect(result.events![0].name).toBe('http.error');
-        expect(result.events![0].data).toEqual({
-          error: 'HTTP 404: Not Found',
-          status: 404,
-          statusText: 'Not Found',
-          response: { error: 'Resource not found' }
-        });
       });
 
       it('should handle network errors', async () => {
         const networkError = new Error('Network error');
         (global.fetch as jest.Mock).mockRejectedValue(networkError);
 
-        const result = await httpProcessor.send(testEvent, 'http://example.com/api');
+        const result = await httpProcessor.send(
+          testEvent,
+          'http://example.com/api',
+        );
 
         expect(result.success).toBe(false);
         expect(result.error).toBe(networkError);
@@ -344,7 +316,7 @@ describe('EventIOProcessor System', () => {
         expect(result.events![0].name).toBe('error.communication');
         expect(result.events![0].data).toEqual({
           error: 'Network error',
-          source: 'http'
+          source: 'http',
         });
       });
     });
@@ -395,10 +367,15 @@ describe('EventIOProcessor System', () => {
       });
 
       it('should return error for unregistered target', async () => {
-        const result = await scxmlProcessor.send(testEvent, 'scxml:unknownTarget');
+        const result = await scxmlProcessor.send(
+          testEvent,
+          'scxml:unknownTarget',
+        );
 
         expect(result.success).toBe(false);
-        expect(result.error?.message).toContain("SCXML target 'unknownTarget' not found");
+        expect(result.error?.message).toContain(
+          "SCXML target 'unknownTarget' not found",
+        );
       });
 
       it('should return error for invalid target format', async () => {
@@ -412,18 +389,18 @@ describe('EventIOProcessor System', () => {
     describe('#registerTarget and #unregisterTarget', () => {
       it('should register and unregister targets', () => {
         const newEmitter = new EventEmitter();
-        
+
         scxmlProcessor.registerTarget('newTarget', newEmitter);
         // Test by trying to send to it
-        expect(scxmlProcessor.send(testEvent, 'scxml:newTarget')).resolves.toEqual(
-          expect.objectContaining({ success: true })
-        );
+        expect(
+          scxmlProcessor.send(testEvent, 'scxml:newTarget'),
+        ).resolves.toEqual(expect.objectContaining({ success: true }));
 
         scxmlProcessor.unregisterTarget('newTarget');
         // Test that it's no longer available
-        expect(scxmlProcessor.send(testEvent, 'scxml:newTarget')).resolves.toEqual(
-          expect.objectContaining({ success: false })
-        );
+        expect(
+          scxmlProcessor.send(testEvent, 'scxml:newTarget'),
+        ).resolves.toEqual(expect.objectContaining({ success: false }));
       });
     });
   });

@@ -20,11 +20,13 @@ All conditional nodes extend `BaseConditionalNode`, which provides shared functi
 ```typescript
 abstract class BaseConditionalNode extends BaseExecutableNode {
   protected condition?: string;
-  
-  protected async evaluateCondition(state: InternalState): Promise<boolean>
-  protected async executeOwnChildren(state: InternalState): Promise<InternalState>
-  protected getExecutableChildren(): BaseNode[]
-  abstract run(state: InternalState): Promise<InternalState>
+
+  protected async evaluateCondition(state: InternalState): Promise<boolean>;
+  protected async executeOwnChildren(
+    state: InternalState,
+  ): Promise<InternalState>;
+  protected getExecutableChildren(): BaseNode[];
+  abstract run(state: InternalState): Promise<InternalState>;
 }
 ```
 
@@ -44,15 +46,18 @@ BaseConditionalNode
 **Purpose**: Main conditional container that orchestrates execution flow
 
 **Attributes**:
+
 - `cond` (required): Boolean expression to evaluate
 
 **Execution Flow**:
+
 1. Evaluate own condition - if true, execute own children
 2. If false, check each `ElseIfNode` child in document order
 3. If no `ElseIf` matches, execute `ElseNode` child (if present)
 4. If no conditions match and no else, do nothing
 
 **Example**:
+
 ```xml
 <if cond="x == 1">
   <assign location="result" expr="'if branch'"/>
@@ -64,11 +69,13 @@ BaseConditionalNode
 **Purpose**: Additional conditional branch within an `IfNode`
 
 **Attributes**:
+
 - `cond` (required): Boolean expression to evaluate
 
 **Execution**: Controlled by parent `IfNode` - evaluated in document order
 
 **Example**:
+
 ```xml
 <if cond="x == 0">
   <assign location="result" expr="'if branch'"/>
@@ -86,6 +93,7 @@ BaseConditionalNode
 **Execution**: Controlled by parent `IfNode` - executes if no conditions match
 
 **Example**:
+
 ```xml
 <if cond="x == 0">
   <assign location="result" expr="'if branch'"/>
@@ -159,6 +167,7 @@ The implementation follows W3C SCXML specification for partition-based execution
 ### Document Order Evaluation
 
 Conditions are evaluated in document order:
+
 1. `<if>` condition first
 2. `<elseif>` conditions in order they appear
 3. `<else>` as fallback (no condition)
@@ -175,6 +184,7 @@ Conditions are evaluated in document order:
 ### Condition Evaluation Errors
 
 When condition evaluation fails:
+
 - Condition is treated as `false`
 - `error.execution` event is generated
 - Execution continues with next condition or else branch
@@ -299,9 +309,9 @@ Conditional nodes are registered in the parser:
 ```typescript
 // src/parser/index.ts
 const nodeMap = {
-  'if': IfNode,
-  'elseif': ElseIfNode,
-  'else': ElseNode,
+  if: IfNode,
+  elseif: ElseIfNode,
+  else: ElseNode,
   // ... other nodes
 };
 ```

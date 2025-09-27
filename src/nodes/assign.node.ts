@@ -14,27 +14,30 @@ const AssignNodeAttr = BaseExecutableNode.schema
   .extend({
     location: z.string().min(1, 'A location is required for the <assign> node'), // Required location expression
     expr: z.string().optional(), // Optional expression (mutually exclusive with content)
-    clear: z.union([
-      z.coerce.boolean(),
-      z.literal(null),
-      z.literal(undefined),
-      z.enum(['null', 'undefined'])
-    ]).pipe(
-      z.transform(val => {
-        switch(val) {
-          case 'null':
-            return null;
-          case 'undefined':
-            return undefined;
-          case null:
-            return null;
-          case undefined:
-            return undefined;
-          default:
-            return Boolean(val);
-        }
-      })
-    ).optional()
+    clear: z
+      .union([
+        z.coerce.boolean(),
+        z.literal(null),
+        z.literal(undefined),
+        z.enum(['null', 'undefined']),
+      ])
+      .pipe(
+        z.transform(val => {
+          switch (val) {
+            case 'null':
+              return null;
+            case 'undefined':
+              return undefined;
+            case null:
+              return null;
+            case undefined:
+              return undefined;
+            default:
+              return Boolean(val);
+          }
+        }),
+      )
+      .optional(),
   })
   .refine(
     data => {
@@ -76,7 +79,7 @@ export class AssignNode extends BaseExecutableNode {
     try {
       // Handle clear operations first (highest priority)
       if (this.clear !== undefined) {
-        switch(this.clear) {
+        switch (this.clear) {
           // Set the value to null when the clear property is set to null
           case null:
             return this.assignToLocation(nextState, this.location, null);
@@ -104,7 +107,7 @@ export class AssignNode extends BaseExecutableNode {
         return this.assignToLocation(
           nextState,
           this.location,
-          this.children.map(child => child.content).join('')
+          this.children.map(child => child.content).join(''),
         );
       }
 
@@ -117,13 +120,10 @@ export class AssignNode extends BaseExecutableNode {
       error.data = {
         ...error.data,
         node: this.toString(),
-        state: structuredClone(nextState)
-      }
+        state: structuredClone(nextState),
+      };
 
-      return addPendingEvent(
-        state,
-        addNodeDetails(error, this)
-      );
+      return addPendingEvent(state, addNodeDetails(error, this));
     }
   }
 

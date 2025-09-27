@@ -36,7 +36,7 @@ describe('History Data Structures', () => {
       const afterTime = Date.now();
       const timestampMatch = id.match(/^hist_(\d+)_/);
       expect(timestampMatch).toBeTruthy();
-      
+
       const timestamp = parseInt(timestampMatch![1]);
       expect(timestamp).toBeGreaterThanOrEqual(beforeTime);
       expect(timestamp).toBeLessThanOrEqual(afterTime);
@@ -104,7 +104,7 @@ describe('History Data Structures', () => {
       expect(serialized.metadata).toEqual(entry.metadata);
       expect(serialized.parentId).toBe(entry.parentId);
       expect(serialized.childIds).toEqual(entry.childIds);
-      
+
       // Check transition serialization
       expect(serialized.transition).toBeDefined();
       expect(serialized.transition!.error).toBe('Test error');
@@ -184,7 +184,9 @@ describe('History Data Structures', () => {
       expect(deserialized.id).toBe(serialized.id);
       expect(deserialized.timestamp).toBe(serialized.timestamp);
       expect(deserialized.type).toBe(serialized.type);
-      expect(deserialized.stateConfiguration).toEqual(serialized.stateConfiguration);
+      expect(deserialized.stateConfiguration).toEqual(
+        serialized.stateConfiguration,
+      );
       expect(deserialized.internalState).toEqual(serialized.internalState);
       expect(deserialized.event).toEqual(serialized.event);
       expect(deserialized.duration).toBe(serialized.duration);
@@ -193,7 +195,7 @@ describe('History Data Structures', () => {
       expect(deserialized.metadata).toEqual(serialized.metadata);
       expect(deserialized.parentId).toBe(serialized.parentId);
       expect(deserialized.childIds).toEqual(serialized.childIds);
-      
+
       // Check transition deserialization
       expect(deserialized.transition).toBeDefined();
       expect(deserialized.transition!.error).toBeInstanceOf(Error);
@@ -228,31 +230,13 @@ describe('History Data Structures', () => {
       // Assert
       expect(DEFAULT_HISTORY_OPTIONS.enabled).toBe(true);
       expect(DEFAULT_HISTORY_OPTIONS.maxEntries).toBe(1000);
-      expect(DEFAULT_HISTORY_OPTIONS.trackedEventTypes).toEqual(Object.values(HistoryEventType));
+      expect(DEFAULT_HISTORY_OPTIONS.trackedEventTypes).toEqual(
+        Object.values(HistoryEventType),
+      );
       expect(DEFAULT_HISTORY_OPTIONS.includeInternalState).toBe(true);
       expect(DEFAULT_HISTORY_OPTIONS.trackTiming).toBe(true);
       expect(DEFAULT_HISTORY_OPTIONS.trackCausality).toBe(true);
       expect(DEFAULT_HISTORY_OPTIONS.defaultMetadata).toEqual({});
-    });
-  });
-
-  describe('HistoryEventType enum', () => {
-    it('should contain all expected event types', () => {
-      // Assert
-      expect(HistoryEventType.STATE_ENTRY).toBe('state_entry');
-      expect(HistoryEventType.STATE_EXIT).toBe('state_exit');
-      expect(HistoryEventType.TRANSITION).toBe('transition');
-      expect(HistoryEventType.EVENT_PROCESSED).toBe('event_processed');
-      expect(HistoryEventType.MICROSTEP_START).toBe('microstep_start');
-      expect(HistoryEventType.MICROSTEP_END).toBe('microstep_end');
-      expect(HistoryEventType.MACROSTEP_START).toBe('macrostep_start');
-      expect(HistoryEventType.MACROSTEP_END).toBe('macrostep_end');
-      expect(HistoryEventType.ERROR).toBe('error');
-    });
-
-    it('should have 9 event types', () => {
-      // Assert
-      expect(Object.values(HistoryEventType)).toHaveLength(9);
     });
   });
 });

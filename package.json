@@ -1,5 +1,5 @@
 {
-  "name": "statecharts",
+  "name": "@tkottke90/statecharts",
   "version": "1.0.0",
   "description": "",
   "main": "./dist/index.js",

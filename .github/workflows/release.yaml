@@ -14,6 +14,8 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get_version.outputs.version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -34,7 +36,9 @@ jobs:
 
       - name: 'Get Version from package.json'
         id: get_version
-        run: echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_ENV
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: 'Get Short SHA'
         id: get_short_sha
@@ -68,7 +72,7 @@ jobs:
             exit 1
           fi
 
-          tar -czvf ${{ env.RELEASE_FILENAME }} dist
+          tar -czvf ${{ env.RELEASE_FILENAME }} dist package.json package-lock.json
 
       - name: Create Tag
         id: create_tag
@@ -90,5 +94,42 @@ jobs:
         if: ${{ env.IS_SNAPSHOT == 'true' }}
         uses: actions/upload-artifact@v5
         with:
-          name: ${{ env.RELEASE_FILENAME }}
+          name: ${{ env.VERSION }}${{ env.RELEASE_FILENAME_SUFFIX != '' && format('-{0}', env.RELEASE_FILENAME_SUFFIX) || '' }}
           path: ${{ env.RELEASE_FILENAME }}
+
+      - name: Create version bump branch
+        run: |
+          BRANCH_NAME="version-bump-$(date +%s)"
+          git checkout -b $BRANCH_NAME
+          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+
+      - name: Bump version
+        run: |
+          npm version minor --no-git-tag-version
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+          git add package.json package-lock.json
+          git commit -m "chore: bump version to $NEW_VERSION"
+
+      - name: Push version bump branch
+        run: |
+          git push origin $BRANCH_NAME
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ env.BRANCH_NAME }}
+          base: main
+          title: "chore: bump version to ${{ env.NEW_VERSION }}"
+          body: |
+            ## Version Bump
+
+            This PR bumps the version from ${{ needs.build.outputs.version }} to ${{ env.NEW_VERSION }} following the release.
+
+            ### Changes
+            - Updated `package.json` version
+            - Updated `package-lock.json` version
+
+            This PR was automatically created by the release workflow.
+          delete-branch: true

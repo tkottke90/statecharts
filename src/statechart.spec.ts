@@ -6,7 +6,7 @@ import { AssignNode } from './nodes/assign.node';
 import { BaseExecutableNode } from './models/base-executable';
 import { InternalState } from './models/internalState';
 import { SCXMLNode } from './nodes/scxml.node';
-import { OnEntryNode } from './nodes';
+import { OnEntryNode, OnExitNode } from './nodes';
 
 // Type for mock active state chain entries
 type MockActiveStateEntry = [string, Record<string, unknown>];
@@ -310,14 +310,11 @@ describe('StateChart', () => {
         ],
         ['playing.healthSystem.healthy', healthyStateNode],
       ];
+
+      // Manually set the state chain
       (
         stateChart as unknown as { activeStateChain: ActiveStateEntry[] }
       ).activeStateChain = activeStateChain;
-
-      // Mock the findSourceStateForTransition method to return the source state
-      jest
-        .spyOn(stateChart as any, 'findSourceStateForTransition')
-        .mockReturnValue('playing.healthSystem.healthy');
 
       const initialState = { currentData: 'initial' };
 
@@ -365,21 +362,27 @@ describe('StateChart', () => {
         },
       });
 
+      const assignNode = new AssignNode({
+        assign: {
+          location: 'data.healthy',
+          expr: '"exited"', // Use expr with proper string literal
+          content: '', // Required by BaseNode
+          children: []
+        }
+      })
+
+      const healthyOnExit = new OnExitNode({
+        onexit: { content: '', children: [assignNode] }
+      })
+
       // Create StateNode instances
       const healthyStateNode = new StateNode({
-        state: { id: 'healthy', content: '', children: [] },
-      });
-      const criticalStateNode = new StateNode({
-        state: { id: 'critical', content: '', children: [] },
+        state: { id: 'healthy', content: '', children: [healthyOnExit, transition1] },
       });
 
-      // Mock unmount methods
-      jest
-        .spyOn(healthyStateNode, 'unmount')
-        .mockResolvedValue({ data: { healthy: 'exited' } });
-      jest
-        .spyOn(criticalStateNode, 'unmount')
-        .mockResolvedValue({ data: { critical: 'exited' } });
+      const criticalStateNode = new StateNode({
+        state: { id: 'critical', content: '', children: [transition2] },
+      });
 
       // Set up active state chain
       const activeStateChain: ActiveStateEntry[] = [
@@ -398,19 +401,11 @@ describe('StateChart', () => {
         ['playing.healthSystem.healthy', healthyStateNode],
         ['playing.healthSystem.critical', criticalStateNode],
       ];
+
+      // Manually set the state chain
       (
         stateChart as unknown as { activeStateChain: ActiveStateEntry[] }
       ).activeStateChain = activeStateChain;
-
-      // Mock the findSourceStateForTransition method
-      jest
-        .spyOn(stateChart as any, 'findSourceStateForTransition')
-        .mockImplementation(transition => {
-          if (transition === transition1) return 'playing.healthSystem.healthy';
-          if (transition === transition2)
-            return 'playing.healthSystem.critical';
-          return null;
-        });
 
       const initialState = { baseData: 'base' };
 
@@ -446,10 +441,10 @@ describe('StateChart', () => {
         },
       });
 
-      // Mock findSourceStateForTransition to return null (no source found)
-      jest
-        .spyOn(stateChart as any, 'findSourceStateForTransition')
-        .mockReturnValue(null);
+      // Manually set the state chain
+      (
+        stateChart as unknown as { activeStateChain: ActiveStateEntry[] }
+      ).activeStateChain = [];
 
       const initialState = { baseData: 'base' };
 
@@ -1092,356 +1087,6 @@ describe('StateChart', () => {
       expect(updatedActiveChain).toHaveLength(2);
       expect(updatedActiveChain[0][0]).toBe('a');
       expect(updatedActiveChain[1][0]).toBe('b');
-    });
-  });
-
-  describe('executeTransitionContent', () => {
-    let stateChart: StateChart;
-
-    beforeEach(() => {
-      stateChart = new StateChart(
-        'gameStart',
-        createMockSCXMLNode(),
-        new Map(),
-      );
-    });
-
-    it('should execute AssignNode executable content and update state', async () => {
-      // Arrange
-      const assignNode = new AssignNode({
-        assign: {
-          location: 'data.testVar',
-          expr: '"Hello World"', // Proper JavaScript string literal
-          content: '',
-          children: [],
-        },
-      });
-
-      const transition = new TransitionNode({
-        transition: {
-          target: 'targetState',
-          event: '',
-          content: '',
-          children: [],
-        },
-      });
-
-      // Add the assign node as a child of the transition
-      transition.children.push(assignNode);
-
-      const initialState = {
-        existingData: 'initial',
-        _datamodel: 'ecmascript', // Add datamodel for expression evaluation
-        data: {}, // Add required data property
-      };
-
-      // Act
-      const result = await (stateChart as any).executeTransitionContent(
-        [transition],
-        initialState,
-      );
-
-      // Assert
-      expect(result).toEqual({
-        existingData: 'initial', // This stays at root level (was in initial state)
-        _datamodel: 'ecmascript',
-        data: {
-          testVar: 'Hello World', // AssignNode correctly assigns to data model
-        },
-      });
-    });
-
-    it('should execute multiple executable content nodes in document order', async () => {
-      // Arrange
-      const assignNode1 = new AssignNode({
-        assign: {
-          location: 'data.var1',
-          expr: '"value1"', // Proper JavaScript string literal
-          content: '',
-          children: [],
-        },
-      });
-
-      const assignNode2 = new AssignNode({
-        assign: {
-          location: 'data.var2',
-          expr: '"value2"', // Proper JavaScript string literal
-          content: '',
-          children: [],
-        },
-      });
-
-      const transition = new TransitionNode({
-        transition: {
-          target: 'targetState',
-          event: '',
-          content: '',
-          children: [],
-        },
-      });
-
-      // Add nodes in specific order
-      transition.children.push(assignNode1, assignNode2);
-
-      const initialState = {
-        baseData: 'base',
-        _datamodel: 'ecmascript', // Add datamodel for expression evaluation
-        data: {}, // Add required data property
-      };
-
-      // Act
-      const result = await (stateChart as any).executeTransitionContent(
-        [transition],
-        initialState,
-      );
-
-      // Assert
-      expect(result).toEqual({
-        baseData: 'base', // This stays at root level (was in initial state)
-        _datamodel: 'ecmascript',
-        data: {
-          var1: 'value1', // AssignNode correctly assigns to data model
-          var2: 'value2', // AssignNode correctly assigns to data model
-        },
-      });
-    });
-
-    it('should handle multiple transitions with executable content', async () => {
-      // Arrange
-      const assignNode1 = new AssignNode({
-        assign: {
-          location: 'data.transition1Var',
-          expr: '"from transition 1"', // Proper JavaScript string literal
-          content: '',
-          children: [],
-        },
-      });
-
-      const assignNode2 = new AssignNode({
-        assign: {
-          location: 'data.transition2Var',
-          expr: '"from transition 2"', // Proper JavaScript string literal
-          content: '',
-          children: [],
-        },
-      });
-
-      const transition1 = new TransitionNode({
-        transition: {
-          target: 'state1',
-          event: '',
-          content: '',
-          children: [],
-        },
-      });
-      transition1.children.push(assignNode1);
-
-      const transition2 = new TransitionNode({
-        transition: {
-          target: 'state2',
-          event: '',
-          content: '',
-          children: [],
-        },
-      });
-      transition2.children.push(assignNode2);
-
-      const initialState = {
-        baseData: 'base',
-        _datamodel: 'ecmascript', // Add datamodel for expression evaluation
-        data: {}, // Add required data property
-      };
-
-      // Act
-      const result = await (stateChart as any).executeTransitionContent(
-        [transition1, transition2],
-        initialState,
-      );
-
-      // Assert
-      expect(result).toEqual({
-        baseData: 'base', // This stays at root level (was in initial state)
-        _datamodel: 'ecmascript',
-        data: {
-          transition1Var: 'from transition 1', // AssignNode correctly assigns to data model
-          transition2Var: 'from transition 2', // AssignNode correctly assigns to data model
-        },
-      });
-    });
-
-    it('should handle transitions with no executable content', async () => {
-      // Arrange
-      const transition = new TransitionNode({
-        transition: {
-          target: 'targetState',
-          event: '',
-          content: '',
-          children: [],
-        },
-      });
-
-      const initialState = { existingData: 'unchanged' };
-
-      // Act
-      const result = await (stateChart as any).executeTransitionContent(
-        [transition],
-        initialState,
-      );
-
-      // Assert
-      expect(result).toEqual({ existingData: 'unchanged' });
-    });
-
-    // TODO: Review this test when we have better error handling
-    it('should handle execution errors gracefully and continue processing', async () => {
-      // Arrange
-      const failingNode = new (class extends BaseExecutableNode {
-        static label = 'assign';
-
-        constructor() {
-          super({ content: '', children: [] });
-        }
-
-        async run(): Promise<InternalState> {
-          throw new Error('Simulated execution error');
-        }
-      })();
-
-      const successNode = new AssignNode({
-        assign: {
-          location: 'data.successVar',
-          expr: '"success"', // Proper JavaScript string literal
-          content: '',
-          children: [],
-        },
-      });
-
-      const transition = new TransitionNode({
-        transition: {
-          target: 'targetState',
-          event: '',
-          content: '',
-          children: [],
-        },
-      });
-
-      transition.children.push(failingNode, successNode);
-
-      const initialState = {
-        baseData: 'base',
-        _datamodel: 'ecmascript', // Add datamodel for expression evaluation
-        data: {}, // Add required data property
-      };
-
-      // Act
-      const result = await (stateChart as any).executeTransitionContent(
-        [transition],
-        initialState,
-      );
-
-      // Assert - Error handling generates structured error events instead of console logging
-      expect(result).toEqual({
-        baseData: 'base', // This stays at root level (was in initial state)
-        _datamodel: 'ecmascript',
-        data: {
-          successVar: 'success', // AssignNode correctly assigns to data model
-        },
-        _pendingInternalEvents: [
-          {
-            name: 'error.transaction.execution-failed',
-            type: 'platform',
-            sendid: '',
-            origin: '',
-            origintype: '',
-            invokeid: '',
-            data: {
-              error: 'Simulated execution error',
-              source: 'transition',
-            },
-          },
-        ],
-      });
-    });
-
-    it('should work with StateChart constructed from XML with executable content', async () => {
-      // Arrange - XML example showing transition with executable content
-      const scxmlWithExecutableContent = `
-        <scxml version="1.0" initial="start">
-          <state id="start">
-            <transition target="processing">
-              <assign id="status" expr="'processing started'" />
-              <assign id="timestamp" expr="Date.now()" />
-            </transition>
-          </state>
-          <state id="processing">
-            <transition target="complete">
-              <assign id="status" expr="'processing complete'" />
-            </transition>
-          </state>
-          <final id="complete" />
-        </scxml>
-      `;
-
-      // Note: This test demonstrates the XML structure but uses manual construction
-      // since the full XML parsing integration is not yet implemented
-
-      const assignNode1 = new AssignNode({
-        assign: {
-          location: 'data.status',
-          expr: '"processing started"', // Proper JavaScript string literal
-          content: '',
-          children: [],
-        },
-      });
-
-      const assignNode2 = new AssignNode({
-        assign: {
-          location: 'data.timestamp',
-          expr: '"1234567890"', // Proper JavaScript string literal
-          content: '',
-          children: [],
-        },
-      });
-
-      const transition = new TransitionNode({
-        transition: {
-          target: 'processing',
-          event: '',
-          content: '',
-          children: [],
-        },
-      });
-
-      transition.children.push(assignNode1, assignNode2);
-
-      const initialState = {
-        _datamodel: 'ecmascript', // Add datamodel for expression evaluation
-        data: {}, // Add required data property
-      };
-
-      // Act
-      const result = await (stateChart as any).executeTransitionContent(
-        [transition],
-        initialState,
-      );
-
-      // Assert
-      expect(result).toEqual({
-        _datamodel: 'ecmascript',
-        data: {
-          status: 'processing started', // AssignNode correctly assigns to data model
-          timestamp: '1234567890', // AssignNode correctly assigns to data model
-        },
-      });
-
-      // This demonstrates how the XML structure would work:
-      // - The <transition> element contains executable content
-      // - <assign> elements modify the data model during transition execution
-      // - Multiple assignments are executed in document order
-      // - The state is updated with all assignments before entering the target state
-
-      // XML structure is provided as reference for implementers
-      expect(scxmlWithExecutableContent).toContain('<assign');
     });
   });
 

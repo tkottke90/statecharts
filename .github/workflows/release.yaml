@@ -92,7 +92,7 @@ jobs:
 
       - name: Save Artifact
         if: ${{ env.IS_SNAPSHOT == 'true' }}
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: ${{ env.VERSION }}${{ env.RELEASE_FILENAME_SUFFIX != '' && format('-{0}', env.RELEASE_FILENAME_SUFFIX) || '' }}
           path: ${{ env.RELEASE_FILENAME }}

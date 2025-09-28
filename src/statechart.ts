@@ -44,6 +44,7 @@ export class StateChart extends StateChartBase {
   private internalEventQueue = new Queue<SCXMLEvent>();
   private lastState: InternalState | undefined;
   private states: Map<string, BaseStateNode> = new Map();
+  private macroStepDone: boolean = false;
 
   private macroStepCount = 0;
   private microStepCount = 0;
@@ -140,12 +141,12 @@ export class StateChart extends StateChartBase {
     );
 
     this.history.startContext(macrostepId);
+    this.macroStepDone = false;
 
     // Process pending events from state into internal queue
     processPendingEvents(state, this.internalEventQueue);
 
-    let macrostepDone = false;
-    while (!macrostepDone) {
+    while (!this.macroStepDone) {
       this.macroStepCount++;
       
       // 1. Process eventless transitions first (highest priority)
@@ -239,7 +240,7 @@ export class StateChart extends StateChartBase {
         }
       }
       // 4. No more events or transitions - macrostep complete
-      macrostepDone = true;
+      this.macroStepDone = true;
     }
 
     this.history.endContext();

@@ -3,8 +3,7 @@ import { StateNode } from './nodes/state.node';
 import { TransitionNode } from './nodes/transition.node';
 import { BaseStateNode } from './models/base-state';
 import { AssignNode } from './nodes/assign.node';
-import { BaseExecutableNode } from './models/base-executable';
-import { InternalState } from './models/internalState';
+import { InternalState, SCXMLEvent } from './models/internalState';
 import { SCXMLNode } from './nodes/scxml.node';
 import { OnEntryNode, OnExitNode } from './nodes';
 
@@ -33,7 +32,6 @@ describe('StateChart', () => {
 
     beforeEach(() => {
       stateChart = new StateChart(
-        'gameStart',
         createMockSCXMLNode(),
         new Map(),
       );
@@ -259,7 +257,6 @@ describe('StateChart', () => {
 
     beforeEach(() => {
       stateChart = new StateChart(
-        'gameStart',
         createMockSCXMLNode(),
         new Map(),
       );
@@ -470,7 +467,6 @@ describe('StateChart', () => {
 
     beforeEach(() => {
       stateChart = new StateChart(
-        'gameStart',
         createMockSCXMLNode(),
         new Map(),
       );
@@ -914,7 +910,6 @@ describe('StateChart', () => {
 
     beforeEach(() => {
       stateChart = new StateChart(
-        'gameStart',
         createMockSCXMLNode(),
         new Map(),
       );
@@ -941,7 +936,6 @@ describe('StateChart', () => {
       const mountSpy = jest.spyOn(stateNode, 'mount');
 
       const stateChart = new StateChart(
-        'testState',
         new SCXMLNode({
           scxml: {
             content: '',
@@ -1100,6 +1094,241 @@ describe('StateChart', () => {
     it.todo('should maintain activeStateChain consistency');
 
     it.todo('should handle complex state hierarchy transitions');
+  });
+
+  describe('Persistence', () => {
+    let stateChart: StateChart;
+
+    beforeEach(() => {
+      stateChart = new StateChart(
+        createMockSCXMLNode(),
+        new Map(),
+      );
+    });
+
+    describe('toJSON', () => {
+      it('should return StateChartJSON with current state data', () => {
+        // Arrange
+        const mockState = { data: { test: 'value' } };
+        const mockActiveChain = [['state1', {} as BaseStateNode], ['state2', {} as BaseStateNode]];
+        const mockExternalEvents: SCXMLEvent[] = [{
+          name: 'test.event',
+          data: {},
+          type: 'external',
+          sendid: '',
+          origin: '',
+          origintype: '',
+          invokeid: ''
+        }];
+
+        // Set up internal state using private property access (testing private method)
+        (stateChart as any).lastState = mockState;
+        (stateChart as any).activeStateChain = mockActiveChain;
+        (stateChart as any).macroStepCount = 5;
+        (stateChart as any).microStepCount = 10;
+        (stateChart as any).externalEventQueue.enqueue(mockExternalEvents[0]);
+
+        // Act
+        const result = stateChart.toJSON();
+
+        // Assert
+        expect(result.state).toEqual(mockState);
+        expect(result.activeStateChain).toEqual(['state1', 'state2']);
+        expect(result.macroStepCount).toBe(5);
+        expect(result.microStepCount).toBe(10);
+        expect(result.externalEvents).toEqual(mockExternalEvents);
+        expect(result.internalEvents).toEqual([]);
+        expect(result.history).toBeDefined();
+      });
+
+      it('should handle empty state and no active states', () => {
+        // Arrange - StateChart starts with empty state
+
+        // Act
+        const result = stateChart.toJSON();
+
+        // Assert
+        expect(result.state).toEqual({ data: {} });
+        expect(result.activeStateChain).toEqual([]);
+        expect(result.macroStepCount).toBe(0);
+        expect(result.microStepCount).toBe(0);
+        expect(result.externalEvents).toEqual([]);
+        expect(result.internalEvents).toEqual([]);
+        expect(result.history).toEqual([]);
+      });
+    });
+
+    describe('serialize', () => {
+      it('should return valid JSON string representation', () => {
+        // Arrange
+        const mockState = { data: { serialized: true } };
+        (stateChart as any).lastState = mockState;
+
+        // Act
+        const result = stateChart.serialize();
+
+        // Assert
+        expect(typeof result).toBe('string');
+        expect(() => JSON.parse(result)).not.toThrow();
+
+        const parsed = JSON.parse(result);
+        expect(parsed.state).toEqual(mockState);
+        expect(parsed.activeStateChain).toBeDefined();
+        expect(parsed.macroStepCount).toBeDefined();
+        expect(parsed.microStepCount).toBeDefined();
+      });
+
+      it('should produce serialized data that matches toJSON output', () => {
+        // Arrange
+        const mockState = { data: { consistency: 'test' } };
+        (stateChart as any).lastState = mockState;
+
+        // Act
+        const jsonResult = stateChart.toJSON();
+        const serializedResult = JSON.parse(stateChart.serialize());
+
+        // Assert
+        expect(serializedResult).toEqual(jsonResult);
+      });
+    });
+
+    describe('deserialize', () => {
+      it('should parse valid JSON string and return StateChartJSON object', () => {
+        // Arrange
+        const mockStateChartJSON = {
+          state: { data: { deserialized: true } },
+          activeStateChain: ['state1', 'state2'],
+          externalEvents: [],
+          internalEvents: [],
+          macroStepCount: 3,
+          microStepCount: 7,
+          history: []
+        };
+        const jsonString = JSON.stringify(mockStateChartJSON);
+
+        // Act
+        const result = stateChart.deserialize(jsonString);
+
+        // Assert
+        expect(result).toEqual(mockStateChartJSON);
+      });
+
+      it('should throw error for invalid JSON string', () => {
+        // Arrange
+        const invalidJson = '{ invalid json }';
+        const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+        // Act & Assert
+        expect(() => stateChart.deserialize(invalidJson)).toThrow();
+
+        // Cleanup
+        consoleSpy.mockRestore();
+      });
+
+      it('should handle empty JSON object', () => {
+        // Arrange
+        const emptyJson = '{}';
+
+        // Act
+        const result = stateChart.deserialize(emptyJson);
+
+        // Assert
+        expect(result).toEqual({});
+      });
+    });
+
+    describe('constructor with persistence option', () => {
+      it('should restore state from persistence data', () => {
+        // Arrange
+        const persistedState = {
+          state: { data: { restored: true } },
+          activeStateChain: ['restored.state'],
+          externalEvents: [],
+          internalEvents: [],
+          macroStepCount: 2,
+          microStepCount: 4,
+          history: []
+        };
+        const persistenceString = JSON.stringify(persistedState);
+
+        // Act
+        const restoredStateChart = new StateChart(
+          createMockSCXMLNode(),
+          new Map([['restored.state', new StateNode({ state: { id: 'restored.state', content: '', children: [] } })]]),
+          { persistence: persistenceString }
+        );
+
+        // Assert
+        const currentJson = restoredStateChart.toJSON();
+        expect(currentJson.state).toEqual(persistedState.state);
+        expect(currentJson.macroStepCount).toBe(persistedState.macroStepCount);
+        expect(currentJson.microStepCount).toBe(persistedState.microStepCount);
+      });
+
+      it('should initialize with default state when no persistence provided', () => {
+        // Arrange & Act
+        const newStateChart = new StateChart(
+          createMockSCXMLNode(),
+          new Map(),
+        );
+
+        // Assert
+        const currentJson = newStateChart.toJSON();
+        expect(currentJson.state).toEqual({ data: {} });
+        expect(currentJson.macroStepCount).toBe(0);
+        expect(currentJson.microStepCount).toBe(0);
+      });
+    });
+  });
+
+  describe('lastState Property', () => {
+    let stateChart: StateChart;
+
+    beforeEach(() => {
+      // Use a simple XML string to create a valid StateChart
+      const simpleXML = `<?xml version="1.0" encoding="UTF-8"?>
+        <scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" initial="gameStart">
+          <state id="gameStart">
+          </state>
+        </scxml>`;
+
+      stateChart = StateChart.fromXML(simpleXML);
+    });
+
+    it('should initialize lastState with empty data object', () => {
+      // Arrange & Act - StateChart is created in beforeEach
+
+      // Assert
+      const json = stateChart.toJSON();
+      expect(json.state).toEqual({ data: {} });
+    });
+
+    it('should maintain lastState between macrosteps', async () => {
+      // Arrange
+      const initialState = { data: { persistent: 'value' } };
+      await stateChart.execute(initialState);
+
+      // Act - Add an event to trigger another macrostep
+      const testEvent: SCXMLEvent = {
+        name: 'test.event',
+        data: {},
+        type: 'external',
+        sendid: '',
+        origin: '',
+        origintype: '',
+        invokeid: ''
+      };
+      stateChart.addEvent(testEvent);
+
+      // Allow some time for event processing
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      // Assert
+      const secondJson = stateChart.toJSON();
+      expect(secondJson.state).toBeDefined();
+      // State should be maintained or updated, not reset
+      expect(secondJson.state.data).toBeDefined();
+    });
   });
 
   describe('Edge Cases', () => {

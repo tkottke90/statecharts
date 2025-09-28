@@ -15,19 +15,30 @@ import {
   processPendingEvents,
   SCXMLEvent,
 } from './models/internalState';
-import { Queue } from './models/event-queue';
+import { Queue, QueueMode } from './models/event-queue';
 import { StateExecutionHistory } from './models/state-execution-history';
-import { HistoryTrackingOptions, HistoryEventType } from './models/history';
+import { HistoryTrackingOptions, HistoryEventType, SerializableHistoryEntry } from './models/history';
 import z from 'zod';
 import { XMLParsingError } from './errors';
 import { InitializeDataModelMixin } from './models/mixins/initializeDataModel';
 
 type Tuple<T> = Array<[string, T]>;
 
+interface StateChartJSON {
+  state: InternalState;
+  activeStateChain: string[];
+  externalEvents: SCXMLEvent[];
+  internalEvents: SCXMLEvent[];
+  macroStepCount: number;
+  microStepCount: number;
+  history: SerializableHistoryEntry[];
+}
+
 interface StateChartOptions {
   abort?: AbortController;
   timeout?: number;
   history?: Partial<HistoryTrackingOptions>;
+  persistence?: string;
 }
 
 // This base class is used to add mixins
@@ -57,7 +68,6 @@ export class StateChart extends StateChartBase {
   // ============================================================================
 
   constructor(
-    private initial: string,
     private readonly root: SCXMLNode,
     stateMap: Map<string, BaseNode>,
     options: StateChartOptions = {},
@@ -74,9 +84,26 @@ export class StateChart extends StateChartBase {
       }
     });
 
-    this.lastState = {
-      data: {}
-    };
+    if (options?.persistence) {
+      const persistedState = this.deserialize(options.persistence);
+      this.lastState = persistedState.state;
+      this.activeStateChain = persistedState.activeStateChain.map(path => [path, this.states.get(path)!]);
+      this.macroStepCount = persistedState.macroStepCount;
+      this.microStepCount = persistedState.microStepCount;
+      this.history.import(persistedState.history);
+      
+      this.externalEventQueue = new Queue<SCXMLEvent>(QueueMode.LastInFirstOut);
+      persistedState.externalEvents.forEach(event => this.externalEventQueue.enqueue(event));
+      
+      this.internalEventQueue = new Queue<SCXMLEvent>(QueueMode.LastInFirstOut);
+      persistedState.internalEvents.forEach(event => this.internalEventQueue.enqueue(event));
+
+    } else {
+      this.lastState = {
+        data: {}
+      };
+    }
+
   }
 
   // ============================================================================
@@ -111,6 +138,16 @@ export class StateChart extends StateChartBase {
     return candidateEntryPaths.filter((path: string) => !this.isActive(path));
   }
 
+  deserialize(jsonData: string) {
+    try {
+      return JSON.parse(jsonData) as StateChartJSON;
+    } catch (error) {
+      console.error('Unable to Deserialize', error);
+
+      throw error;
+    }
+  }
+
   async execute(
     input: InternalState,
     options?: StateChartOptions,
@@ -139,13 +176,16 @@ export class StateChart extends StateChartBase {
     }
 
     // SCXML Specification: Initialize the data model before entering initial states
-    let currentState = await this.initializeDataModel(this.root, input);
+    this.lastState = await this.initializeDataModel(this.root, input);
 
     // SCXML Specification: Enter the initial state configuration with onentry handlers
-    currentState = await this.enterInitialStates(currentState);
+    this.lastState = await this.enterInitialStates(this.lastState);
 
     // Run the event loop
-    return await this.macrostep(currentState);
+    return await this.macrostep(
+      // Clone the state so that it is not manipulated during processing
+      structuredClone(this.lastState)
+    );
   }
 
   async macrostep(state: InternalState): Promise<InternalState> {
@@ -381,6 +421,22 @@ export class StateChart extends StateChartBase {
     );
 
     return currentState;
+  }
+
+  serialize() {
+    return JSON.stringify(this);
+  }
+
+  toJSON(): StateChartJSON {
+    return {
+      state: this.lastState,
+      activeStateChain: this.activeStateChain.map(([path]) => path),
+      externalEvents: this.externalEventQueue.toArray(),
+      internalEvents: this.internalEventQueue.toArray(),
+      macroStepCount: this.macroStepCount,
+      microStepCount: this.microStepCount,
+      history: this.history.export(),
+    };
   }
 
   // ============================================================================
@@ -765,6 +821,6 @@ export class StateChart extends StateChartBase {
       });
     }
 
-    return new StateChart(root.initial, root, identifiableChildren, options);
+    return new StateChart( root, identifiableChildren, options);
   }
 }

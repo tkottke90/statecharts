@@ -42,9 +42,12 @@ export class StateChart extends StateChartBase {
   private externalEventQueue = new Queue<SCXMLEvent>();
   private history: StateExecutionHistory;
   private internalEventQueue = new Queue<SCXMLEvent>();
-  private lastState: InternalState | undefined;
+  private lastState: InternalState;
   private states: Map<string, BaseStateNode> = new Map();
   private macroStepDone: boolean = false;
+
+  private timeoutInterval: number = -1;
+  private timeoutId: NodeJS.Timeout | undefined;
 
   private macroStepCount = 0;
   private microStepCount = 0;
@@ -70,6 +73,10 @@ export class StateChart extends StateChartBase {
         this.states.set(id, node);
       }
     });
+
+    this.lastState = {
+      data: {}
+    };
   }
 
   // ============================================================================
@@ -90,6 +97,10 @@ export class StateChart extends StateChartBase {
   // Public API for external event injection
   public addEvent(event: SCXMLEvent): void {
     this.externalEventQueue.enqueue(event);
+
+    if (this.macroStepDone) {
+      this.macrostep(this.lastState);
+    }
   }
 
   computeEntrySet(sourcePath: string, targetPath: string): string[] {
@@ -111,12 +122,20 @@ export class StateChart extends StateChartBase {
 
     // Configure an abort signal
     abort.signal.addEventListener('abort', () => {
-      this.sendEventByName('abort');
+      this.addEvent({
+        name: 'abort',
+        data: {},
+        type: 'platform',
+        sendid: '',
+        origin: '',
+        origintype: '',
+        invokeid: ''
+      });
     });
 
     // If timeout is specified, abort after the specified time
     if (options?.timeout) {
-      this.sendEventByName('timeout');
+      this.timeoutInterval = options.timeout
     }
 
     // SCXML Specification: Initialize the data model before entering initial states
@@ -145,6 +164,23 @@ export class StateChart extends StateChartBase {
 
     // Process pending events from state into internal queue
     processPendingEvents(state, this.internalEventQueue);
+
+    // If a timeout is set, we should set a timeout to trigger an abort event
+    if (this.timeoutInterval !== -1) {
+      this.timeoutId = setTimeout(() => {
+        this.addEvent({
+          name: 'abort.timeout',
+          data: {
+            duration: this.timeoutInterval
+          },
+          type: 'platform',
+          sendid: '',
+          origin: '',
+          origintype: '',
+          invokeid: ''
+        });
+      }, this.timeoutInterval);
+    }
 
     while (!this.macroStepDone) {
       this.macroStepCount++;
@@ -214,6 +250,17 @@ export class StateChart extends StateChartBase {
       // 3. Process external events (lowest priority, only when internal queue empty)
       const externalEvent = this.externalEventQueue.dequeue();
       if (externalEvent) {
+
+        // Aborting happens at the external level to ensure that we are always leaving
+        // the StateChart in a stable state.  Other events queued after this one will not
+        // trigger if the current execution has been aborted.  They will be processed next
+        // time the StateChart triggers.
+        if (externalEvent.name.startsWith('abort')) {
+          this.macroStepDone = true;
+          continue;
+        }
+
+
         const eventTransitions = this.selectTransitions(externalEvent, state);
         if (eventTransitions.length > 0) {
           // Record event processing
@@ -241,6 +288,12 @@ export class StateChart extends StateChartBase {
       }
       // 4. No more events or transitions - macrostep complete
       this.macroStepDone = true;
+    }
+
+    // When a timeout is set, we should clear it at the end of a macrostep
+    if (this.timeoutId) {
+      clearTimeout(this.timeoutId);
+      this.timeoutId = undefined;
     }
 
     this.history.endContext();
@@ -328,22 +381,6 @@ export class StateChart extends StateChartBase {
     );
 
     return currentState;
-  }
-
-  public sendEventByName(
-    eventName: string,
-    data?: Record<string, unknown>,
-  ): void {
-    const event: SCXMLEvent = {
-      name: eventName,
-      type: 'external',
-      sendid: '',
-      origin: '',
-      origintype: '',
-      invokeid: '',
-      data: data || {},
-    };
-    this.addEvent(event);
   }
 
   // ============================================================================

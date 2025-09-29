@@ -16,7 +16,6 @@ describe('Integration Tests', () => {
     );
 
     describe('Simultaneous System Entry Test', () => {
-
       it('should enter all parallel regions simultaneously when state chart executes', async () => {
         // Arrange - Initial state for execution
         const initialState: InternalState = {

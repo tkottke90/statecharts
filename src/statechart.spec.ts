@@ -31,10 +31,7 @@ describe('StateChart', () => {
     let stateChart: StateChart;
 
     beforeEach(() => {
-      stateChart = new StateChart(
-        createMockSCXMLNode(),
-        new Map(),
-      );
+      stateChart = new StateChart(createMockSCXMLNode(), new Map());
     });
 
     it('should compute entry set for same-parent transition', () => {
@@ -256,10 +253,7 @@ describe('StateChart', () => {
     let stateChart: StateChart;
 
     beforeEach(() => {
-      stateChart = new StateChart(
-        createMockSCXMLNode(),
-        new Map(),
-      );
+      stateChart = new StateChart(createMockSCXMLNode(), new Map());
     });
 
     it('should exit states and call unmount handlers', async () => {
@@ -364,17 +358,21 @@ describe('StateChart', () => {
           location: 'data.healthy',
           expr: '"exited"', // Use expr with proper string literal
           content: '', // Required by BaseNode
-          children: []
-        }
-      })
+          children: [],
+        },
+      });
 
       const healthyOnExit = new OnExitNode({
-        onexit: { content: '', children: [assignNode] }
-      })
+        onexit: { content: '', children: [assignNode] },
+      });
 
       // Create StateNode instances
       const healthyStateNode = new StateNode({
-        state: { id: 'healthy', content: '', children: [healthyOnExit, transition1] },
+        state: {
+          id: 'healthy',
+          content: '',
+          children: [healthyOnExit, transition1],
+        },
       });
 
       const criticalStateNode = new StateNode({
@@ -466,10 +464,7 @@ describe('StateChart', () => {
     let stateChart: StateChart;
 
     beforeEach(() => {
-      stateChart = new StateChart(
-        createMockSCXMLNode(),
-        new Map(),
-      );
+      stateChart = new StateChart(createMockSCXMLNode(), new Map());
     });
 
     it('should enter states and call mount handlers', async () => {
@@ -909,10 +904,7 @@ describe('StateChart', () => {
     let stateChart: StateChart;
 
     beforeEach(() => {
-      stateChart = new StateChart(
-        createMockSCXMLNode(),
-        new Map(),
-      );
+      stateChart = new StateChart(createMockSCXMLNode(), new Map());
     });
 
     it('should add states to active chain when updateMethod is "add"', async () => {
@@ -1100,26 +1092,28 @@ describe('StateChart', () => {
     let stateChart: StateChart;
 
     beforeEach(() => {
-      stateChart = new StateChart(
-        createMockSCXMLNode(),
-        new Map(),
-      );
+      stateChart = new StateChart(createMockSCXMLNode(), new Map());
     });
 
     describe('toJSON', () => {
       it('should return StateChartJSON with current state data', () => {
         // Arrange
         const mockState = { data: { test: 'value' } };
-        const mockActiveChain = [['state1', {} as BaseStateNode], ['state2', {} as BaseStateNode]];
-        const mockExternalEvents: SCXMLEvent[] = [{
-          name: 'test.event',
-          data: {},
-          type: 'external',
-          sendid: '',
-          origin: '',
-          origintype: '',
-          invokeid: ''
-        }];
+        const mockActiveChain = [
+          ['state1', {} as BaseStateNode],
+          ['state2', {} as BaseStateNode],
+        ];
+        const mockExternalEvents: SCXMLEvent[] = [
+          {
+            name: 'test.event',
+            data: {},
+            type: 'external',
+            sendid: '',
+            origin: '',
+            origintype: '',
+            invokeid: '',
+          },
+        ];
 
         // Set up internal state using private property access (testing private method)
         (stateChart as any).lastState = mockState;
@@ -1202,7 +1196,7 @@ describe('StateChart', () => {
           internalEvents: [],
           macroStepCount: 3,
           microStepCount: 7,
-          history: []
+          history: [],
         };
         const jsonString = JSON.stringify(mockStateChartJSON);
 
@@ -1216,7 +1210,9 @@ describe('StateChart', () => {
       it('should throw error for invalid JSON string', () => {
         // Arrange
         const invalidJson = '{ invalid json }';
-        const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+        const consoleSpy = jest
+          .spyOn(console, 'error')
+          .mockImplementation(() => {});
 
         // Act & Assert
         expect(() => stateChart.deserialize(invalidJson)).toThrow();
@@ -1247,15 +1243,22 @@ describe('StateChart', () => {
           internalEvents: [],
           macroStepCount: 2,
           microStepCount: 4,
-          history: []
+          history: [],
         };
         const persistenceString = JSON.stringify(persistedState);
 
         // Act
         const restoredStateChart = new StateChart(
           createMockSCXMLNode(),
-          new Map([['restored.state', new StateNode({ state: { id: 'restored.state', content: '', children: [] } })]]),
-          { persistence: persistenceString }
+          new Map([
+            [
+              'restored.state',
+              new StateNode({
+                state: { id: 'restored.state', content: '', children: [] },
+              }),
+            ],
+          ]),
+          { persistence: persistenceString },
         );
 
         // Assert
@@ -1267,10 +1270,7 @@ describe('StateChart', () => {
 
       it('should initialize with default state when no persistence provided', () => {
         // Arrange & Act
-        const newStateChart = new StateChart(
-          createMockSCXMLNode(),
-          new Map(),
-        );
+        const newStateChart = new StateChart(createMockSCXMLNode(), new Map());
 
         // Assert
         const currentJson = newStateChart.toJSON();
@@ -1316,7 +1316,7 @@ describe('StateChart', () => {
         sendid: '',
         origin: '',
         origintype: '',
-        invokeid: ''
+        invokeid: '',
       };
       stateChart.addEvent(testEvent);
 

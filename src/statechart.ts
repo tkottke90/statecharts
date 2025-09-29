@@ -17,7 +17,11 @@ import {
 } from './models/internalState';
 import { Queue, QueueMode } from './models/event-queue';
 import { StateExecutionHistory } from './models/state-execution-history';
-import { HistoryTrackingOptions, HistoryEventType, SerializableHistoryEntry } from './models/history';
+import {
+  HistoryTrackingOptions,
+  HistoryEventType,
+  SerializableHistoryEntry,
+} from './models/history';
 import z from 'zod';
 import { XMLParsingError } from './errors';
 import { InitializeDataModelMixin } from './models/mixins/initializeDataModel';
@@ -87,23 +91,28 @@ export class StateChart extends StateChartBase {
     if (options?.persistence) {
       const persistedState = this.deserialize(options.persistence);
       this.lastState = persistedState.state;
-      this.activeStateChain = persistedState.activeStateChain.map(path => [path, this.states.get(path)!]);
+      this.activeStateChain = persistedState.activeStateChain.map(path => [
+        path,
+        this.states.get(path)!,
+      ]);
       this.macroStepCount = persistedState.macroStepCount;
       this.microStepCount = persistedState.microStepCount;
       this.history.import(persistedState.history);
-      
-      this.externalEventQueue = new Queue<SCXMLEvent>(QueueMode.LastInFirstOut);
-      persistedState.externalEvents.forEach(event => this.externalEventQueue.enqueue(event));
-      
-      this.internalEventQueue = new Queue<SCXMLEvent>(QueueMode.LastInFirstOut);
-      persistedState.internalEvents.forEach(event => this.internalEventQueue.enqueue(event));
 
+      this.externalEventQueue = new Queue<SCXMLEvent>(QueueMode.LastInFirstOut);
+      persistedState.externalEvents.forEach(event =>
+        this.externalEventQueue.enqueue(event),
+      );
+
+      this.internalEventQueue = new Queue<SCXMLEvent>(QueueMode.LastInFirstOut);
+      persistedState.internalEvents.forEach(event =>
+        this.internalEventQueue.enqueue(event),
+      );
     } else {
       this.lastState = {
-        data: {}
+        data: {},
       };
     }
-
   }
 
   // ============================================================================
@@ -166,13 +175,13 @@ export class StateChart extends StateChartBase {
         sendid: '',
         origin: '',
         origintype: '',
-        invokeid: ''
+        invokeid: '',
       });
     });
 
     // If timeout is specified, abort after the specified time
     if (options?.timeout) {
-      this.timeoutInterval = options.timeout
+      this.timeoutInterval = options.timeout;
     }
 
     // SCXML Specification: Initialize the data model before entering initial states
@@ -184,7 +193,7 @@ export class StateChart extends StateChartBase {
     // Run the event loop
     return await this.macrostep(
       // Clone the state so that it is not manipulated during processing
-      structuredClone(this.lastState)
+      structuredClone(this.lastState),
     );
   }
 
@@ -211,20 +220,20 @@ export class StateChart extends StateChartBase {
         this.addEvent({
           name: 'abort.timeout',
           data: {
-            duration: this.timeoutInterval
+            duration: this.timeoutInterval,
           },
           type: 'platform',
           sendid: '',
           origin: '',
           origintype: '',
-          invokeid: ''
+          invokeid: '',
         });
       }, this.timeoutInterval);
     }
 
     while (!this.macroStepDone) {
       this.macroStepCount++;
-      
+
       // 1. Process eventless transitions first (highest priority)
       const eventlessTransitions = this.activeStateChain
         .map(([, node]) => node.getEventlessTransitions())
@@ -290,7 +299,6 @@ export class StateChart extends StateChartBase {
       // 3. Process external events (lowest priority, only when internal queue empty)
       const externalEvent = this.externalEventQueue.dequeue();
       if (externalEvent) {
-
         // Aborting happens at the external level to ensure that we are always leaving
         // the StateChart in a stable state.  Other events queued after this one will not
         // trigger if the current execution has been aborted.  They will be processed next
@@ -299,7 +307,6 @@ export class StateChart extends StateChartBase {
           this.macroStepDone = true;
           continue;
         }
-
 
         const eventTransitions = this.selectTransitions(externalEvent, state);
         if (eventTransitions.length > 0) {
@@ -631,9 +638,10 @@ export class StateChart extends StateChartBase {
     // For each transition, compute its exit set and add to the union
     for (const transition of transitions) {
       // Look through active state chain to find the first state which contains this transition
-      const [sourceState] = this.activeStateChain.find(
-        ([,node]) => node.containsTransaction(transition)
-      ) ?? []
+      const [sourceState] =
+        this.activeStateChain.find(([, node]) =>
+          node.containsTransaction(transition),
+        ) ?? [];
 
       if (sourceState && transition.target) {
         // Convert activeStateChain to the format expected by the utility function
@@ -821,6 +829,6 @@ export class StateChart extends StateChartBase {
       });
     }
 
-    return new StateChart( root, identifiableChildren, options);
+    return new StateChart(root, identifiableChildren, options);
   }
 }

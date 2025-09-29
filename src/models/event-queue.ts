@@ -48,4 +48,8 @@ export class Queue<EventType> {
         return this.queue.at(-1);
     }
   }
+
+  toArray() {
+    return [...this.queue];
+  }
 }

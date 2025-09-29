@@ -121,7 +121,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: ${{ env.BRANCH_NAME }}
           base: main
-          title: "chore: bump version to ${{ env.NEW_VERSION }}"
+          title: 'chore: bump version to ${{ env.NEW_VERSION }}'
           body: |
             ## Version Bump
 

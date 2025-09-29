@@ -2,7 +2,6 @@ import { StateChart } from './statechart';
 import { readFileSync } from 'fs';
 import path from 'path';
 import { InternalState } from './models/internalState';
-import { BaseStateNode } from './models/base-state';
 import { StateNode } from './nodes';
 
 describe('Integration Tests', () => {
@@ -17,33 +16,6 @@ describe('Integration Tests', () => {
     );
 
     describe('Simultaneous System Entry Test', () => {
-      it('should create StateChart and have initial state set', async () => {
-        // Arrange
-        const stateChart = StateChart.fromXML(xmlStr);
-
-        // Act
-        await stateChart.execute({
-          data: {},
-        });
-
-        // Assert
-        // Check if initial state is set correctly
-        const initial = (stateChart as unknown as { initial: string }).initial;
-        expect(initial).toBe('gameRunning');
-
-        // Check if states map is populated
-        const states = (
-          stateChart as unknown as { states: Map<string, unknown> }
-        ).states;
-        expect(states.size).toBe(13);
-
-        // Check if the initial state is loaded into the chain
-        const chain = stateChart as unknown as {
-          activeStateChain: Array<[string, BaseStateNode]>;
-        };
-        expect(chain.activeStateChain.length).toBe(8);
-      });
-
       it('should enter all parallel regions simultaneously when state chart executes', async () => {
         // Arrange - Initial state for execution
         const initialState: InternalState = {
@@ -64,18 +36,6 @@ describe('Integration Tests', () => {
           }
         ).activeStateChain;
         const activePaths = activeStateChain.map(([path]) => path);
-
-        console.table(
-          stateChart
-            .getHistory()
-            .getAllEntries()
-            .map(entry => {
-              return {
-                type: entry.type,
-                event: entry.stateConfiguration.at(-1),
-              };
-            }),
-        );
 
         // All parallel regions should be active simultaneously
         expect(activePaths).toContain('gameRunning');

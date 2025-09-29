@@ -1,6 +1,7 @@
 import z from 'zod';
 import { BaseNodeAttr, CreateFromJsonResponse } from '../models';
 import { BaseStateNode } from '../models/base-state';
+import { CalculateInitialStateMixin } from '../models/mixins/calculateInititalState';
 
 export const StateNodeAttr = BaseNodeAttr.extend({
   id: z.string().min(1),
@@ -19,7 +20,7 @@ export type StateNodeType = {
  * @see https://www.w3.org/TR/scxml/#state
  */
 export class StateNode
-  extends BaseStateNode
+  extends CalculateInitialStateMixin(BaseStateNode)
   implements z.infer<typeof StateNodeAttr>
 {
   readonly id: string;

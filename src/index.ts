@@ -13,5 +13,6 @@ export {
 } from './models';
 
 export { StateChart } from './statechart';
-
 export { parse } from './parser';
+
+export * from './nodes';

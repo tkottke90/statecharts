@@ -1,6 +1,7 @@
 import z from 'zod';
 import { BaseNode, BaseNodeAttr } from '../models/base';
 import { CreateFromJsonResponse } from '../models/methods';
+import { CalculateInitialStateMixin } from '../models/mixins/calculateInititalState';
 
 const SCXML_VERSIONS = ['1.0', '1.1'] as const;
 type SCXMLVersion = (typeof SCXML_VERSIONS)[number];
@@ -33,7 +34,7 @@ export type SCXMLNodeType = {
 };
 
 export class SCXMLNode
-  extends BaseNode
+  extends CalculateInitialStateMixin(BaseNode)
   implements z.infer<typeof SCXMLNodeAttr>
 {
   readonly initial: string;

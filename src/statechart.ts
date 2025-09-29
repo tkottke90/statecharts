@@ -2,7 +2,7 @@ import { BaseNode } from './models';
 import SimpleXML from 'simple-xml-to-json';
 import { parse } from './parser';
 import { BaseStateNode } from './models/base-state';
-import { InitialNode, SCXMLNode, TransitionNode } from './nodes';
+import { SCXMLNode, TransitionNode } from './nodes';
 import {
   findLCCA,
   computeExitSet,
@@ -15,19 +15,34 @@ import {
   processPendingEvents,
   SCXMLEvent,
 } from './models/internalState';
-import { Queue } from './models/event-queue';
+import { Queue, QueueMode } from './models/event-queue';
 import { StateExecutionHistory } from './models/state-execution-history';
-import { HistoryTrackingOptions, HistoryEventType } from './models/history';
+import {
+  HistoryTrackingOptions,
+  HistoryEventType,
+  SerializableHistoryEntry,
+} from './models/history';
 import z from 'zod';
 import { XMLParsingError } from './errors';
 import { InitializeDataModelMixin } from './models/mixins/initializeDataModel';
 
 type Tuple<T> = Array<[string, T]>;
 
+interface StateChartJSON {
+  state: InternalState;
+  activeStateChain: string[];
+  externalEvents: SCXMLEvent[];
+  internalEvents: SCXMLEvent[];
+  macroStepCount: number;
+  microStepCount: number;
+  history: SerializableHistoryEntry[];
+}
+
 interface StateChartOptions {
   abort?: AbortController;
   timeout?: number;
   history?: Partial<HistoryTrackingOptions>;
+  persistence?: string;
 }
 
 // This base class is used to add mixins
@@ -42,7 +57,12 @@ export class StateChart extends StateChartBase {
   private externalEventQueue = new Queue<SCXMLEvent>();
   private history: StateExecutionHistory;
   private internalEventQueue = new Queue<SCXMLEvent>();
+  private lastState: InternalState;
   private states: Map<string, BaseStateNode> = new Map();
+  private macroStepDone: boolean = false;
+
+  private timeoutInterval: number = -1;
+  private timeoutId: NodeJS.Timeout | undefined;
 
   private macroStepCount = 0;
   private microStepCount = 0;
@@ -52,7 +72,6 @@ export class StateChart extends StateChartBase {
   // ============================================================================
 
   constructor(
-    private initial: string,
     private readonly root: SCXMLNode,
     stateMap: Map<string, BaseNode>,
     options: StateChartOptions = {},
@@ -68,6 +87,32 @@ export class StateChart extends StateChartBase {
         this.states.set(id, node);
       }
     });
+
+    if (options?.persistence) {
+      const persistedState = this.deserialize(options.persistence);
+      this.lastState = persistedState.state;
+      this.activeStateChain = persistedState.activeStateChain.map(path => [
+        path,
+        this.states.get(path)!,
+      ]);
+      this.macroStepCount = persistedState.macroStepCount;
+      this.microStepCount = persistedState.microStepCount;
+      this.history.import(persistedState.history);
+
+      this.externalEventQueue = new Queue<SCXMLEvent>(QueueMode.LastInFirstOut);
+      persistedState.externalEvents.forEach(event =>
+        this.externalEventQueue.enqueue(event),
+      );
+
+      this.internalEventQueue = new Queue<SCXMLEvent>(QueueMode.LastInFirstOut);
+      persistedState.internalEvents.forEach(event =>
+        this.internalEventQueue.enqueue(event),
+      );
+    } else {
+      this.lastState = {
+        data: {},
+      };
+    }
   }
 
   // ============================================================================
@@ -88,6 +133,10 @@ export class StateChart extends StateChartBase {
   // Public API for external event injection
   public addEvent(event: SCXMLEvent): void {
     this.externalEventQueue.enqueue(event);
+
+    if (this.macroStepDone) {
+      this.macrostep(this.lastState);
+    }
   }
 
   computeEntrySet(sourcePath: string, targetPath: string): string[] {
@@ -96,6 +145,16 @@ export class StateChart extends StateChartBase {
     // Build entry path using utility function, then filter out already active states
     const candidateEntryPaths = buildEntryPath(lccaPath, targetPath);
     return candidateEntryPaths.filter((path: string) => !this.isActive(path));
+  }
+
+  deserialize(jsonData: string) {
+    try {
+      return JSON.parse(jsonData) as StateChartJSON;
+    } catch (error) {
+      console.error('Unable to Deserialize', error);
+
+      throw error;
+    }
   }
 
   async execute(
@@ -109,22 +168,33 @@ export class StateChart extends StateChartBase {
 
     // Configure an abort signal
     abort.signal.addEventListener('abort', () => {
-      this.sendEventByName('abort');
+      this.addEvent({
+        name: 'abort',
+        data: {},
+        type: 'platform',
+        sendid: '',
+        origin: '',
+        origintype: '',
+        invokeid: '',
+      });
     });
 
     // If timeout is specified, abort after the specified time
     if (options?.timeout) {
-      this.sendEventByName('timeout');
+      this.timeoutInterval = options.timeout;
     }
 
     // SCXML Specification: Initialize the data model before entering initial states
-    let currentState = await this.initializeDataModel(this.root, input);
+    this.lastState = await this.initializeDataModel(this.root, input);
 
     // SCXML Specification: Enter the initial state configuration with onentry handlers
-    currentState = await this.enterInitialStates(currentState);
+    this.lastState = await this.enterInitialStates(this.lastState);
 
     // Run the event loop
-    return await this.macrostep(currentState);
+    return await this.macrostep(
+      // Clone the state so that it is not manipulated during processing
+      structuredClone(this.lastState),
+    );
   }
 
   async macrostep(state: InternalState): Promise<InternalState> {
@@ -139,16 +209,36 @@ export class StateChart extends StateChartBase {
     );
 
     this.history.startContext(macrostepId);
+    this.macroStepDone = false;
 
     // Process pending events from state into internal queue
     processPendingEvents(state, this.internalEventQueue);
 
-    let macrostepDone = false;
-    while (!macrostepDone) {
-      // 1. Process eventless transitions first (highest priority)
+    // If a timeout is set, we should set a timeout to trigger an abort event
+    if (this.timeoutInterval !== -1) {
+      this.timeoutId = setTimeout(() => {
+        this.addEvent({
+          name: 'abort.timeout',
+          data: {
+            duration: this.timeoutInterval,
+          },
+          type: 'platform',
+          sendid: '',
+          origin: '',
+          origintype: '',
+          invokeid: '',
+        });
+      }, this.timeoutInterval);
+    }
+
+    while (!this.macroStepDone) {
       this.macroStepCount++;
 
-      const eventlessTransitions = this.selectEventlessTransitions();
+      // 1. Process eventless transitions first (highest priority)
+      const eventlessTransitions = this.activeStateChain
+        .map(([, node]) => node.getEventlessTransitions())
+        .flat();
+
       if (eventlessTransitions.length > 0) {
         state = await this.microstep(state, eventlessTransitions);
         // Process any new pending events generated by the microstep
@@ -209,6 +299,15 @@ export class StateChart extends StateChartBase {
       // 3. Process external events (lowest priority, only when internal queue empty)
       const externalEvent = this.externalEventQueue.dequeue();
       if (externalEvent) {
+        // Aborting happens at the external level to ensure that we are always leaving
+        // the StateChart in a stable state.  Other events queued after this one will not
+        // trigger if the current execution has been aborted.  They will be processed next
+        // time the StateChart triggers.
+        if (externalEvent.name.startsWith('abort')) {
+          this.macroStepDone = true;
+          continue;
+        }
+
         const eventTransitions = this.selectTransitions(externalEvent, state);
         if (eventTransitions.length > 0) {
           // Record event processing
@@ -235,7 +334,13 @@ export class StateChart extends StateChartBase {
         }
       }
       // 4. No more events or transitions - macrostep complete
-      macrostepDone = true;
+      this.macroStepDone = true;
+    }
+
+    // When a timeout is set, we should clear it at the end of a macrostep
+    if (this.timeoutId) {
+      clearTimeout(this.timeoutId);
+      this.timeoutId = undefined;
     }
 
     this.history.endContext();
@@ -256,6 +361,7 @@ export class StateChart extends StateChartBase {
     );
 
     // State Snapshot
+    this.lastState = structuredClone(state);
     return state;
   }
 
@@ -294,10 +400,10 @@ export class StateChart extends StateChartBase {
     currentState = await this.exitStates(transitions, currentState);
 
     // Trigger any transitions
-    currentState = await this.executeTransitionContent(
-      transitions,
-      currentState,
-    );
+    for (const transition of transitions) {
+      // Execute all executable content within this transition
+      currentState = await transition.run(currentState);
+    }
 
     // Enter states based on the current list of transactions
     currentState = await this.enterStates(transitions, currentState);
@@ -324,20 +430,20 @@ export class StateChart extends StateChartBase {
     return currentState;
   }
 
-  public sendEventByName(
-    eventName: string,
-    data?: Record<string, unknown>,
-  ): void {
-    const event: SCXMLEvent = {
-      name: eventName,
-      type: 'external',
-      sendid: '',
-      origin: '',
-      origintype: '',
-      invokeid: '',
-      data: data || {},
+  serialize() {
+    return JSON.stringify(this);
+  }
+
+  toJSON(): StateChartJSON {
+    return {
+      state: this.lastState,
+      activeStateChain: this.activeStateChain.map(([path]) => path),
+      externalEvents: this.externalEventQueue.toArray(),
+      internalEvents: this.internalEventQueue.toArray(),
+      macroStepCount: this.macroStepCount,
+      microStepCount: this.microStepCount,
+      history: this.history.export(),
     };
-    this.addEvent(event);
   }
 
   // ============================================================================
@@ -382,31 +488,6 @@ export class StateChart extends StateChartBase {
     this.activeStateChain.push([statePath, stateNode]);
 
     return updatedState;
-  }
-
-  /**
-   * Determine the initial state path according to SCXML specification
-   */
-  private determineInitialStatePath(): string {
-    if (this.initial) {
-      return this.initial;
-    }
-
-    // Check for <initial> node
-    const [initialNode] = this.root.getChildrenOfType(InitialNode);
-    if (initialNode) {
-      return initialNode.content;
-    }
-
-    // Grab the first state element
-    const [firstStateNode] = this.root.getChildrenOfType(BaseStateNode);
-    if (firstStateNode) {
-      return firstStateNode.id;
-    }
-
-    throw new Error(
-      'Could not identify an initial state from the provided configuration',
-    );
   }
 
   private async enterStates(
@@ -503,7 +584,7 @@ export class StateChart extends StateChartBase {
     this.activeStateChain = [];
 
     // 2. Determine the initial state path
-    const initialStatePath = this.determineInitialStatePath();
+    const initialStatePath = this.root.determineInititalState();
 
     this.history.addEntry(
       HistoryEventType.INITIAL_STATE,
@@ -547,29 +628,6 @@ export class StateChart extends StateChartBase {
     return event.name === eventDescriptor;
   }
 
-  /**
-   * Executes the executable content within transitions according to SCXML specification.
-   * This includes processing elements like <assign>, <script>, <log>, <send>, etc.
-   *
-   * @param transitions - Array of transitions to execute content for
-   * @param state - Current state of the state machine
-   * @returns Promise resolving to the updated state after executing all transition content
-   */
-  private async executeTransitionContent(
-    transitions: TransitionNode[],
-    state: InternalState,
-  ): Promise<InternalState> {
-    let currentState = { ...state };
-
-    // Execute transitions in document order
-    for (const transition of transitions) {
-      // Execute all executable content within this transition
-      currentState = await transition.run(currentState); // Fixed: use currentState instead of state
-    }
-
-    return currentState;
-  }
-
   private async exitStates(
     transitions: TransitionNode[],
     state: InternalState,
@@ -579,8 +637,12 @@ export class StateChart extends StateChartBase {
 
     // For each transition, compute its exit set and add to the union
     for (const transition of transitions) {
-      // Extract source path from transition - we need to find the source state
-      const sourceState = this.findSourceStateForTransition(transition);
+      // Look through active state chain to find the first state which contains this transition
+      const [sourceState] =
+        this.activeStateChain.find(([, node]) =>
+          node.containsTransaction(transition),
+        ) ?? [];
+
       if (sourceState && transition.target) {
         // Convert activeStateChain to the format expected by the utility function
         const activeStateEntries: ActiveStateEntry[] =
@@ -592,6 +654,8 @@ export class StateChart extends StateChartBase {
           transition.target,
           activeStateEntries,
         );
+
+        // Add the states we need to exit to the set
         exitStates.forEach(state => allExitStates.add(state));
       }
     }
@@ -605,26 +669,6 @@ export class StateChart extends StateChartBase {
   }
 
   /**
-   * Finds the source state path for a given transition by looking through
-   * the active state chain to find which state contains this transition.
-   *
-   * @param transition - The transition to find the source for
-   * @returns The path of the source state, or null if not found
-   */
-  private findSourceStateForTransition(
-    transition: TransitionNode,
-  ): string | null {
-    // Look through active state chain to find which state contains this transition
-    for (const [statePath, stateNode] of this.activeStateChain) {
-      // Check if this state node contains the transition
-      if (stateNode.containsTransaction(transition)) {
-        return statePath;
-      }
-    }
-    return null;
-  }
-
-  /**
    * Get current active state configuration as string array
    */
   private getActiveStateConfiguration(): string[] {
@@ -633,22 +677,6 @@ export class StateChart extends StateChartBase {
 
   private isActive(path: string): boolean {
     return this.activeStateChain.some(([activePath]) => activePath === path);
-  }
-
-  // Helper method to remove conflicting transitions (placeholder for now)
-  private removeConflictingTransitions(
-    transitions: TransitionNode[],
-  ): TransitionNode[] {
-    // TODO: Implement SCXML conflict resolution algorithm
-    // For now, just return all transitions
-    return transitions;
-  }
-
-  // Helper method to select eventless transitions
-  private selectEventlessTransitions(): TransitionNode[] {
-    return this.activeStateChain
-      .map(([, node]) => node.getEventlessTransitions())
-      .flat();
   }
 
   private sortByPathDepth(pathA: string, pathB: string) {
@@ -680,8 +708,10 @@ export class StateChart extends StateChartBase {
       }
     }
 
-    // Remove any conflicting transitions
-    return this.removeConflictingTransitions(enabledTransitions);
+    // TODO: Implement SCXML conflict resolution algorithm
+
+    // For now, just return all transitions
+    return enabledTransitions;
   }
 
   private async updateStates(
@@ -799,6 +829,6 @@ export class StateChart extends StateChartBase {
       });
     }
 
-    return new StateChart(root.initial, root, identifiableChildren, options);
+    return new StateChart(root, identifiableChildren, options);
   }
 }

@@ -11,6 +11,7 @@
     "target": "ES2023",
     "moduleResolution": "nodenext",
     "lib": ["ES2023", "DOM"],
+    "types": ["node", "jest"],
 
     // Other Outputs
     "declaration": true,

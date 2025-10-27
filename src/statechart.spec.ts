@@ -48,7 +48,7 @@ describe('StateChart', () => {
       ).activeStateChain = mockActiveStateChain;
 
       // Act
-      const result = stateChart.computeEntrySet(sourcePath, targetPath);
+      const result = (stateChart as any).computeEntrySet(sourcePath, targetPath);
 
       // Assert
       expect(result).toEqual(['playing.healthSystem.critical']);
@@ -68,7 +68,7 @@ describe('StateChart', () => {
       ).activeStateChain = mockActiveStateChain;
 
       // Act
-      const result = stateChart.computeEntrySet(sourcePath, targetPath);
+      const result = (stateChart as any).computeEntrySet(sourcePath, targetPath);
 
       // Assert
       expect(result).toEqual([
@@ -87,7 +87,7 @@ describe('StateChart', () => {
       ).activeStateChain = mockActiveStateChain;
 
       // Act
-      const result = stateChart.computeEntrySet(sourcePath, targetPath);
+      const result = (stateChart as any).computeEntrySet(sourcePath, targetPath);
 
       // Assert
       expect(result).toEqual([
@@ -111,7 +111,7 @@ describe('StateChart', () => {
       ).activeStateChain = mockActiveStateChain;
 
       // Act
-      const result = stateChart.computeEntrySet(sourcePath, targetPath);
+      const result = (stateChart as any).computeEntrySet(sourcePath, targetPath);
 
       // Assert
       expect(result).toEqual([]);
@@ -131,7 +131,7 @@ describe('StateChart', () => {
       ).activeStateChain = mockActiveStateChain;
 
       // Act
-      const result = stateChart.computeEntrySet(sourcePath, targetPath);
+      const result = (stateChart as any).computeEntrySet(sourcePath, targetPath);
 
       // Assert
       // LCCA is 'playing', so should enter healthSystem and processingDamage
@@ -151,7 +151,7 @@ describe('StateChart', () => {
       ).activeStateChain = mockActiveStateChain;
 
       // Act
-      const result = stateChart.computeEntrySet(sourcePath, targetPath);
+      const result = (stateChart as any).computeEntrySet(sourcePath, targetPath);
 
       // Assert
       // Verify shallowest states come first (proper entry order)
@@ -184,7 +184,7 @@ describe('StateChart', () => {
       ).activeStateChain = mockActiveStateChain;
 
       // Act
-      const result = stateChart.computeEntrySet(sourcePath, targetPath);
+      const result = (stateChart as any).computeEntrySet(sourcePath, targetPath);
 
       // Assert
       expect(result).toEqual(['playing', 'playing.healthSystem']);
@@ -204,7 +204,7 @@ describe('StateChart', () => {
       ).activeStateChain = mockActiveStateChain;
 
       // Act
-      const result = stateChart.computeEntrySet(sourcePath, targetPath);
+      const result = (stateChart as any).computeEntrySet(sourcePath, targetPath);
 
       // Assert
       // Should only enter the new parts of the path
@@ -229,7 +229,7 @@ describe('StateChart', () => {
       ).activeStateChain = mockActiveStateChain;
 
       // Act
-      const result = stateChart.computeEntrySet(sourcePath, targetPath);
+      const result = (stateChart as any).computeEntrySet(sourcePath, targetPath);
 
       // Assert
       // Should only enter the target, not the already-active parent

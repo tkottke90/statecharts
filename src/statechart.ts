@@ -119,6 +119,10 @@ export class StateChart extends StateChartBase {
   // GETTERS/SETTERS
   // ============================================================================
 
+  get data() {
+    return this.lastState.data;
+  }
+
   /**
    * Get the history tracking instance for external access
    */

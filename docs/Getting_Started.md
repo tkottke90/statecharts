@@ -183,17 +183,41 @@ async function trafficLightDemo() {
   // Output: { currentColor: 'red', duration: 5000 }
 
   // Send events to trigger transitions
-  stateChart.sendEventByName('timer');
+  stateChart.addEvent({
+    name: 'timer',
+    type: 'external',
+    sendid: '',
+    origin: '',
+    origintype: '',
+    invokeid: '',
+    data: {},
+  });
   currentState = await stateChart.macrostep(currentState);
   console.log('After timer 1:', currentState.data);
   // Output: { currentColor: 'green', duration: 3000 }
 
-  stateChart.sendEventByName('timer');
+  stateChart.addEvent({
+    name: 'timer',
+    type: 'external',
+    sendid: '',
+    origin: '',
+    origintype: '',
+    invokeid: '',
+    data: {},
+  });
   currentState = await stateChart.macrostep(currentState);
   console.log('After timer 2:', currentState.data);
   // Output: { currentColor: 'yellow', duration: 1000 }
 
-  stateChart.sendEventByName('timer');
+  stateChart.addEvent({
+    name: 'timer',
+    type: 'external',
+    sendid: '',
+    origin: '',
+    origintype: '',
+    invokeid: '',
+    data: {},
+  });
   currentState = await stateChart.macrostep(currentState);
   console.log('After timer 3:', currentState.data);
   // Output: { currentColor: 'red', duration: 5000 }
@@ -206,23 +230,39 @@ trafficLightDemo().catch(console.error);
 
 After your state machine is running, you can send events to trigger transitions:
 
-### Sending Events by Name
+### Sending Events
 
 ```typescript
 // Simple event
-stateChart.sendEventByName('start');
+stateChart.addEvent({
+  name: 'start',
+  type: 'external',
+  sendid: '',
+  origin: '',
+  origintype: '',
+  invokeid: '',
+  data: {},
+});
 
 // Event with data
-stateChart.sendEventByName('userInput', {
-  username: 'john',
-  action: 'login',
+stateChart.addEvent({
+  name: 'userInput',
+  type: 'external',
+  sendid: '',
+  origin: '',
+  origintype: '',
+  invokeid: '',
+  data: {
+    username: 'john',
+    action: 'login',
+  },
 });
 
 // Process the events
 const newState = await stateChart.macrostep(currentState);
 ```
 
-### Sending Event Objects
+### Creating Custom Event Objects
 
 ```typescript
 import { SCXMLEvent } from 'statecharts';
@@ -336,8 +376,8 @@ const stateChart = StateChart.fromXML(parallelXML);
 const result = await stateChart.execute({ data: {}, _datamodel: 'ecmascript' });
 
 // Both audio and video systems run in parallel
-stateChart.sendEventByName('mute'); // Affects only audio
-stateChart.sendEventByName('pause'); // Affects only video
+stateChart.addEvent({ name: 'mute', type: 'external', sendid: '', origin: '', origintype: '', invokeid: '', data: {} }); // Affects only audio
+stateChart.addEvent({ name: 'pause', type: 'external', sendid: '', origin: '', origintype: '', invokeid: '', data: {} }); // Affects only video
 ```
 
 ## Best Practices
@@ -408,7 +448,15 @@ describe('State Machine Tests', () => {
       _datamodel: 'ecmascript',
     });
 
-    stateChart.sendEventByName('start');
+    stateChart.addEvent({
+      name: 'start',
+      type: 'external',
+      sendid: '',
+      origin: '',
+      origintype: '',
+      invokeid: '',
+      data: {},
+    });
     state = await stateChart.macrostep(state);
 
     expect(state.data.message).toBe('System is running');

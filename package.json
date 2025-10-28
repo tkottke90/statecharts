@@ -13,6 +13,7 @@
   "scripts": {
     "build": "tsc",
     "format": "eslint --fix . && prettier --write .",
+    "prepublish": "npm run build",
     "test": "jest",
     "test:cicd": "jest --verbose --coverage",
     "test:watch": "jest --watchAll --verbose --coverage",

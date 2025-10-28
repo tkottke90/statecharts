@@ -67,6 +67,9 @@ export class StateChart extends StateChartBase {
   private macroStepCount = 0;
   private microStepCount = 0;
 
+  readonly on: StateExecutionHistory['on'];
+  readonly off: StateExecutionHistory['off'];
+
   // ============================================================================
   // CONSTRUCTOR
   // ============================================================================
@@ -80,6 +83,9 @@ export class StateChart extends StateChartBase {
 
     // Initialize history tracking
     this.history = new StateExecutionHistory(options.history);
+
+    this.on = this.history.on.bind(this.history);
+    this.off = this.history.off.bind(this.history);
 
     // Collect all state notes so we can access them later
     stateMap.forEach((node, id) => {
@@ -366,7 +372,7 @@ export class StateChart extends StateChartBase {
     return state;
   }
 
-  async microstep(
+  private async microstep(
     state: InternalState,
     transitions: TransitionNode[],
   ): Promise<InternalState> {

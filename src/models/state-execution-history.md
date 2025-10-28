@@ -38,6 +38,8 @@ The history system operates as a passive observer - it doesn't change how your s
 
 The system is designed to be production-ready with minimal performance overhead. You can configure it to track only the events you care about, limit memory usage with automatic cleanup, and export/import history data for offline analysis.
 
+**Accessing History Events**: The `StateChart` class provides convenient `on()` and `off()` methods that proxy directly to the internal history instance, allowing you to listen to history events without needing to access the history object directly. You can also access the history instance via `stateChart.getHistory()` if you need more advanced functionality.
+
 ## Core Components
 
 ### HistoryEventType
@@ -241,17 +243,35 @@ const history = stateChart.getHistory();
 
 ### Event Listening
 
+You can listen to history events either directly on the StateChart instance or by accessing the history object:
+
 ```typescript
-// Listen for history events
-history.on('history', payload => {
+// Option 1: Listen directly on StateChart (recommended)
+stateChart.on('history', payload => {
   console.log('New history entry:', payload.entry);
   console.log('Total entries:', payload.totalEntries);
 });
 
 // Listen for memory management events
-history.on('pruned', data => {
+stateChart.on('pruned', data => {
   console.log(`Pruned ${data.removedCount} old entries`);
 });
+
+// Listen for specific event types
+stateChart.on(HistoryEventType.STATE_ENTRY, payload => {
+  console.log('State entered:', payload.entry.stateConfiguration);
+});
+
+// Option 2: Access history object directly
+const history = stateChart.getHistory();
+history.on('history', payload => {
+  console.log('New history entry:', payload.entry);
+});
+
+// Remove listeners using off()
+const listener = (payload) => console.log(payload);
+stateChart.on('history', listener);
+stateChart.off('history', listener); // Unregister the listener
 ```
 
 ### Querying History

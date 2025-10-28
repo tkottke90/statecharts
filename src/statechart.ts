@@ -67,6 +67,9 @@ export class StateChart extends StateChartBase {
   private macroStepCount = 0;
   private microStepCount = 0;
 
+  readonly on: StateExecutionHistory['on'];
+  readonly off: StateExecutionHistory['off'];
+
   // ============================================================================
   // CONSTRUCTOR
   // ============================================================================
@@ -80,6 +83,9 @@ export class StateChart extends StateChartBase {
 
     // Initialize history tracking
     this.history = new StateExecutionHistory(options.history);
+
+    this.on = this.history.on.bind(this.history);
+    this.off = this.history.off.bind(this.history);
 
     // Collect all state notes so we can access them later
     stateMap.forEach((node, id) => {
@@ -119,6 +125,10 @@ export class StateChart extends StateChartBase {
   // GETTERS/SETTERS
   // ============================================================================
 
+  get data() {
+    return this.lastState.data;
+  }
+
   /**
    * Get the history tracking instance for external access
    */
@@ -130,21 +140,18 @@ export class StateChart extends StateChartBase {
   // PUBLIC METHODS
   // ============================================================================
 
-  // Public API for external event injection
+  /**
+   * Add an event to the external queue.  This will be processed during the next macrostep.
+   * @param event The event to add to the external queue
+   */
   public addEvent(event: SCXMLEvent): void {
+    // Add the event to the external queue
     this.externalEventQueue.enqueue(event);
 
+    // If the macrostep is complete, process the event immediately
     if (this.macroStepDone) {
       this.macrostep(this.lastState);
     }
-  }
-
-  computeEntrySet(sourcePath: string, targetPath: string): string[] {
-    const lccaPath = findLCCA(sourcePath, targetPath);
-
-    // Build entry path using utility function, then filter out already active states
-    const candidateEntryPaths = buildEntryPath(lccaPath, targetPath);
-    return candidateEntryPaths.filter((path: string) => !this.isActive(path));
   }
 
   deserialize(jsonData: string) {
@@ -365,7 +372,7 @@ export class StateChart extends StateChartBase {
     return state;
   }
 
-  async microstep(
+  private async microstep(
     state: InternalState,
     transitions: TransitionNode[],
   ): Promise<InternalState> {
@@ -488,6 +495,14 @@ export class StateChart extends StateChartBase {
     this.activeStateChain.push([statePath, stateNode]);
 
     return updatedState;
+  }
+
+  private computeEntrySet(sourcePath: string, targetPath: string): string[] {
+    const lccaPath = findLCCA(sourcePath, targetPath);
+
+    // Build entry path using utility function, then filter out already active states
+    const candidateEntryPaths = buildEntryPath(lccaPath, targetPath);
+    return candidateEntryPaths.filter((path: string) => !this.isActive(path));
   }
 
   private async enterStates(

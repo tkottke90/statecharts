@@ -6,6 +6,7 @@ import { AssignNode } from './nodes/assign.node';
 import { InternalState, SCXMLEvent } from './models/internalState';
 import { SCXMLNode } from './nodes/scxml.node';
 import { OnEntryNode, OnExitNode } from './nodes';
+import { HistoryEventType } from './models/history';
 
 // Type for mock active state chain entries
 type MockActiveStateEntry = [string, Record<string, unknown>];
@@ -48,7 +49,7 @@ describe('StateChart', () => {
       ).activeStateChain = mockActiveStateChain;
 
       // Act
-      const result = stateChart.computeEntrySet(sourcePath, targetPath);
+      const result = (stateChart as any).computeEntrySet(sourcePath, targetPath);
 
       // Assert
       expect(result).toEqual(['playing.healthSystem.critical']);
@@ -68,7 +69,7 @@ describe('StateChart', () => {
       ).activeStateChain = mockActiveStateChain;
 
       // Act
-      const result = stateChart.computeEntrySet(sourcePath, targetPath);
+      const result = (stateChart as any).computeEntrySet(sourcePath, targetPath);
 
       // Assert
       expect(result).toEqual([
@@ -87,7 +88,7 @@ describe('StateChart', () => {
       ).activeStateChain = mockActiveStateChain;
 
       // Act
-      const result = stateChart.computeEntrySet(sourcePath, targetPath);
+      const result = (stateChart as any).computeEntrySet(sourcePath, targetPath);
 
       // Assert
       expect(result).toEqual([
@@ -111,7 +112,7 @@ describe('StateChart', () => {
       ).activeStateChain = mockActiveStateChain;
 
       // Act
-      const result = stateChart.computeEntrySet(sourcePath, targetPath);
+      const result = (stateChart as any).computeEntrySet(sourcePath, targetPath);
 
       // Assert
       expect(result).toEqual([]);
@@ -131,7 +132,7 @@ describe('StateChart', () => {
       ).activeStateChain = mockActiveStateChain;
 
       // Act
-      const result = stateChart.computeEntrySet(sourcePath, targetPath);
+      const result = (stateChart as any).computeEntrySet(sourcePath, targetPath);
 
       // Assert
       // LCCA is 'playing', so should enter healthSystem and processingDamage
@@ -151,7 +152,7 @@ describe('StateChart', () => {
       ).activeStateChain = mockActiveStateChain;
 
       // Act
-      const result = stateChart.computeEntrySet(sourcePath, targetPath);
+      const result = (stateChart as any).computeEntrySet(sourcePath, targetPath);
 
       // Assert
       // Verify shallowest states come first (proper entry order)
@@ -184,7 +185,7 @@ describe('StateChart', () => {
       ).activeStateChain = mockActiveStateChain;
 
       // Act
-      const result = stateChart.computeEntrySet(sourcePath, targetPath);
+      const result = (stateChart as any).computeEntrySet(sourcePath, targetPath);
 
       // Assert
       expect(result).toEqual(['playing', 'playing.healthSystem']);
@@ -204,7 +205,7 @@ describe('StateChart', () => {
       ).activeStateChain = mockActiveStateChain;
 
       // Act
-      const result = stateChart.computeEntrySet(sourcePath, targetPath);
+      const result = (stateChart as any).computeEntrySet(sourcePath, targetPath);
 
       // Assert
       // Should only enter the new parts of the path
@@ -229,24 +230,12 @@ describe('StateChart', () => {
       ).activeStateChain = mockActiveStateChain;
 
       // Act
-      const result = stateChart.computeEntrySet(sourcePath, targetPath);
+      const result = (stateChart as any).computeEntrySet(sourcePath, targetPath);
 
       // Assert
       // Should only enter the target, not the already-active parent
       expect(result).toEqual(['playing.healthSystem.healthy']);
     });
-  });
-
-  describe('isActive', () => {
-    it.todo('should return true for active state paths');
-
-    it.todo('should return false for inactive state paths');
-
-    it.todo('should handle root level state paths');
-
-    it.todo('should handle deep nested state paths');
-
-    it.todo('should be case sensitive');
   });
 
   describe('exitStates', () => {
@@ -1076,18 +1065,6 @@ describe('StateChart', () => {
     });
   });
 
-  describe('Integration Tests', () => {
-    it.todo('should handle complete microstep with exit and entry sets');
-
-    it.todo('should process eventless transitions correctly');
-
-    it.todo('should handle parallel state transitions');
-
-    it.todo('should maintain activeStateChain consistency');
-
-    it.todo('should handle complex state hierarchy transitions');
-  });
-
   describe('Persistence', () => {
     let stateChart: StateChart;
 
@@ -1331,15 +1308,80 @@ describe('StateChart', () => {
     });
   });
 
-  describe('Edge Cases', () => {
-    it.todo('should handle malformed paths gracefully');
+  describe('Event Emitting', () => {
+    let stateChart: StateChart;
 
-    it.todo('should handle transitions with no target');
+    beforeEach(() => {
+      stateChart = new StateChart(createMockSCXMLNode(), new Map());
+    });
 
-    it.todo('should handle self-transitions');
+    it('should register event listeners via on() proxy method', () => {
+      // Arrange
+      const listener = jest.fn();
 
-    it.todo('should handle transitions between parallel regions');
+      // Act
+      stateChart.on('history', listener);
 
-    it.todo('should handle history state transitions');
+      // Trigger an event by accessing the history directly
+      const history = (stateChart as any).history;
+      history.addEntry(
+        HistoryEventType.MACROSTEP_START,
+        [],
+        { data: {} },
+      );
+
+      // Assert
+      expect(listener).toHaveBeenCalled();
+      expect(listener).toHaveBeenCalledWith(
+        expect.objectContaining({
+          entry: expect.objectContaining({
+            type: HistoryEventType.MACROSTEP_START,
+          }),
+          totalEntries: expect.any(Number),
+        }),
+      );
+    });
+
+    it('should unregister event listeners via off() proxy method', () => {
+      // Arrange
+      const listener = jest.fn();
+      stateChart.on('history', listener);
+
+      // Act - Remove the listener
+      stateChart.off('history', listener);
+
+      // Trigger an event
+      const history = (stateChart as any).history;
+      history.addEntry(
+        HistoryEventType.MACROSTEP_START,
+        [],
+        { data: {} },
+      );
+
+      // Assert
+      expect(listener).not.toHaveBeenCalled();
+    });
+
+    it('should register listeners for specific event types', () => {
+      // Arrange
+      const stateEntryListener = jest.fn();
+      const stateExitListener = jest.fn();
+
+      // Act
+      stateChart.on(HistoryEventType.STATE_ENTRY, stateEntryListener);
+      stateChart.on(HistoryEventType.STATE_EXIT, stateExitListener);
+
+      // Trigger a state entry event
+      const history = (stateChart as any).history;
+      history.addEntry(
+        HistoryEventType.STATE_ENTRY,
+        ['testState'],
+        { data: {} },
+      );
+
+      // Assert
+      expect(stateEntryListener).toHaveBeenCalledTimes(1);
+      expect(stateExitListener).not.toHaveBeenCalled();
+    });
   });
 });

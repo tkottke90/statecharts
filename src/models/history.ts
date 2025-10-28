@@ -21,7 +21,7 @@ export enum HistoryEventType {
   STATE_ENTRY = 'state_entry',
   STATE_EXIT = 'state_exit',
   TRANSITION = 'transition',
-}
+};
 
 /**
  * Represents a state transition for history tracking

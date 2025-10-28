@@ -16,11 +16,22 @@ import {
 import { InternalState } from './internalState';
 import { performance } from 'perf_hooks';
 
+type HistoryEventMap = Record<
+  `${HistoryEventType}`,
+  [HistoryEventPayload]
+> & {
+  cleared: [],
+  history: [HistoryEventPayload],
+  imported: [{ count: number }],
+  pruned: [{ removedCount: number }],
+  error: [Error],
+}
+
 /**
  * Core class for tracking state machine execution history
  * Provides comprehensive history tracking, querying, and event emission capabilities
  */
-export class StateExecutionHistory extends EventEmitter {
+export class StateExecutionHistory extends EventEmitter<HistoryEventMap> {
   private entries: Map<HistoryId, HistoryEntry> = new Map();
   private orderedEntries: HistoryId[] = [];
   private options: HistoryTrackingOptions;
@@ -100,13 +111,18 @@ export class StateExecutionHistory extends EventEmitter {
     // Prune old entries if necessary
     const entriesPruned = this.pruneEntries();
 
-    // Emit history event
+    // Create payload for all listeners
     const payload: HistoryEventPayload = {
       entry,
       totalEntries: this.entries.size,
       entriesPruned,
     };
+
+    // Emit all history events to global listeners
     this.emit('history', payload);
+
+    // Emit to type-specific listeners
+    this.emit(type, payload);
 
     return id;
   }

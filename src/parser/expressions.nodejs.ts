@@ -20,10 +20,58 @@ export const evaluateEcmascriptExpression = (
   expression: string,
   data: InternalState,
 ) => {
-  const context = createContext(data);
+  // Create a restricted sandbox for SCXML expressions
+  const sandbox = {
+    // Include the state data
+    data: data.data,
+    _event: data._event,
+    _name: data._name,
+    _sessionId: data._sessionId,
+    
+    // Safe built-ins for expressions
+    Math: Math,
+    Date: Date,
+    JSON: JSON,
+    parseInt: parseInt,
+    parseFloat: parseFloat,
+    String: String,
+    Number: Number,
+    Boolean: Boolean,
+    Array: Array,
+    Object: Object,
+    
+    // Explicitly undefined dangerous globals
+    require: undefined,
+    process: undefined,
+    fetch: undefined,
+    import: undefined,
+    eval: undefined,
+    Function: undefined,
+    global: undefined,
+    globalThis: undefined
+  };
 
-  const result = runInContext(expression, context);
-  return result; // Convert result to string for SCXML compatibility
+
+  const context = createContext(sandbox, {
+    codeGeneration: {
+      strings: false,  // Prevent eval and Function constructor
+      wasm: false
+    }
+  });
+
+  try {
+    const result = runInContext(expression, context, {
+      timeout: 1000,  // 1 second timeout
+      displayErrors: false
+    });
+    return result;
+  } catch (error) {
+    // Handle errors appropriately for your use case
+    throw new SCXMLExpressionError(
+      'Expression evaluation failed',
+      'evaluation-error'
+    );
+  }
 };
 
 export const evaluateExpression = (expression: string, data: InternalState) => {

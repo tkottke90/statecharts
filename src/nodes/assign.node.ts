@@ -12,7 +12,20 @@ import { evaluateExpression } from '../parser/expressions.nodejs';
 
 const AssignNodeAttr = BaseExecutableNode.schema
   .extend({
-    location: z.string().min(1, 'A location is required for the <assign> node'), // Required location expression
+    location: z.string()
+      .describe('The data model location to assign to.  This can be either the data or _event properties in the state')
+      .min(1, 'A location is required for the <assign> node')
+      .pipe(
+        z.transform(val => {
+          // This allows the statechart to assign to the `data` property
+          if (val.startsWith('data')) return val;
+          // This allows the statechart to assign to the `_event` property
+          if (val.startsWith('_event')) return val;
+
+          // Default to the data property
+          return `data.${val}`
+        })
+      ), // Required location expression (prefixed with 'data' if not already)
     expr: z.string().optional(), // Optional expression (mutually exclusive with content)
     clear: z
       .union([

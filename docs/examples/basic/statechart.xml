@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scxml
+  xmlns="http://www.w3.org/2005/07/scxml"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="../schemas/scxml.xsd"
+  version="1.0"
+  datamodel="ecmascript"
+  initial="counter"
+>
+  <datamodel>
+    <!-- Counter value -->
+    <data id="count" expr="data.count ?? 0" />
+    <!-- Timestamp of last increment -->
+    <data id="lastIncrement" expr="data.lastIncrement ?? null" />
+    <!-- Total number of executions -->
+    <data id="totalExecutions" expr="data.totalExecutions ?? 0" />
+  </datamodel>
+
+  <state id="idle">
+    <onentry>
+      <log label="Info">System is Idle</log>
+    </onentry>
+  
+    <transition target="counter" event="count" />
+  </state>
+
+  <!-- Main counter state -->
+  <state id="counter">
+    <onentry>
+      <log label="info" expr="'Counter state entered. Current count: ' + data.count" />
+    </onentry>
+
+    <transition target="idle">
+       <!-- Update timestamp -->
+      <assign location="lastIncrement" expr="new Date().toISOString()" />
+
+      <!-- Increment total executions -->
+      <assign location="totalExecutions" expr="data.totalExecutions + 1" />
+
+      <log expr="'Counter incremented to: ' + data.count + ' at ' + data.lastIncrement" />
+
+      <!-- Increment the counter -->
+      <assign location="count" expr="data.count + 1" />
+    </transition>
+  </state>
+</scxml>

@@ -17,7 +17,7 @@ import { InternalState } from './internalState';
 import { performance } from 'perf_hooks';
 
 type HistoryEventMap = Record<
-  `${HistoryEventType}`,
+  `${Exclude<HistoryEventType, 'error'>}`,
   [HistoryEventPayload]
 > & {
   cleared: [],
@@ -25,7 +25,7 @@ type HistoryEventMap = Record<
   imported: [{ count: number }],
   pruned: [{ removedCount: number }],
   error: [Error],
-}
+};
 
 /**
  * Core class for tracking state machine execution history

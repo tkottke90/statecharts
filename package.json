@@ -11,7 +11,7 @@
     "./nodes": "./dist/nodes/index.js"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "rm -rf dist && tsc",
     "format": "eslint --fix . && prettier --write .",
     "prepublish": "npm run build",
     "test": "jest",

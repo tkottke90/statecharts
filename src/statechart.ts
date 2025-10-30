@@ -125,8 +125,26 @@ export class StateChart extends StateChartBase {
   // GETTERS/SETTERS
   // ============================================================================
 
+  /**
+   * The data currently registered in the 
+   * internal state object
+   */
   get data() {
     return this.lastState.data;
+  }
+
+  /**
+   * Flag for indicating if the statechart has been initialized
+   */
+  get isInitialized() {
+    return this.activeStateChain.length > 0;
+  }
+
+  /**
+   * A list of the active states in the chain
+   */
+  get state() {
+    return this.activeStateChain.map(([stateLabel]) => stateLabel);
   }
 
   /**
@@ -149,9 +167,9 @@ export class StateChart extends StateChartBase {
     this.externalEventQueue.enqueue(event);
 
     // If the macrostep is complete, process the event immediately
-    if (this.macroStepDone) {
-      this.macrostep(this.lastState);
-    }
+    // if (this.macroStepDone) {
+    //   this.macrostep(this.lastState);
+    // }
   }
 
   deserialize(jsonData: string) {
@@ -191,11 +209,14 @@ export class StateChart extends StateChartBase {
       this.timeoutInterval = options.timeout;
     }
 
-    // SCXML Specification: Initialize the data model before entering initial states
-    this.lastState = await this.initializeDataModel(this.root, input);
+    if (!this.isInitialized) {
+      // SCXML Specification: Initialize the data model before entering initial states
+      this.lastState = await this.initializeDataModel(this.root, input);
+  
+      // SCXML Specification: Enter the initial state configuration with onentry handlers
+      this.lastState = await this.enterInitialStates(this.lastState);
+    }
 
-    // SCXML Specification: Enter the initial state configuration with onentry handlers
-    this.lastState = await this.enterInitialStates(this.lastState);
 
     // Run the event loop
     return await this.macrostep(

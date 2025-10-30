@@ -142,3 +142,8 @@ vite.config.ts.timestamp-*
 # Local Development Environment
 data
 node_modules
+
+docs/examples/**/*.json
+docs/examples/**/*.js
+docs/examples/**/*.d.ts
+docs/examples/**/*.d.ts.map

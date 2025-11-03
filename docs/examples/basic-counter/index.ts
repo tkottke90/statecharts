@@ -3,6 +3,7 @@
 import { StateChart } from '../../../dist/index.js';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { join } from 'path';
+import * as readline from 'readline';
 
 /**
  * Basic Counter Example with Data Persistence
@@ -28,6 +29,60 @@ interface CounterState {
   _datamodel: 'ecmascript';
 }
 
+/**
+ * Prompts the user to run the counter again using readline
+ * @returns Promise<boolean> - true if user wants to run again, false otherwise
+ */
+async function promptUserRunAgain(): Promise<boolean> {
+  return new Promise((resolve) => {
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    });
+
+    // Configure stdin to read single characters
+    process.stdin.setRawMode(true);
+    process.stdin.resume();
+    process.stdin.setEncoding('utf8');
+
+    const askQuestion = () => {
+      process.stdout.write('\n🔄 Run counter again? (y/N): ');
+
+      const onData = (key: string) => {
+        const char = key.toLowerCase();
+
+        if (char === 'y') {
+          process.stdout.write('y\n');
+          cleanup();
+          resolve(true);
+        } else if (char === 'n' || char === '\r' || char === '\n') {
+          process.stdout.write('n\n');
+          cleanup();
+          resolve(false);
+        } else if (char === '\u0003') { // Ctrl+C
+          process.stdout.write('\n');
+          cleanup();
+          process.exit(0);
+        } else {
+          process.stdout.write(`\n❌ Invalid input '${key}'. Please enter 'y' for yes or 'n' for no.\n`);
+          askQuestion(); // Re-prompt
+        }
+      };
+
+      const cleanup = () => {
+        process.stdin.removeListener('data', onData);
+        process.stdin.setRawMode(false);
+        process.stdin.pause();
+        rl.close();
+      };
+
+      process.stdin.on('data', onData);
+    };
+
+    askQuestion();
+  });
+}
+
 async function main() {
   const dataFilePath = join(__dirname, 'counter-data.json');
 
@@ -35,7 +90,7 @@ async function main() {
   console.log('='.repeat(50));
 
   try {
-    let fileContent = '{}'
+    let fileContent = '{}';
 
     // Step 1: Read existing data from JSON file (or use defaults)
     let existingData: CounterData = {
@@ -69,7 +124,7 @@ async function main() {
 
     console.log('⚙️  Executing statechart...');
 
-    // Step 6: Trigger state change with an event
+    // Step 4: Trigger state change with an event
     stateChart.addEvent({
       name: 'count',
       type: 'external',
@@ -80,13 +135,17 @@ async function main() {
       data: {}
     })
 
-    // Step 6: Start processing the events
+    // Step 5: Start processing the events
     const result = await stateChart.execute(initialState);
 
-    console.log('\n✅ Statechart execution completed');
-    console.log('');
+    console.log([
+      '',
+      '✅ Statechart execution completed',
+      `   Current State: ${stateChart.state.join(',')}`,
+      ''
+    ].join('\n'));
 
-    // Step 5: Display the results
+    // Step 6: Display the results
     const updatedData = result.data as unknown as CounterData;
     console.log('📊 Updated Counter Data:');
     console.log(`   Count: ${updatedData.count}`);
@@ -94,12 +153,12 @@ async function main() {
     console.log(`   Total executions: ${updatedData.totalExecutions}`);
     console.log('');
 
-    // Step 6: Save the updated state back to the JSON file
+    // Step 7: Save the updated state back to the JSON file
     writeFileSync(dataFilePath, JSON.stringify(stateChart, null, 2), 'utf-8');
     console.log(`💾 Counter data saved to: ${dataFilePath}`);
     console.log('');
 
-    // Step 7: Show the increment
+    // Step 8: Show the increment
     const increment = updatedData.count - initialState.data.count;
     if (increment > 0) {
       console.log(`🎉 Counter incremented by ${increment}!`);
@@ -108,7 +167,6 @@ async function main() {
     }
 
     console.log('');
-    console.log('Run this command again to increment the counter further.');
 
   } catch (error) {
     console.error('❌ Error:', error);
@@ -116,9 +174,26 @@ async function main() {
   }
 }
 
+async function runLoop() {
+  let runAgain = true;
+
+  try {
+    while (runAgain) {
+      console.clear();
+      await main();
+      runAgain = await promptUserRunAgain();
+    }
+
+    console.log('\n👋 Goodbye!');
+  } catch (err) {
+    console.error('Unhandled error:', err);
+    process.exit(1);
+  }
+}
+
 // Run the main function
 if (require.main === module) {
-  main().catch((error) => {
+  runLoop().catch((error) => {
     console.error('Unhandled error:', error);
     process.exit(1);
   });

@@ -543,7 +543,7 @@ describe('AssignNode', () => {
       // Assert
       expect(result.success).toBe(true);
       expect(result.node).toBeInstanceOf(AssignNode);
-      expect(result.node?.location).toBe('user.name');
+      expect(result.node?.location).toBe('data.user.name'); // AssignNode automatically prefixes with 'data.'
       expect(result.node?.expr).toBe('John Doe');
       expect(result.error).toBeUndefined();
     });
@@ -581,7 +581,7 @@ describe('AssignNode', () => {
       // Assert
       expect(result.success).toBe(true);
       expect(result.node).toBeInstanceOf(AssignNode);
-      expect(result.node?.location).toBe('user.name');
+      expect(result.node?.location).toBe('data.user.name'); // AssignNode automatically prefixes with 'data.'
       expect(result.node?.expr).toBeUndefined();
     });
 
@@ -600,7 +600,7 @@ describe('AssignNode', () => {
       // Assert
       expect(result.success).toBe(true);
       expect(result.node).toBeInstanceOf(AssignNode);
-      expect(result.node?.location).toBe('user.name');
+      expect(result.node?.location).toBe('data.user.name'); // AssignNode automatically prefixes with 'data.'
       expect(result.node?.clear).toBe(true);
       expect(result.error).toBeUndefined();
     });

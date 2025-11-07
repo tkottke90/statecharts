@@ -170,7 +170,7 @@ describe('Node: <onexit>', () => {
       const assignChild3 = new AssignNode({
         assign: {
           location: 'data.counter',
-          expr: 'counter + 1',
+          expr: 'data.counter + 1', // Fix: properly reference the counter in the data model
           content: '',
           children: [],
         },

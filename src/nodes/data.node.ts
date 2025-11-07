@@ -13,23 +13,12 @@ const DataNodeAttr = BaseExecutableNode.schema
     expr: z.string().optional(),
   })
   .check(ctx => {
-    const { expr, content, src } = ctx.value;
+    const { expr, src } = ctx.value;
 
     const hasExpr = (expr?.length ?? 0) > 0;
-    const hasContent = (content?.length ?? 0) > 0;
     const hasSrc = (src?.length ?? 0) > 0;
 
-    const fields = [hasExpr, hasContent, hasSrc];
-
-    // If none of the attributes are populated, we throw an error
-    if (!fields.some(Boolean)) {
-      ctx.issues.push({
-        code: 'custom',
-        message: `Must specify exactly one of 'expr', 'src', or child content`,
-        input: ctx.value,
-        continue: true, // make this issue continuable (default: false)
-      });
-    }
+    const fields = [hasExpr, hasSrc];
 
     if (fields.filter(Boolean).length > 1) {
       ctx.issues.push({
@@ -118,6 +107,9 @@ export class DataNode
           };
         }
       }
+
+      case 'number':
+        return Number(value ?? 0);
 
       case 'text':
         return `${value}`;

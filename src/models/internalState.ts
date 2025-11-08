@@ -3,13 +3,102 @@
 import { BaseNode } from './base';
 import { Queue } from './event-queue';
 
+/**
+ * Represents an SCXML event as defined by the W3C SCXML specification.
+ * Events are one of the basic concepts in SCXML since they drive most transitions.
+ *
+ * This interface defines the internal structure of events that is accessible via the
+ * `_event` system variable during event processing.
+ *
+ * @see https://www.w3.org/TR/scxml/#InternalStructureofEvents
+ */
 export interface SCXMLEvent {
+  /**
+   * The name of the event.
+   *
+   * This is a character string giving the name of the event. It is what is matched
+   * against the 'event' attribute of transitions. Transitions can do additional tests
+   * by using the value of this field inside boolean expressions in the 'cond' attribute.
+   *
+   * Examples: "user.click", "done.state.myState", "error.execution"
+   */
   name: string;
+
+  /**
+   * The type of the event, indicating its origin.
+   *
+   * - `"platform"`: Events raised by the platform itself, such as error events
+   *   (e.g., error.execution, error.communication, error.platform)
+   * - `"internal"`: Events raised by `<raise>` and `<send>` with target '_internal'
+   * - `"external"`: All other events, including those from external entities
+   */
   type: 'platform' | 'internal' | 'external';
+
+  /**
+   * The send identifier of the event.
+   *
+   * If the sending entity has specified a value for this (via the 'id' or 'idlocation'
+   * attribute of `<send>`), this field will contain that value. In the case of error
+   * events triggered by a failed attempt to send an event, this field contains the
+   * send id of the triggering `<send>` element. Otherwise, this field is left blank (empty string).
+   *
+   * This can be used to correlate events with their originating send operations.
+   */
   sendid: string;
+
+  /**
+   * The origin URI of the event.
+   *
+   * For external events, this is a URI equivalent to the 'target' attribute on the
+   * `<send>` element. When used as the value of 'target' in a response `<send>`,
+   * it allows the receiver to send a response back to the originating entity via
+   * the Event I/O Processor specified in 'origintype'.
+   *
+   * For internal and platform events, this field is left blank (empty string).
+   */
   origin: string;
+
+  /**
+   * The origin type of the event.
+   *
+   * For external events, this is equivalent to the 'type' field on the `<send>` element.
+   * When used as the value of 'type' in a response `<send>`, it allows the receiver to
+   * send a response back to the originating entity at the URI specified by 'origin'.
+   *
+   * Common values include "scxml" for the SCXML Event I/O Processor.
+   *
+   * For internal and platform events, this field is left blank (empty string).
+   */
   origintype: string;
+
+  /**
+   * The invoke identifier of the event.
+   *
+   * If this event is generated from an invoked child process (via `<invoke>`),
+   * this field contains the invoke id of the invocation that triggered the child process.
+   * This is particularly important for events like "done.invoke._id_" which signal
+   * that an invoked process has completed.
+   *
+   * Otherwise, this field is left blank (empty string).
+   */
   invokeid: string;
+
+  /**
+   * The data payload of the event.
+   *
+   * This field contains whatever data the sending entity chose to include in this event.
+   * The receiving SCXML Processor reformats this data to match its data model, but does
+   * not otherwise modify it.
+   *
+   * Data can be provided via:
+   * - The 'namelist' attribute of `<send>` or `<raise>`
+   * - `<param>` elements within `<send>` or `<raise>`
+   * - `<content>` elements within `<send>` or `<raise>`
+   * - External entities sending events to the state machine
+   *
+   * If the conversion to the data model is not possible, this field is left blank
+   * and an 'error.execution' event is placed in the internal event queue.
+   */
   data: Record<string, unknown>;
 }
 

@@ -1,0 +1,427 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scxml
+  xmlns="http://www.w3.org/2005/07/scxml"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.w3.org/2005/07/scxml ../../../schemas/scxml.xsd"
+  version="1.0"
+  datamodel="ecmascript"
+  initial="idle"
+>
+
+  <!-- ============================================ -->
+  <!-- DATA MODEL                                   -->
+  <!-- ============================================ -->
+  <datamodel>
+    <!-- Configuration -->
+    <data id="model" expr="'mistral:7b'" />
+    <data id="maxIterations" expr="10" />
+
+    <!-- Conversation State -->
+    <data id="userMessage" expr="''" />
+    <data id="messages" expr="[]" />
+    <data id="tokenUsage" expr="0" />
+
+    <!-- Router State -->
+    <data id="iterationCount" expr="0" />
+    <data id="agentsInvoked" expr="[]" />
+    <data id="currentAgent" expr="null" />
+    <data id="decision" expr="null" />
+    <data id="nextAgent" expr="null" />
+
+    <!-- Agent Results -->
+    <data id="plan" expr="null" />
+    <data id="finalResponse" expr="null" />
+
+    <!-- LLM Response (from external system) -->
+    <data id="llmResponse" expr="null" />
+
+    <!-- Current Prompt (built dynamically) -->
+    <data id="prompt" expr="''" />
+
+    <!-- Error Handling -->
+    <data id="error" expr="null" />
+    <data id="errorCount" expr="0" />
+
+    <!-- Intermediate processing data -->
+    <data id="planResponse" expr="null" />
+    <data id="contextInfo" expr="''" />
+
+    <!-- Inline Prompts using CDATA -->
+    <data id="prompts.system">
+      <![CDATA[## System Instructions
+        - You are part of a multi-agent system
+        - Be concise and direct
+        - Avoid conversational filler like "Great", "Certainly", "Okay"
+        - Return structured output when requested
+        - Focus on providing accurate and helpful information]]>
+    </data>
+
+    <data id="prompts.planner">
+      <![CDATA[## Role: Planning Agent
+
+      ## Task
+      Analyze the user's request and create a step-by-step plan to accomplish it.
+
+      ## Guidelines
+      - Break down complex requests into manageable steps
+      - Identify if additional data gathering is needed
+      - Estimate the complexity of the request
+      - Be specific about what needs to be done
+
+      ## Output Format
+      Provide your response as a JSON object with this structure:
+      {
+        "steps": ["step 1", "step 2", "..."],
+        "requiresData": true/false,
+        "complexity": "low/medium/high",
+        "reasoning": "brief explanation of the plan"
+      }]]>
+    </data>
+
+    <data id="prompts.responder">
+      <![CDATA[## Role: Response Agent
+
+      ## Task
+      Synthesize information gathered by other agents and provide a helpful response to the user.
+
+      ## Guidelines
+      - Be direct and helpful
+      - Reference specific findings from the planning phase
+      - Provide actionable information
+      - Keep responses focused and relevant
+      - If the plan indicated data was needed but none was gathered, acknowledge this limitation
+
+      ## Context
+      You have access to the plan created by the planning agent and should use it to structure your response.]]>
+    </data>
+
+    <!-- Prompt Versioning -->
+    <data id="prompts.version" expr="'1.0.0'" />
+    <data id="prompts.lastModified" expr="'2025-11-09'" />
+  </datamodel>
+
+  <!-- ============================================ -->
+  <!-- IDLE STATE - Waiting for user input         -->
+  <!-- ============================================ -->
+  <state id="idle">
+    <onentry>
+      <log expr="'System idle, waiting for user message...'" />
+    </onentry>
+
+    <!-- Transition to active when message received -->
+    <transition event="message" target="active">
+      <assign location="data.userMessage" expr="_event.data.message" />
+      <assign location="data.iterationCount" expr="0" />
+      <assign location="data.agentsInvoked" expr="[]" />
+      <assign location="data.errorCount" expr="0" />
+      <log expr="'Received message: ' + data.userMessage" />
+    </transition>
+  </state>
+
+  <!-- ============================================ -->
+  <!-- ACTIVE STATE - Main orchestration           -->
+  <!-- ============================================ -->
+  <state id="active" initial="router">
+
+    <!-- ============================================ -->
+    <!-- ROUTER - Central decision hub               -->
+    <!-- ============================================ -->
+    <state id="router">
+      <onentry>
+        <log
+          expr="'Router: Iteration ' + data.iterationCount + ', Agents invoked: ' + data.agentsInvoked.join(', ')" />
+
+        <!-- Increment iteration count -->
+        <assign location="data.iterationCount" expr="data.iterationCount + 1" />
+
+        <!-- Decision logic using SCXML conditionals -->
+        <if cond="data.iterationCount > data.maxIterations">
+          <log expr="'Max iterations reached, forcing response'" />
+          <assign location="data.decision" expr="'respond'" />
+          <elseif cond="!data.plan">
+            <log expr="'Router decision: Call planner agent'" />
+            <assign location="data.decision" expr="'callAgent'" />
+            <assign location="data.nextAgent" expr="'planner'" />
+          </elseif>
+          <elseif cond="data.plan">
+            <log expr="'Router decision: Ready to respond'" />
+            <assign location="data.decision" expr="'respond'" />
+          </elseif>
+          <else>
+            <log expr="'Router decision: Default to respond'" />
+            <assign location="data.decision" expr="'respond'" />
+          </else>
+        </if>
+
+        <log
+          expr="'Router decision: ' + data.decision + (data.nextAgent ? ' (agent: ' + data.nextAgent + ')' : '')" />
+      </onentry>
+
+      <!-- Route to agent invocation -->
+      <transition cond="data.decision === 'callAgent'" target="invokeAgent" />
+
+      <!-- Route to response -->
+      <transition cond="data.decision === 'respond'" target="respondToUser" />
+    </state>
+
+    <!-- ============================================ -->
+    <!-- INVOKE AGENT - Routes to specific agent     -->
+    <!-- ============================================ -->
+    <state id="invokeAgent">
+      <onentry>
+        <log expr="'Invoking agent: ' + data.nextAgent" />
+      </onentry>
+
+      <!-- Route to specific agent -->
+      <transition cond="data.nextAgent === 'planner'" target="agents.planner" />
+      <transition cond="data.nextAgent === 'responder'" target="agents.responder" />
+
+      <!-- Fallback: if no agent matched, go to responder -->
+      <transition target="agents.responder" />
+    </state>
+
+    <!-- ============================================ -->
+    <!-- AGENTS - Compound state containing all agents -->
+    <!-- ============================================ -->
+    <state id="agents">
+
+      <!-- ============================================ -->
+      <!-- PLANNER AGENT                               -->
+      <!-- ============================================ -->
+      <state id="planner" initial="plannerPrepare">
+
+        <state id="plannerPrepare">
+          <onentry>
+            <log expr="'Planner: Preparing prompt'" />
+
+            <!-- Compose prompt: system + agent-specific + context -->
+            <assign location="data.prompt"
+              expr="data.prompts.system + '\n\n' + data.prompts.planner + '\n\n## User Request\n' + data.userMessage" />
+
+            <!-- Build messages array -->
+            <assign location="data.messages"
+              expr="[
+              { role: 'system', content: data.prompts.system },
+              { role: 'user', content: data.prompts.planner + '\n\n## User Request\n' + data.userMessage }
+            ]" />
+
+            <!-- Set current agent -->
+            <assign location="data.currentAgent" expr="'planner'" />
+
+            <log expr="'Planner: Prompt prepared, transitioning to callLLM'" />
+          </onentry>
+
+          <transition target="callLLM" />
+        </state>
+
+        <state id="plannerProcessResponse">
+          <onentry>
+            <log expr="'Planner: Processing LLM response'" />
+
+            <!-- Extract the assistant's message content from llmResponse -->
+            <assign location="data.planResponse" expr="data.llmResponse.content" />
+
+            <log expr="'Planner response: ' + data.planResponse" />
+            <log expr="'Planner: Waiting for external system to parse JSON response'" />
+
+            <!-- State stabilizes here, external system will parse JSON -->
+            <!-- and send 'agents.planner.plannerProcessResponse.complete' event -->
+          </onentry>
+
+          <!-- Transition when external system completes JSON parsing -->
+          <transition event="agents.planner.plannerProcessResponse.complete" target="router">
+            <log expr="'Planner: JSON parsing complete, plan received'" />
+
+            <!-- Plan is already set by external system via event data -->
+            <assign location="data.plan" expr="_event.data.plan" />
+
+            <!-- Track agent invocation -->
+            <assign location="data.agentsInvoked" expr="data.agentsInvoked.concat('planner')" />
+
+            <log expr="'Planner: Plan created, returning to router'" />
+          </transition>
+        </state>
+
+      </state>
+
+      <!-- ============================================ -->
+      <!-- RESPONDER AGENT                             -->
+      <!-- ============================================ -->
+      <state id="responder" initial="responderPrepare">
+
+        <state id="responderPrepare">
+          <onentry>
+            <log expr="'Responder: Preparing prompt'" />
+
+            <!-- Compose prompt with context from plan -->
+            <assign location="data.contextInfo"
+              expr="'## Plan Summary\n' + (data.plan ? JSON.stringify(data.plan, null, 2) : 'No plan available')" />
+
+            <assign location="data.prompt"
+              expr="data.prompts.system + '\n\n' + data.prompts.responder + '\n\n' + data.contextInfo + '\n\n## User Request\n' + data.userMessage" />
+
+            <!-- Build messages array -->
+            <assign location="data.messages"
+              expr="[
+              { role: 'system', content: data.prompts.system },
+              { role: 'user', content: data.prompts.responder + '\n\n' + data.contextInfo + '\n\n## User Request\n' + data.userMessage }
+            ]" />
+
+            <!-- Set current agent -->
+            <assign location="data.currentAgent" expr="'responder'" />
+
+            <log expr="'Responder: Prompt prepared, transitioning to callLLM'" />
+          </onentry>
+
+          <transition target="callLLM" />
+        </state>
+
+        <state id="responderProcessResponse">
+          <onentry>
+            <log expr="'Responder: Processing LLM response'" />
+
+            <!-- Extract the assistant's message content from llmResponse -->
+            <assign location="data.finalResponse" expr="data.llmResponse.content" />
+
+            <log expr="'Responder: Final response prepared'" />
+
+            <!-- Track agent invocation -->
+            <assign location="data.agentsInvoked" expr="data.agentsInvoked.concat('responder')" />
+
+            <raise event="agent.complete" />
+          </onentry>
+
+          <!-- Return to router -->
+          <transition event="agent.complete" target="router" />
+        </state>
+
+      </state>
+
+    </state>
+
+    <!-- ============================================ -->
+    <!-- CALL LLM - Reusable utility state           -->
+    <!-- Waits for external system to call LLM API   -->
+    <!-- ============================================ -->
+    <state id="callLLM" initial="waitingForResponse">
+
+      <!-- Route successful response back to appropriate agent -->
+      <transition event="callLLM.success" cond="data.currentAgent === 'planner'"
+        target="agents.planner.plannerProcessResponse">
+        <log expr="'CallLLM: Success - routing response to planner'" />
+        <assign location="data.llmResponse" expr="_event.data.response" />
+        <assign location="data.tokenUsage" expr="data.tokenUsage + _event.data.token" />
+        <log expr="'Token usage: ' + _event.data.token + ' (total: ' + data.tokenUsage + ')'" />
+      </transition>
+
+      <transition event="callLLM.success" cond="data.currentAgent === 'responder'"
+        target="agents.responder.responderProcessResponse">
+        <log expr="'CallLLM: Success - routing response to responder'" />
+        <assign location="data.llmResponse" expr="_event.data.response" />
+        <assign location="data.tokenUsage" expr="data.tokenUsage + _event.data.token" />
+        <log expr="'Token usage: ' + _event.data.token + ' (total: ' + data.tokenUsage + ')'" />
+      </transition>
+
+      <!-- Handle LLM errors -->
+      <transition event="callLLM.error" target="handleError">
+        <log expr="'CallLLM: Error occurred during LLM call'" />
+        <assign location="data.error" expr="_event.data" />
+        <assign location="data.tokenUsage" expr="data.tokenUsage + _event.data.token" />
+        <log expr="'Token usage: ' + _event.data.token + ' (total: ' + data.tokenUsage + ')'" />
+      </transition>
+
+      <state id="waitingForResponse">
+        <onentry>
+          <log expr="'CallLLM: Waiting for LLM response for agent: ' + data.currentAgent" />
+          <log expr="'CallLLM: Model=' + data.model + ', Messages count=' + data.messages.length" />
+        </onentry>
+
+        <!-- State stabilizes here, external system detects 'callLLM' state -->
+        <!-- and sends either 'callLLM.success' or 'callLLM.error' event -->
+      </state>
+
+    </state>
+
+    <!-- ============================================ -->
+    <!-- RESPOND TO USER - Prepare final response    -->
+    <!-- ============================================ -->
+    <state id="respondToUser">
+      <onentry>
+        <log expr="'RespondToUser: Preparing final response'" />
+
+        <!-- If we don't have a final response yet, call responder agent -->
+        <if cond="!data.finalResponse">
+          <log expr="'RespondToUser: No final response, invoking responder agent'" />
+          <assign location="data.nextAgent" expr="'responder'" />
+          <raise event="invoke.responder" />
+        <else>
+          <log expr="'RespondToUser: Final response ready'" />
+          <raise event="response.ready" />
+        </else>
+        </if>
+      </onentry>
+
+      <!-- If need to invoke responder, go back to invokeAgent -->
+      <transition event="invoke.responder" target="invokeAgent" />
+
+      <!-- If response ready, send message -->
+      <transition event="response.ready" target="sendMessage" />
+    </state>
+
+    <!-- ============================================ -->
+    <!-- SEND MESSAGE - Reusable utility state       -->
+    <!-- Waits for external system to send message   -->
+    <!-- ============================================ -->
+    <state id="sendMessage">
+      <onentry>
+        <log expr="'SendMessage: Waiting for external system to send message to user'" />
+        <log expr="'Final Response: ' + data.finalResponse" />
+
+        <!-- State stabilizes here, external system will send message -->
+        <!-- and raise 'message.sent' event when complete -->
+      </onentry>
+
+      <transition event="message.sent" target="idle">
+        <log expr="'SendMessage: Message sent successfully, returning to idle'" />
+        <!-- Clean up for next conversation -->
+        <assign location="data.userMessage" expr="''" />
+        <assign location="data.plan" expr="null" />
+        <assign location="data.finalResponse" expr="null" />
+        <assign location="data.currentAgent" expr="null" />
+        <assign location="data.decision" expr="null" />
+      </transition>
+    </state>
+
+    <!-- ============================================ -->
+    <!-- HANDLE ERROR - Error handling state         -->
+    <!-- ============================================ -->
+    <state id="handleError">
+      <onentry>
+        <log expr="'HandleError: Error occurred'" />
+        <log expr="'Error details: ' + JSON.stringify(data.error)" />
+
+        <!-- Increment error count -->
+        <assign location="data.errorCount" expr="data.errorCount + 1" />
+
+        <!-- Decide: retry or fail using SCXML conditionals -->
+        <if cond="data.errorCount &lt; 3">
+          <log expr="'HandleError: Retry attempt ' + data.errorCount" />
+          <raise event="error.retry" />
+          <else>
+            <log expr="'HandleError: Max retries exceeded, failing gracefully'" />
+            <assign location="data.finalResponse" expr="'Sorry, an error occurred while processing your request. Please try again later.'" />
+            <raise event="error.fatal" />
+          </else>
+        </if>
+      </onentry>
+
+      <!-- Retry: go back to router -->
+      <transition event="error.retry" target="router" />
+
+      <!-- Fatal: send error message and return to idle -->
+      <transition event="error.fatal" target="sendMessage" />
+    </state>
+
+  </state>
+
+</scxml>

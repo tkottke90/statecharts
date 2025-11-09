@@ -93,12 +93,6 @@ async function main() {
     let fileContent = '{}';
 
     // Step 1: Read existing data from JSON file (or use defaults)
-    let existingData: CounterData = {
-      count: 0,
-      lastIncrement: null,
-      totalExecutions: 0
-    };
-
     if (existsSync(dataFilePath)) {
       console.log('📖 Reading existing counter data from file...');
       fileContent = readFileSync(dataFilePath, 'utf-8');

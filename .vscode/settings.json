@@ -6,5 +6,15 @@
     "llm",
     "scxml",
     "SCXML"
+  ],
+  "xml.fileAssociations": [
+    {
+      "pattern": "**/*.scxml",
+      "systemId": "./schemas/scxml.xsd"
+    },
+    {
+      "pattern": "**/examples/*.xml",
+      "systemId": "./schemas/scxml.xsd"
+    }
   ]
 }

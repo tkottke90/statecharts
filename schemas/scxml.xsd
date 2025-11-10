@@ -21,7 +21,7 @@
     <xs:attribute name="datamodel" type="xs:string" default="ecmascript"/>
     <xs:attribute name="initial" type="xs:string"/>
     <xs:attribute name="name" type="xs:string"/>
-    <xs:attribute name="xmlns" type="xs:string" fixed="http://www.w3.org/2005/07/scxml"/>
+    <!-- Note: xmlns is handled by the schema's targetNamespace, not as an attribute -->
   </xs:complexType>
 
   <!-- State element -->

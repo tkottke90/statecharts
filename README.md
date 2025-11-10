@@ -62,6 +62,91 @@ console.log('State machine result:', result.data);
 // Output: { counter: 1 }
 ```
 
+## ✅ Validating SCXML Files
+
+The library includes a utility CLI tool for validating SCXML files with three layers of validation:
+
+### Quick Validation
+
+```bash
+# Validate a single file
+npx @tkottke90/statecharts validate --file path/to/your-statechart.xml
+
+# Watch mode - continuously validate on file changes
+npx @tkottke90/statecharts validate --file path/to/your-statechart.xml --watch
+
+# JSON output for CI/CD integration
+npx @tkottke90/statecharts validate --file path/to/your-statechart.xml --json
+```
+
+### Validation Layers
+
+The validator performs three levels of validation:
+
+1. **XML Syntax Validation** - Catches basic XML errors (unclosed tags, invalid characters)
+2. **XSD Schema Validation** - Validates against SCXML schema (required attributes, valid elements)
+3. **SCXML Semantic Validation** - Validates statechart logic (state references, initial states)
+
+### Example Output
+
+**Valid SCXML:**
+```
+🔍 Validating: my-statechart.xml
+
+============================================================
+
+📝 Step 1: XML Syntax Validation...
+✅ XML syntax is valid
+
+📋 Step 2: XSD Schema Validation...
+✅ XSD schema validation passed
+
+🔧 Step 3: SCXML Semantic Validation...
+✅ SCXML semantic validation passed
+
+============================================================
+
+✅ All validations passed!
+```
+
+**Invalid SCXML:**
+```
+❌ XSD Schema Validation Failed:
+Element 'scxml': The attribute 'version' is required but missing.
+```
+
+### JSON Output for CI/CD
+
+```bash
+npx @tkottke90/statecharts validate --file my-file.xml --json
+```
+
+```json
+{
+  "valid": true,
+  "file": "my-file.xml",
+  "timestamp": "2025-11-10T02:37:29.393Z",
+  "layers": {
+    "syntax": { "valid": true },
+    "schema": { "valid": true },
+    "semantic": { "valid": true }
+  }
+}
+```
+
+### Global Installation
+
+For frequent use, install globally:
+
+```bash
+npm install -g @tkottke90/statecharts
+statecharts validate --file my-file.xml
+```
+
+### Requirements
+
+- **xmllint** (optional) - For XSD schema validation. Available by default on macOS/Linux. If not available, schema validation will be skipped.
+
 ## 📚 Documentation
 
 ### Getting Started

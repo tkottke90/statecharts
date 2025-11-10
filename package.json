@@ -3,15 +3,19 @@
   "version": "1.2.1",
   "description": "",
   "main": "./dist/index.js",
+  "bin": {
+    "statecharts": "./dist/cli/index.js"
+  },
   "files": [
-    "dist"
+    "dist",
+    "schemas"
   ],
   "exports": {
     ".": "./dist/index.js",
     "./nodes": "./dist/nodes/index.js"
   },
   "scripts": {
-    "build": "rm -rf dist && tsc",
+    "build": "rm -rf dist && tsc && chmod +x dist/cli/index.js",
     "format": "eslint --fix . && prettier --write .",
     "prepublish": "npm run build",
     "test": "jest",
@@ -25,6 +29,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "commander": "^14.0.2",
     "fast-xml-parser": "^5.3.1",
     "lodash": "4.17.21",
     "zod": "4.1.5"

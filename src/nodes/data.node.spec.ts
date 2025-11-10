@@ -1,5 +1,5 @@
 import { DataNode } from './data.node';
-import SimpleXML from 'simple-xml-to-json';
+import { convertXML } from '../utils/xml-adapter';
 
 describe('Node: <data>', () => {
   describe('#createFromJSON', () => {
@@ -11,7 +11,7 @@ describe('Node: <data>', () => {
         <data id="test">test</data>
       `;
 
-      const json = SimpleXML.convertXML(dataXML);
+      const json = convertXML(dataXML);
 
       // Act
       const { success, node, error } = DataNode.createFromJSON(json);

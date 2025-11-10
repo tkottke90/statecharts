@@ -2,7 +2,7 @@ import { AssignNode } from './assign.node';
 import { BaseNode } from '../models/base';
 import { InternalState, SCXMLEvent } from '../models/internalState';
 import { parse } from '../parser';
-import SimpleXML from 'simple-xml-to-json';
+import { convertXML } from '../utils/xml-adapter';
 import { TransitionNode } from './transition.node';
 
 // Helper function to create test InternalState
@@ -645,7 +645,7 @@ describe('AssignNode', () => {
         </transition>
       `;
 
-      const { root } = parse<TransitionNode>(SimpleXML.convertXML(xmlExample));
+      const { root } = parse<TransitionNode>(convertXML(xmlExample));
 
       const initialState = createTestEventState({ user: { id: 1 } });
 

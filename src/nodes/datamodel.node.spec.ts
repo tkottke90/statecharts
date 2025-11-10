@@ -1,6 +1,6 @@
 import { DataNode } from './data.node';
 import { DataModelNode } from './datamodel.node';
-import SimpleXML from 'simple-xml-to-json';
+import { convertXML } from '../utils/xml-adapter';
 
 describe('Node: <datamodel>', () => {
   describe('#createFromJSON', () => {
@@ -14,7 +14,7 @@ describe('Node: <datamodel>', () => {
         </datamodel>
       `;
 
-      const json = SimpleXML.convertXML(dataXML);
+      const json = convertXML(dataXML);
 
       // Act
       const { success, node, error } = DataModelNode.createFromJSON(json);

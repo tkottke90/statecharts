@@ -1,5 +1,5 @@
 import { BaseNode } from './models';
-import SimpleXML from 'simple-xml-to-json';
+import { convertXML } from './utils/xml-adapter';
 import { parse } from './parser';
 import { BaseStateNode } from './models/base-state';
 import { SCXMLNode, TransitionNode } from './nodes';
@@ -840,7 +840,7 @@ export class StateChart extends StateChartBase {
   // ============================================================================
 
   static fromXML(xmlStr: string, options: StateChartOptions = {}) {
-    const parsedXML = SimpleXML.convertXML(xmlStr) as {
+    const parsedXML = convertXML(xmlStr) as {
       scxml: z.infer<typeof SCXMLNode.schema>;
     };
 

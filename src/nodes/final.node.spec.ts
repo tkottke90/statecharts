@@ -1,6 +1,6 @@
 import { FinalNode } from './final.node';
 import { InternalState } from '../models/internalState';
-import SimpleXML from 'simple-xml-to-json';
+import { convertXML } from '../utils/xml-adapter';
 
 describe('Node: <final>', () => {
   describe('#createFromJSON', () => {
@@ -12,7 +12,7 @@ describe('Node: <final>', () => {
         <final id="test"></final>
       `;
 
-      const json = SimpleXML.convertXML(finalXML);
+      const json = convertXML(finalXML);
 
       // Act
       const { success, node, error } = FinalNode.createFromJSON(json);

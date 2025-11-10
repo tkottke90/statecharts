@@ -1,6 +1,6 @@
 import { ParamNode, collectParamValues } from './param.node';
 import { InternalState } from '../models/internalState';
-import SimpleXML from 'simple-xml-to-json';
+import { convertXML } from '../utils/xml-adapter';
 
 describe('Node: <param>', () => {
   let testState: InternalState;
@@ -34,7 +34,7 @@ describe('Node: <param>', () => {
   describe('#createFromJSON', () => {
     it('should create a ParamNode instance from XML with expr attribute', () => {
       const paramXML = `<param name="userName" expr="user.name"/>`;
-      const json = SimpleXML.convertXML(paramXML);
+      const json = convertXML(paramXML);
 
       const { success, node, error } = ParamNode.createFromJSON(json);
 
@@ -47,7 +47,7 @@ describe('Node: <param>', () => {
 
     it('should create a ParamNode instance from XML with location attribute', () => {
       const paramXML = `<param name="userEmail" location="user.email"/>`;
-      const json = SimpleXML.convertXML(paramXML);
+      const json = convertXML(paramXML);
 
       const { success, node, error } = ParamNode.createFromJSON(json);
 
@@ -60,7 +60,7 @@ describe('Node: <param>', () => {
 
     it('should create a ParamNode instance from XML with content', () => {
       const paramXML = `<param name="greeting">Hello World</param>`;
-      const json = SimpleXML.convertXML(paramXML);
+      const json = convertXML(paramXML);
 
       const { success, node, error } = ParamNode.createFromJSON(json);
 

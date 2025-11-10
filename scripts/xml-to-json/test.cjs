@@ -1,4 +1,4 @@
-const { convertXML } = require('simple-xml-to-json');
+const { convertXML } = require('../../dist/utils/xml-adapter.js');
 const { readFileSync } = require('fs');
 const path = require('path');
 

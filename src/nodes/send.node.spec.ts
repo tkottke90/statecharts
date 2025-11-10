@@ -5,7 +5,7 @@ import {
   EventIOProcessor,
 } from '../models/event-io-processor';
 import { InternalState } from '../models/internalState';
-import SimpleXML from 'simple-xml-to-json';
+import { convertXML } from '../utils/xml-adapter';
 import { StateNode } from './state.node';
 import { OnEntryNode } from './onentry.node';
 
@@ -51,7 +51,7 @@ describe('Node: <send>', () => {
   describe('#createFromJSON', () => {
     it('should create a SendNode instance from XML with event and target', () => {
       const sendXML = `<send event="testEvent" target="http://example.com"/>`;
-      const json = SimpleXML.convertXML(sendXML);
+      const json = convertXML(sendXML);
 
       const { success, node, error } = SendNode.createFromJSON(json);
 
@@ -64,7 +64,7 @@ describe('Node: <send>', () => {
 
     it('should create a SendNode instance with expression attributes', () => {
       const sendXML = `<send eventexpr="eventName" targetexpr="targetUrl" typeexpr="'http'"/>`;
-      const json = SimpleXML.convertXML(sendXML);
+      const json = convertXML(sendXML);
 
       const { success, node, error } = SendNode.createFromJSON(json);
 

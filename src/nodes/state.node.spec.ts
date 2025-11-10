@@ -1,5 +1,5 @@
 import { StateNode } from './state.node';
-import SimpleXML from 'simple-xml-to-json';
+import { convertXML } from '../utils/xml-adapter';
 
 describe('Node: <state>', () => {
   describe('#createFromJSON', () => {
@@ -11,7 +11,7 @@ describe('Node: <state>', () => {
         <state id="test">test</state>
       `;
 
-      const json = SimpleXML.convertXML(stateXML);
+      const json = convertXML(stateXML);
 
       // Act
       const { success, node, error } = StateNode.createFromJSON(json);

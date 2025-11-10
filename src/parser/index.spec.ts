@@ -10,7 +10,7 @@ import { InitialNode } from '../nodes/initial.node';
 import { ParallelNode } from '../nodes/parallel.node';
 import { SCXMLNode } from '../nodes/scxml.node';
 import { mergeMaps, parse, parseType } from './index';
-import SimpleXML from 'simple-xml-to-json';
+import { convertXML } from '../utils/xml-adapter';
 
 describe('Parser', () => {
   describe('Node Creation & Error Handling', () => {
@@ -390,7 +390,7 @@ describe('Parser', () => {
 
     it('should collect errors from children that return no root node', () => {
       // Arrange
-      const xmlJson = SimpleXML.convertXML(`
+      const xmlJson = convertXML(`
       <state initial="green" id="traffic_light">
         <state>
           <onentry>
@@ -415,7 +415,7 @@ describe('Parser', () => {
       // systems is when you fix one error only to find there is a queue of them
 
       // Arrange
-      const xmlJson = SimpleXML.convertXML(`
+      const xmlJson = convertXML(`
       <state initial="green" id="traffic_light">
         <state>
           <onentry>

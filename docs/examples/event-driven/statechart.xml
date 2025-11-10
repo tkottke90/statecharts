@@ -183,7 +183,7 @@
     <!-- ============================================ -->
     <!-- AGENTS - Compound state containing all agents -->
     <!-- ============================================ -->
-    <state id="agents">
+    <state id="agents" initial="planner">
 
       <!-- ============================================ -->
       <!-- PLANNER AGENT                               -->
